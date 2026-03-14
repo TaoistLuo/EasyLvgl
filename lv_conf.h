@@ -52,7 +52,7 @@
 
 #if LV_USE_STDLIB_MALLOC == LV_STDLIB_BUILTIN
     /*Size of the memory available for `lv_malloc()` in bytes (>= 2kB)*/
-    #define LV_MEM_SIZE (1024 * 1024)
+    #define LV_MEM_SIZE (1280 * 720)
 
     /*Size of the memory expand for `lv_malloc()` in bytes*/
     #define LV_MEM_POOL_EXPAND_SIZE 0
@@ -71,7 +71,7 @@
  *====================*/
 
 /*Default display refresh, input device read and animation step period.*/
-#define LV_DEF_REFR_PERIOD  33      /*[ms]*/
+#define LV_DEF_REFR_PERIOD  15      /*[ms]*/
 
 /*Default Dot Per Inch. Used to initialize default sizes such as widgets sized, style paddings.
  *(Not so important, you can adjust it to modify default sizes and spaces)*/
@@ -270,7 +270,7 @@
     *LV_LOG_LEVEL_ERROR       Only critical issue, when the system may fail
     *LV_LOG_LEVEL_USER        Only logs added by the user
     *LV_LOG_LEVEL_NONE        Do not log anything*/
-    #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+    #define LV_LOG_LEVEL LV_LOG_LEVEL_INFO
 
     /*1: Print the log with 'printf';
     *0: User need to register a callback with `lv_log_register_print_cb()`*/
@@ -946,7 +946,7 @@
  *==================*/
 
 /*Use SDL to open window on PC and handle mouse and keyboard*/
-#define LV_USE_SDL              0
+#define LV_USE_SDL              1
 #if LV_USE_SDL
     #define LV_SDL_INCLUDE_PATH     <SDL2/SDL.h>
     #define LV_SDL_RENDER_MODE      LV_DISPLAY_RENDER_MODE_DIRECT   /*LV_DISPLAY_RENDER_MODE_DIRECT is recommended for best performance*/
@@ -976,7 +976,7 @@
 #endif
 
 /*Driver for /dev/fb*/
-#define LV_USE_LINUX_FBDEV      1
+#define LV_USE_LINUX_FBDEV      0
 #if LV_USE_LINUX_FBDEV
     #define LV_LINUX_FBDEV_BSD           0
     #define LV_LINUX_FBDEV_RENDER_MODE   LV_DISPLAY_RENDER_MODE_PARTIAL
@@ -1012,7 +1012,7 @@
 #define LV_USE_TFT_ESPI         0
 
 /*Driver for evdev input devices*/
-#define LV_USE_EVDEV    0
+#define LV_USE_EVDEV    1
 
 /*Driver for libinput input devices*/
 #define LV_USE_LIBINPUT    0

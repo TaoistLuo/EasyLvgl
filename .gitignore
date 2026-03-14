@@ -1,57 +1,25 @@
-demo
+# Build directories
+build/
+bin/
 
-# Prerequisites
-*.d
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Object files
+# Compiled files
 *.o
-*.ko
-*.obj
-*.elf
-/build/
-/bin/
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
 *.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
-*.so.*
 *.dylib
-
-# Executables
 *.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Temporary files
+*.tmp
+*.log
+.DS_Store
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-/Debug/
+# LVGL generated files
+lv_conf_internal.h
