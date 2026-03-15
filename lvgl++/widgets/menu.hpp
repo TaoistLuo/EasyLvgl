@@ -4,10 +4,10 @@
 
 namespace lvgl {
 
-class LMenu : public LWidget {
+class LMenu : public LWidgetCRTP<LMenu> {
 public:
     explicit LMenu(lv_obj_t* parent = nullptr)
-        : LWidget(lv_menu_create(parent ? parent : lv_scr_act())) {}
+        : LWidgetCRTP(lv_menu_create(parent ? parent : lv_scr_act())) {}
 
     lv_obj_t* page_create(const char* title) {
         return lv_menu_page_create(m_obj, title);

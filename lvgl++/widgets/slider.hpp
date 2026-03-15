@@ -3,7 +3,7 @@
 /**
  * @file slider.hpp
  * @brief 滑块组件
- * @version 1.0.0
+ * @version 2.0.0
  * @date 2026-03-15
  */
 
@@ -14,31 +14,41 @@
 
 namespace lvgl {
 
-class LSlider : public LWidget {
+class LSlider : public LWidgetCRTP<LSlider> {
 public:
     explicit LSlider(lv_obj_t* parent = nullptr)
-        : LWidget(lv_slider_create(parent ? parent : lv_scr_act())) {}
-    
-    LSlider& range(int min, int max) {
+        : LWidgetCRTP(lv_slider_create(parent ? parent : lv_scr_act())) {}
+
+    LSlider& set_range(int min, int max) {
         lv_slider_set_range(m_obj, min, max);
         return *this;
     }
     
-    LSlider& value(int val, lv_anim_enable_t anim = LV_ANIM_OFF) {
+    LSlider& set_value(int val, lv_anim_enable_t anim = LV_ANIM_OFF) {
         lv_slider_set_value(m_obj, val, anim);
         return *this;
     }
-    
-    int get_value() const {
-        return lv_slider_get_value(m_obj);
+
+    LSlider& set_left_value(int val, lv_anim_enable_t anim = LV_ANIM_OFF) {
+        lv_slider_set_left_value(m_obj, val, anim);
+        return *this;
     }
-    
-    LSlider& size(int w, int h) {
-        lv_obj_set_size(m_obj, w, h);
+
+    LSlider& set_mode(lv_slider_mode_t mode) {
+        lv_slider_set_mode(m_obj, mode);
         return *this;
     }
     
-    LSlider& pos(int x, int y) {
+    int value() const {
+        return lv_slider_get_value(m_obj);
+    }
+    
+    LSlider& set_size(int w, int h) {
+        lv_obj_set_size(m_obj, w, h);
+        return *this;
+    }
+
+    LSlider& set_pos(int x, int y) {
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }

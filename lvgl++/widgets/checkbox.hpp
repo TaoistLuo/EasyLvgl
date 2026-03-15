@@ -3,7 +3,7 @@
 /**
  * @file checkbox.hpp
  * @brief 复选框组件
- * @version 1.0.0
+ * @version 2.0.0
  * @date 2026-03-15
  */
 
@@ -13,17 +13,17 @@
 
 namespace lvgl {
 
-class LCheckbox : public LWidget {
+class LCheckbox : public LWidgetCRTP<LCheckbox> {
 public:
     explicit LCheckbox(lv_obj_t* parent = nullptr)
-        : LWidget(lv_checkbox_create(parent ? parent : lv_scr_act())) {}
-    
-    LCheckbox& text(const char* txt) {
+        : LWidgetCRTP(lv_checkbox_create(parent ? parent : lv_scr_act())) {}
+
+    LCheckbox& set_text(const char* txt) {
         lv_checkbox_set_text(m_obj, txt);
         return *this;
     }
     
-    LCheckbox& checked(bool check) {
+    LCheckbox& set_checked(bool check) {
         if (check) {
             lv_obj_add_state(m_obj, LV_STATE_CHECKED);
         } else {
@@ -35,8 +35,8 @@ public:
     bool is_checked() const {
         return lv_obj_has_state(m_obj, LV_STATE_CHECKED);
     }
-    
-    LCheckbox& pos(int x, int y) {
+
+    LCheckbox& set_pos(int x, int y) {
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }

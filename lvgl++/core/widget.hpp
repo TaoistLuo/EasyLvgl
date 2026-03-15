@@ -15,6 +15,34 @@
 
 namespace lvgl {
 
+class LWidget;
+
+template<typename Derived>
+class LWidgetCRTP;
+
+#define LVGL_WIDGET_FLUENT_SIZE(CLASS_NAME) \
+    CLASS_NAME& set_size(int w, int h) { \
+        LWidgetCRTP<CLASS_NAME>::set_size(w, h); \
+        return *this; \
+    }
+
+#define LVGL_WIDGET_FLUENT_POS(CLASS_NAME) \
+    CLASS_NAME& set_pos(int x, int y) { \
+        LWidgetCRTP<CLASS_NAME>::set_pos(x, y); \
+        return *this; \
+    }
+
+#define LVGL_WIDGET_FLUENT_ALIGN(CLASS_NAME) \
+    CLASS_NAME& set_align(lv_align_t align_value) { \
+        LWidgetCRTP<CLASS_NAME>::set_align(align_value); \
+        return *this; \
+    }
+
+#define LVGL_WIDGET_FLUENT_GEOMETRY(CLASS_NAME) \
+    LVGL_WIDGET_FLUENT_SIZE(CLASS_NAME) \
+    LVGL_WIDGET_FLUENT_POS(CLASS_NAME) \
+    LVGL_WIDGET_FLUENT_ALIGN(CLASS_NAME)
+
 /**
  * @class LWidget
  * @brief LVGL对象的RAII包装基类
@@ -98,20 +126,27 @@ public:
      * @return const lv_obj_t* 原生指针
      */
     const lv_obj_t* native() const { return m_obj; }
-    
-    LWidget& size(int w, int h) {
+};
+
+template<typename Derived>
+class LWidgetCRTP : public LWidget {
+public:
+    using LWidget::LWidget;
+    using LWidget::operator=;
+
+    Derived& set_size(int w, int h) {
         lv_obj_set_size(m_obj, w, h);
-        return *this;
+        return static_cast<Derived&>(*this);
     }
-    
-    LWidget& pos(int x, int y) {
+
+    Derived& set_pos(int x, int y) {
         lv_obj_set_pos(m_obj, x, y);
-        return *this;
+        return static_cast<Derived&>(*this);
     }
-    
-    LWidget& align(lv_align_t align) {
-        lv_obj_set_align(m_obj, align);
-        return *this;
+
+    Derived& set_align(lv_align_t align_value) {
+        lv_obj_set_align(m_obj, align_value);
+        return static_cast<Derived&>(*this);
     }
 };
 

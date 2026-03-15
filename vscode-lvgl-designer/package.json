@@ -1,0 +1,81 @@
+{
+  "name": "lvgl-designer",
+  "displayName": "LVGL++ Designer",
+  "description": "Visual UI designer for LVGL++ - drag & drop components, generate C++ code",
+  "version": "0.1.0",
+  "publisher": "lvglpp",
+  "extensionKind": ["ui"],
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onCustomEditor:lvglDesigner.luiEditor",
+    "onCommand:lvglDesigner.openPreview",
+    "onCommand:lvglDesigner.newScreen",
+    "onCommand:lvglDesigner.compile"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "lvglDesigner.luiEditor",
+        "displayName": "LVGL++ Designer",
+        "selector": [{ "filenamePattern": "*.lui" }],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "lvglDesigner.openDesigner",
+        "title": "LVGL++: Open Qt Designer"
+      },
+      {
+        "command": "lvglDesigner.openPreview",
+        "title": "LVGL++: Open Visual Designer (Webview)"
+      },
+      {
+        "command": "lvglDesigner.newScreen",
+        "title": "LVGL++: New Screen"
+      },
+      {
+        "command": "lvglDesigner.compile",
+        "title": "LVGL++: Compile .lui to C++"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "lvglDesigner.openDesigner",
+          "when": "resourceExtname == .lui",
+          "group": "navigation"
+        },
+        {
+          "command": "lvglDesigner.openPreview",
+          "when": "resourceExtname == .lui",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "lvglDesigner.openDesigner",
+          "when": "resourceExtname == .lui",
+          "group": "navigation"
+        },
+        {
+          "command": "lvglDesigner.openPreview",
+          "when": "resourceExtname == .lui",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

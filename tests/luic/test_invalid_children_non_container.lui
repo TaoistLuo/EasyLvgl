@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "name": "InvalidChildrenNonContainer",
+  "children": [
+    {
+      "type": "LButton",
+      "id": "btn",
+      "props": { "text": "Click" },
+      "children": [
+        { "type": "LLabel", "id": "nested", "props": { "text": "oops" } }
+      ]
+    }
+  ]
+}

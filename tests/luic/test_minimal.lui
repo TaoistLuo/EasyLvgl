@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "name": "Minimal",
+  "size": [320, 240],
+  "children": [
+    {
+      "type": "LLabel",
+      "id": "title",
+      "props": { "text": "Hello" }
+    }
+  ]
+}

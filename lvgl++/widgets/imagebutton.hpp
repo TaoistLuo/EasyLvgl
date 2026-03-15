@@ -5,18 +5,23 @@
 
 namespace lvgl {
 
-class LImageButton : public LWidget {
+class LImageButton : public LWidgetCRTP<LImageButton> {
 public:
     explicit LImageButton(lv_obj_t* parent = nullptr)
-        : LWidget(lv_imagebutton_create(parent ? parent : lv_scr_act())) {}
+        : LWidgetCRTP(lv_imagebutton_create(parent ? parent : lv_scr_act())) {}
 
-    LImageButton& src(lv_imagebutton_state_t state, const void* src) {
+    LImageButton& set_src(lv_imagebutton_state_t state, const void* src) {
         lv_imagebutton_set_src(m_obj, state, nullptr, src, nullptr);
         return *this;
     }
 
-    LImageButton& state(lv_imagebutton_state_t state) {
+    LImageButton& set_state(lv_imagebutton_state_t state) {
         lv_imagebutton_set_state(m_obj, state);
+        return *this;
+    }
+
+    LImageButton& set_size(int w, int h) {
+        lv_obj_set_size(m_obj, w, h);
         return *this;
     }
 

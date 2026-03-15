@@ -3,7 +3,7 @@
 /**
  * @file style.hpp
  * @brief 样式构建器，提供链式API设置样式
- * @version 1.0.0
+ * @version 2.0.0
  * @date 2026-03-15
  * 
  * Style类自动管理lv_style_t生命周期，支持链式调用。
@@ -22,9 +22,9 @@ namespace lvgl {
  * @example
  * @code
  * LStyle btn_style;
- * btn_style.bg_color(0x2196F3)
- *          .radius(8)
- *          .pad_all(10)
+ * btn_style.set_bg_color(0x2196F3)
+ *          .set_radius(8)
+ *          .set_pad_all(10)
  *          .apply_to(button);
  * @endcode
  */
@@ -85,7 +85,7 @@ public:
      * @param hex 十六进制颜色值（如0xFF0000表示红色）
      * @return LStyle& 当前对象引用，支持链式调用
      */
-    LStyle& bg_color(uint32_t hex) {
+    LStyle& set_bg_color(uint32_t hex) {
         lv_style_set_bg_color(&m_style, lv_color_hex(hex));
         return *this;
     }
@@ -95,7 +95,7 @@ public:
      * @param opa 不透明度（0-255，255为完全不透明）
      * @return LStyle& 当前对象引用
      */
-    LStyle& bg_opa(lv_opa_t opa) {
+    LStyle& set_bg_opa(lv_opa_t opa) {
         lv_style_set_bg_opa(&m_style, opa);
         return *this;
     }
@@ -106,7 +106,7 @@ public:
      * @param color 边框颜色（十六进制）
      * @return LStyle& 当前对象引用
      */
-    LStyle& border(int width, uint32_t color) {
+    LStyle& set_border(int width, uint32_t color) {
         lv_style_set_border_width(&m_style, width);
         lv_style_set_border_color(&m_style, lv_color_hex(color));
         return *this;
@@ -117,7 +117,7 @@ public:
      * @param width 边框宽度（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& border_width(int width) {
+    LStyle& set_border_width(int width) {
         lv_style_set_border_width(&m_style, width);
         return *this;
     }
@@ -127,7 +127,7 @@ public:
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
-    LStyle& border_color(uint32_t hex) {
+    LStyle& set_border_color(uint32_t hex) {
         lv_style_set_border_color(&m_style, lv_color_hex(hex));
         return *this;
     }
@@ -137,7 +137,7 @@ public:
      * @param r 半径值（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& radius(int r) {
+    LStyle& set_radius(int r) {
         lv_style_set_radius(&m_style, r);
         return *this;
     }
@@ -147,7 +147,7 @@ public:
      * @param pad 内边距值（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& pad_all(int pad) {
+    LStyle& set_pad_all(int pad) {
         lv_style_set_pad_all(&m_style, pad);
         return *this;
     }
@@ -157,7 +157,7 @@ public:
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
-    LStyle& pad_top(int pad) {
+    LStyle& set_pad_top(int pad) {
         lv_style_set_pad_top(&m_style, pad);
         return *this;
     }
@@ -167,7 +167,7 @@ public:
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
-    LStyle& pad_bottom(int pad) {
+    LStyle& set_pad_bottom(int pad) {
         lv_style_set_pad_bottom(&m_style, pad);
         return *this;
     }
@@ -177,7 +177,7 @@ public:
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
-    LStyle& pad_left(int pad) {
+    LStyle& set_pad_left(int pad) {
         lv_style_set_pad_left(&m_style, pad);
         return *this;
     }
@@ -187,7 +187,7 @@ public:
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
-    LStyle& pad_right(int pad) {
+    LStyle& set_pad_right(int pad) {
         lv_style_set_pad_right(&m_style, pad);
         return *this;
     }
@@ -197,7 +197,7 @@ public:
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
-    LStyle& text_color(uint32_t hex) {
+    LStyle& set_text_color(uint32_t hex) {
         lv_style_set_text_color(&m_style, lv_color_hex(hex));
         return *this;
     }
@@ -207,7 +207,7 @@ public:
      * @param font 字体指针
      * @return LStyle& 当前对象引用
      */
-    LStyle& text_font(const lv_font_t* font) {
+    LStyle& set_text_font(const lv_font_t* font) {
         lv_style_set_text_font(&m_style, font);
         return *this;
     }
@@ -217,7 +217,7 @@ public:
      * @param width 阴影宽度（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& shadow_width(int width) {
+    LStyle& set_shadow_width(int width) {
         lv_style_set_shadow_width(&m_style, width);
         return *this;
     }
@@ -227,7 +227,7 @@ public:
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
-    LStyle& shadow_color(uint32_t hex) {
+    LStyle& set_shadow_color(uint32_t hex) {
         lv_style_set_shadow_color(&m_style, lv_color_hex(hex));
         return *this;
     }
@@ -237,7 +237,7 @@ public:
      * @param offset X偏移量（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& shadow_offset_x(int offset) {
+    LStyle& set_shadow_offset_x(int offset) {
         lv_style_set_shadow_offset_x(&m_style, offset);
         return *this;
     }
@@ -247,7 +247,7 @@ public:
      * @param offset Y偏移量（像素）
      * @return LStyle& 当前对象引用
      */
-    LStyle& shadow_offset_y(int offset) {
+    LStyle& set_shadow_offset_y(int offset) {
         lv_style_set_shadow_offset_y(&m_style, offset);
         return *this;
     }

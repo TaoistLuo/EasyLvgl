@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "name": "BadPropTypeOptions",
+  "children": [
+    { "type": "LDropdown", "id": "dd", "props": { "options": ["A", "B"] } }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "name": "BadPropTypeBool",
+  "children": [
+    { "type": "LCheckbox", "id": "cb", "props": { "checked": [1, 0] } }
+  ]
+}

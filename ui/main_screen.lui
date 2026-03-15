@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "name": "MainScreen",
+  "size": [800, 480],
+  "children": [
+    {
+      "type": "LLabel",
+      "id": "title",
+      "props": {
+        "text": "Dashboard",
+        "color": "0x2196F3",
+        "font_size": 24
+      }
+    },
+    {
+      "type": "LButton",
+      "id": "btn_login",
+      "props": {
+        "text": "Login",
+        "size": [120, 50],
+        "theme": "primary"
+      },
+      "events": ["clicked"]
+    },
+    {
+      "type": "LVStack",
+      "id": "info_panel",
+      "props": {
+        "spacing": 10,
+        "padding": 15,
+        "size": [400, 300]
+      },
+      "children": [
+        {
+          "type": "LSlider",
+          "id": "brightness",
+          "props": {
+            "range": [0, 100],
+            "value": 75,
+            "size": [350, 10]
+          },
+          "events": ["value_changed"]
+        },
+        {
+          "type": "LBar",
+          "id": "progress",
+          "props": {
+            "range": [0, 100],
+            "value": 50,
+            "size": [350, 20]
+          }
+        },
+        {
+          "type": "LCheckbox",
+          "id": "cb_enable",
+          "props": {
+            "text": "Enable Feature",
+            "checked": true
+          },
+          "events": ["value_changed"]
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 /**
  * @file label.hpp
  * @brief 标签组件
- * @version 1.0.0
+ * @version 2.0.0
  * @date 2026-03-15
  */
 
@@ -18,17 +18,17 @@ namespace lvgl {
  * @class LLabel
  * @brief 标签组件，封装lv_label
  */
-class LLabel : public LWidget {
+class LLabel : public LWidgetCRTP<LLabel> {
 public:
     explicit LLabel(lv_obj_t* parent = nullptr)
-        : LWidget(lv_label_create(parent ? parent : lv_scr_act())) {}
-    
-    LLabel& text(const char* txt) {
+        : LWidgetCRTP(lv_label_create(parent ? parent : lv_scr_act())) {}
+
+    LLabel& set_text(const char* txt) {
         lv_label_set_text(m_obj, txt);
         return *this;
     }
     
-    LLabel& text_fmt(const char* fmt, ...) {
+    LLabel& set_text_fmt(const char* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         lv_label_set_text_fmt(m_obj, fmt, args);
@@ -36,23 +36,13 @@ public:
         return *this;
     }
     
-    LLabel& align(lv_align_t a) {
-        lv_obj_set_align(m_obj, a);
-        return *this;
-    }
-    
-    LLabel& pos(int x, int y) {
-        lv_obj_set_pos(m_obj, x, y);
-        return *this;
-    }
-    
-    LLabel& color(uint32_t hex) {
+    LLabel& set_color(uint32_t hex) {
         LStyle style;
-        style.text_color(hex).apply_to(m_obj);
+        style.set_text_color(hex).apply_to(m_obj);
         return *this;
     }
     
-    LLabel& font_size(int size) {
+    LLabel& set_font_size(int size) {
         const lv_font_t* font = nullptr;
         switch(size) {
 #if LV_FONT_MONTSERRAT_12
@@ -77,13 +67,23 @@ public:
         }
         if (font) {
             LStyle style;
-            style.text_font(font).apply_to(m_obj);
+            style.set_text_font(font).apply_to(m_obj);
         }
         return *this;
     }
     
-    LLabel& long_mode(lv_label_long_mode_t mode) {
+    LLabel& set_long_mode(lv_label_long_mode_t mode) {
         lv_label_set_long_mode(m_obj, mode);
+        return *this;
+    }
+
+    LLabel& set_size(int w, int h) {
+        lv_obj_set_size(m_obj, w, h);
+        return *this;
+    }
+
+    LLabel& set_pos(int x, int y) {
+        lv_obj_set_pos(m_obj, x, y);
         return *this;
     }
 };

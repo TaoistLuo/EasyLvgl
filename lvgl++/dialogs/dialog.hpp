@@ -1,12 +1,4 @@
 #pragma once
-
-/**
- * @file dialog.hpp
- * @brief 对话框组件
- * @version 1.0.0
- * @date 2026-03-15
- */
-
 #include "lvgl/lvgl.h"
 #include <functional>
 #include <vector>

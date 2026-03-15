@@ -1,0 +1,262 @@
+{
+    "children": [
+        {
+            "children": [
+                {
+                    "id": "header",
+                    "props": {
+                        "text": "Settings"
+                    },
+                    "type": "LLabel"
+                },
+                {
+                    "children": [
+                        {
+                            "events": [
+                                "clicked"
+                            ],
+                            "id": "btn_ok",
+                            "props": {
+                                "size": [
+                                    80,
+                                    40
+                                ],
+                                "text": "OK",
+                                "theme": "primary"
+                            },
+                            "type": "LButton"
+                        },
+                        {
+                            "events": [
+                                "clicked"
+                            ],
+                            "id": "btn_cancel",
+                            "props": {
+                                "size": [
+                                    80,
+                                    40
+                                ],
+                                "text": "Cancel"
+                            },
+                            "type": "LButton"
+                        }
+                    ],
+                    "id": "row1",
+                    "props": {
+                        "spacing": 10
+                    },
+                    "type": "LHStack"
+                },
+                {
+                    "events": [
+                        "value_changed"
+                    ],
+                    "id": "volume",
+                    "props": {
+                        "range": [
+                            0,
+                            100
+                        ],
+                        "value": 50
+                    },
+                    "type": "LSlider"
+                }
+            ],
+            "id": "main_panel",
+            "props": {
+                "padding": 20,
+                "pos": [
+                    60,
+                    -50
+                ],
+                "size": [
+                    518,
+                    378
+                ],
+                "spacing": 10
+            },
+            "type": "LVStack"
+        },
+        {
+            "id": "led_0",
+            "props": {
+                "on": true,
+                "pos": [
+                    110,
+                    40
+                ],
+                "size": 30
+            },
+            "type": "LLed"
+        },
+        {
+            "id": "label_1",
+            "props": {
+                "pos": [
+                    210,
+                    -20
+                ],
+                "size": [
+                    200,
+                    30
+                ]
+            },
+            "type": "LLabel"
+        },
+        {
+            "id": "slider_2",
+            "props": {
+                "pos": [
+                    180,
+                    110
+                ],
+                "size": [
+                    200,
+                    10
+                ]
+            },
+            "type": "LSlider"
+        },
+        {
+            "id": "button_6",
+            "props": {
+                "pos": [
+                    100,
+                    170
+                ],
+                "size": [
+                    120,
+                    50
+                ]
+            },
+            "type": "LButton"
+        },
+        {
+            "id": "chart_7",
+            "props": {
+                "pos": [
+                    340,
+                    160
+                ],
+                "size": [
+                    152,
+                    66
+                ]
+            },
+            "type": "LChart"
+        },
+        {
+            "id": "switch_0",
+            "props": {
+                "checked": null,
+                "enabled": null,
+                "hidden": false,
+                "pos": [
+                    220,
+                    40
+                ],
+                "size": [
+                    87,
+                    42
+                ]
+            },
+            "type": "LSwitch"
+        },
+        {
+            "id": "slider_0",
+            "props": {
+                "left_value": 0,
+                "mode": 0,
+                "pos": [
+                    100,
+                    240
+                ],
+                "range": [
+                    0,
+                    100
+                ],
+                "size": [
+                    200,
+                    10
+                ],
+                "value": 50
+            },
+            "type": "LSlider"
+        },
+        {
+            "id": "slider_1",
+            "props": {
+                "left_value": 0,
+                "mode": 0,
+                "pos": [
+                    100,
+                    280
+                ],
+                "range": [
+                    0,
+                    100
+                ],
+                "size": [
+                    200,
+                    10
+                ],
+                "value": 50
+            },
+            "type": "LSlider"
+        },
+        {
+            "id": "line_2",
+            "props": {
+                "color": "0xFFFFFF",
+                "pos": [
+                    70,
+                    130
+                ],
+                "size": [
+                    482,
+                    10
+                ],
+                "width": 2,
+                "y_invert": false
+            },
+            "type": "LLine"
+        },
+        {
+            "id": "list_3",
+            "props": {
+                "pos": [
+                    340,
+                    250
+                ],
+                "size": [
+                    189,
+                    58
+                ]
+            },
+            "type": "LList"
+        },
+        {
+            "id": "button_4",
+            "props": {
+                "disabled": false,
+                "pos": [
+                    410,
+                    10
+                ],
+                "size": [
+                    120,
+                    50
+                ],
+                "text": "Button",
+                "theme": "primary"
+            },
+            "type": "LButton"
+        }
+    ],
+    "name": "Nested",
+    "size": [
+        800,
+        480
+    ],
+    "version": "1.0"
+}

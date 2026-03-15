@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "name": "InvalidThemeValue",
+  "children": [
+    { "type": "LButton", "id": "btn", "props": { "text": "Click", "theme": "ghost" } }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "name": "CoreWidgets",
+  "size": [800, 480],
+  "children": [
+    { "type": "LLabel",    "id": "lbl",    "props": { "text": "Title", "color": "0x2196F3", "font_size": 24 } },
+    { "type": "LButton",   "id": "btn",    "props": { "text": "Click", "size": [120, 50], "theme": "primary" }, "events": ["clicked"] },
+    { "type": "LSlider",   "id": "sld",    "props": { "range": [0, 100], "value": 50, "size": [200, 10] }, "events": ["value_changed"] },
+    { "type": "LCheckbox", "id": "cb",     "props": { "text": "Enable", "checked": true }, "events": ["value_changed"] },
+    { "type": "LSwitch",   "id": "sw",     "props": { "checked": false }, "events": ["value_changed"] },
+    { "type": "LBar",      "id": "bar",    "props": { "range": [0, 100], "value": 75, "size": [200, 20] } },
+    { "type": "LArc",      "id": "arc",    "props": { "range": [0, 100], "value": 60, "size": 120 } },
+    { "type": "LDropdown", "id": "dd",     "props": { "options": "A\\nB\\nC", "size": [150, 40] }, "events": ["value_changed"] }
+  ]
+}

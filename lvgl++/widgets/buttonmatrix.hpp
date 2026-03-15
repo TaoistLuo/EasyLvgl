@@ -5,17 +5,17 @@
 
 namespace lvgl {
 
-class LButtonMatrix : public LWidget {
+class LButtonMatrix : public LWidgetCRTP<LButtonMatrix> {
 public:
     explicit LButtonMatrix(lv_obj_t* parent = nullptr)
-        : LWidget(lv_buttonmatrix_create(parent ? parent : lv_scr_act())) {}
+        : LWidgetCRTP(lv_buttonmatrix_create(parent ? parent : lv_scr_act())) {}
 
-    LButtonMatrix& map(const char** map) {
+    LButtonMatrix& set_map(const char** map) {
         lv_buttonmatrix_set_map(m_obj, map);
         return *this;
     }
 
-    LButtonMatrix& selected(uint16_t btn_id) {
+    LButtonMatrix& set_selected(uint16_t btn_id) {
         lv_buttonmatrix_set_selected_button(m_obj, btn_id);
         return *this;
     }
@@ -24,12 +24,17 @@ public:
         return lv_buttonmatrix_get_selected_button(m_obj);
     }
 
-    LButtonMatrix& one_checked(bool en) {
+    LButtonMatrix& set_one_checked(bool en) {
         lv_buttonmatrix_set_one_checked(m_obj, en);
         return *this;
     }
 
-    LButtonMatrix& size(int w, int h) {
+    LButtonMatrix& set_pos(int x, int y) {
+        lv_obj_set_pos(m_obj, x, y);
+        return *this;
+    }
+
+    LButtonMatrix& set_size(int w, int h) {
         lv_obj_set_size(m_obj, w, h);
         return *this;
     }

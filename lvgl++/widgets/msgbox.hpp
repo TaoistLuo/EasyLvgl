@@ -5,17 +5,17 @@
 
 namespace lvgl {
 
-class LMsgBox : public LWidget {
+class LMsgBox : public LWidgetCRTP<LMsgBox> {
 public:
     explicit LMsgBox(lv_obj_t* parent = nullptr)
-        : LWidget(lv_msgbox_create(parent)) {}
+        : LWidgetCRTP(lv_msgbox_create(parent)) {}
 
-    LMsgBox& title(const char* txt) {
+    LMsgBox& set_title(const char* txt) {
         lv_msgbox_add_title(m_obj, txt);
         return *this;
     }
 
-    LMsgBox& text(const char* txt) {
+    LMsgBox& set_text(const char* txt) {
         lv_msgbox_add_text(m_obj, txt);
         return *this;
     }

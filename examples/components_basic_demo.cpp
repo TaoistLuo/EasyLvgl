@@ -17,32 +17,32 @@ int main(void) {
     printf("Press Ctrl+C to exit gracefully.\n\n");
 
     LLabel title;
-    title.text("LVGL++ Components Demo")
-         .pos(10, 10)
-         .color(0x2196F3);
+    title.set_text("LVGL++ Components Demo")
+         .set_pos(10, 10)
+         .set_color(0x2196F3);
 
     LButton btn1;
-    btn1.text("Primary Button")
-        .size(150, 50)
-        .pos(10, 50)
+    btn1.set_text("Primary Button")
+        .set_size(150, 50)
+        .set_pos(10, 50)
         .primary()
         .on_click([](lv_event_t*) {
             printf("Primary button clicked!\n");
         });
 
     LButton btn2;
-    btn2.text("Secondary")
-        .size(150, 50)
-        .pos(170, 50)
+    btn2.set_text("Secondary")
+        .set_size(150, 50)
+        .set_pos(170, 50)
         .on_click([](lv_event_t*) {
             printf("Secondary button clicked!\n");
         });
 
     LSlider slider;
-    slider.range(0, 100)
-          .value(50)
-          .size(310, 10)
-          .pos(10, 120)
+    slider.set_range(0, 100)
+          .set_value(50)
+          .set_size(310, 10)
+          .set_pos(10, 120)
           .on_change([](lv_event_t* e) {
               auto* obj = (lv_obj_t*)lv_event_get_target(e);
               int val = lv_slider_get_value(obj);
@@ -50,9 +50,9 @@ int main(void) {
           });
 
     LCheckbox cb;
-    cb.text("Enable Feature")
-      .pos(10, 150)
-      .checked(true)
+    cb.set_text("Enable Feature")
+      .set_pos(10, 150)
+      .set_checked(true)
       .on_change([](lv_event_t* e) {
           auto* obj = (lv_obj_t*)lv_event_get_target(e);
           bool checked = lv_obj_has_state(obj, LV_STATE_CHECKED);
@@ -60,8 +60,7 @@ int main(void) {
       });
 
     LSwitch sw;
-    sw.pos(200, 150)
-      //.on()
+    sw.set_pos(200, 150)
       .on_change([](lv_event_t* e) {
           auto* obj = (lv_obj_t*)lv_event_get_target(e);
           bool on = lv_obj_has_state(obj, LV_STATE_CHECKED);
@@ -69,35 +68,35 @@ int main(void) {
       });
 
     LBar bar;
-    bar.range(0, 100)
-       .value(75, LV_ANIM_ON)
-       .size(310, 20)
-       .pos(10, 200);
+    bar.set_range(0, 100)
+       .set_value(75, LV_ANIM_ON)
+       .set_size(310, 20)
+       .set_pos(10, 200);
 
     LArc arc;
-    arc.range(0, 100)
-       .value(60)
-       .rotation(270)
-       .size(100)
-       .pos(10, 240);
+    arc.set_range(0, 100)
+       .set_value(60)
+       .set_rotation(270)
+       .set_size(100)
+       .set_pos(10, 240);
 
     LSpinner spinner;
-    spinner.size(50)
-           .pos(130, 265);
+    spinner.set_size(50)
+           .set_pos(130, 265);
 
     LLed led_green;
-    led_green.color(0x00FF00)
-             .brightness(255)
-             //.on()
-             .size(30)
-             .pos(200, 270);
+    led_green.set_color(0x00FF00)
+             .set_brightness(255)
+             .on()
+             .set_size(30)
+             .set_pos(200, 270);
 
     LLed led_red;
-    led_red.color(0xFF0000)
-           .brightness(200)
+    led_red.set_color(0xFF0000)
+           .set_brightness(200)
            .off()
-           .size(30)
-           .pos(250, 270);
+           .set_size(30)
+           .set_pos(250, 270);
 
     while(signal_handler.is_running()) {
         lv_timer_handler();

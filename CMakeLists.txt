@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(lvgl_cpp)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -11,6 +11,29 @@ add_subdirectory(lvgl)
 target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR})
 
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/ui_generated)
+
+# --- luic compiler ---
+add_executable(luic tools/luic/main.cpp)
+target_include_directories(luic PRIVATE ${PROJECT_SOURCE_DIR}/tools/luic)
+target_compile_features(luic PRIVATE cxx_std_17)
+set_target_properties(luic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+# --- Auto-compile .lui files ---
+file(GLOB LUI_FILES "${CMAKE_SOURCE_DIR}/ui/*.lui")
+set(LUI_GENERATED "")
+foreach(LUI_FILE ${LUI_FILES})
+    get_filename_component(LUI_NAME ${LUI_FILE} NAME_WE)
+    set(LUI_OUTPUT "${CMAKE_SOURCE_DIR}/ui_generated/${LUI_NAME}_ui.hpp")
+    add_custom_command(
+        OUTPUT ${LUI_OUTPUT}
+        COMMAND ${PROJECT_SOURCE_DIR}/bin/luic ${LUI_FILE} -o ${LUI_OUTPUT}
+        DEPENDS ${LUI_FILE} luic
+        COMMENT "luic: ${LUI_NAME}.lui -> ${LUI_NAME}_ui.hpp"
+    )
+    list(APPEND LUI_GENERATED ${LUI_OUTPUT})
+endforeach()
+add_custom_target(ui_compile ALL DEPENDS ${LUI_GENERATED})
 
 add_executable(main main.cpp mouse_cursor_icon.c)
 
@@ -51,4 +74,10 @@ add_custom_target(run_basic COMMAND ${EXECUTABLE_OUTPUT_PATH}/components_basic_d
 add_custom_target(run_advanced COMMAND ${EXECUTABLE_OUTPUT_PATH}/components_advanced_demo DEPENDS components_advanced_demo)
 add_custom_target(run_containers COMMAND ${EXECUTABLE_OUTPUT_PATH}/components_containers_demo DEPENDS components_containers_demo)
 add_custom_target(run_untested COMMAND ${EXECUTABLE_OUTPUT_PATH}/untested_components_demo DEPENDS untested_components_demo)
+
+# --- luic demo (end-to-end test) ---
+add_executable(luic_demo examples/luic_demo.cpp)
+add_dependencies(luic_demo ui_compile)
+target_link_libraries(luic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
+add_custom_target(run_luic_demo COMMAND ${EXECUTABLE_OUTPUT_PATH}/luic_demo DEPENDS luic_demo)
 

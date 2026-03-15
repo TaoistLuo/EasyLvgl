@@ -18,41 +18,41 @@ int main(void) {
     printf("Press Ctrl+C to exit gracefully.\n\n");
 
     LLabel title;
-    title.text("Container Layouts")
-         .pos(10, 10)
-         .color(0x2196F3);
+    title.set_text("Container Layouts")
+         .set_pos(10, 10)
+         .set_color(0x2196F3);
 
     LVStack vstack;
-    vstack.pos(10, 50)
-          .size(200, 400);
+    vstack.set_pos(10, 50)
+          .set_size(200, 400);
 
     LLabel label1;
-    label1.text("VStack Layout");
+    label1.set_text("VStack Layout");
     lv_obj_set_parent(label1.native(), vstack.native());
 
     LButton btn1;
-    btn1.text("Button 1").size(180, 40);
+    btn1.set_text("Button 1").set_size(180, 40);
     lv_obj_set_parent(btn1.native(), vstack.native());
 
     LButton btn2;
-    btn2.text("Button 2").size(180, 40);
+    btn2.set_text("Button 2").set_size(180, 40);
     lv_obj_set_parent(btn2.native(), vstack.native());
 
     LButton btn3;
-    btn3.text("Button 3").size(180, 40);
+    btn3.set_text("Button 3").set_size(180, 40);
     lv_obj_set_parent(btn3.native(), vstack.native());
 
     LSlider slider;
-    slider.range(0, 100).value(50).size(180, 10);
+    slider.set_range(0, 100).set_value(50).set_size(180, 10);
     lv_obj_set_parent(slider.native(), vstack.native());
 
     LBar bar;
-    bar.range(0, 100).value(75).size(180, 20);
+    bar.set_range(0, 100).set_value(75).set_size(180, 20);
     lv_obj_set_parent(bar.native(), vstack.native());
 
     LList list;
-    list.pos(230, 50)
-        .size(250, 400);
+    list.set_pos(230, 50)
+        .set_size(250, 400);
     
     list.add_text("Section 1");
     list.add_button(LV_SYMBOL_FILE, "Document 1");
@@ -69,25 +69,25 @@ int main(void) {
     list.add_button(LV_SYMBOL_CLOSE, "Cancelled");
 
     LTabView tabview;
-    tabview.pos(500, 50)
-           .size(300, 400);
+    tabview.set_pos(500, 50)
+           .set_size(300, 400);
     
     auto tab1 = tabview.add_tab("Tab 1");
     auto tab2 = tabview.add_tab("Tab 2");
     auto tab3 = tabview.add_tab("Tab 3");
     
     LLabel tab1_label;
-    tab1_label.text("Content of Tab 1");
+    tab1_label.set_text("Content of Tab 1");
     lv_obj_set_parent(tab1_label.native(), tab1);
     lv_obj_center(tab1_label.native());
     
     LLabel tab2_label;
-    tab2_label.text("Content of Tab 2");
+    tab2_label.set_text("Content of Tab 2");
     lv_obj_set_parent(tab2_label.native(), tab2);
     lv_obj_center(tab2_label.native());
     
     LLabel tab3_label;
-    tab3_label.text("Content of Tab 3");
+    tab3_label.set_text("Content of Tab 3");
     lv_obj_set_parent(tab3_label.native(), tab3);
     lv_obj_center(tab3_label.native());
 

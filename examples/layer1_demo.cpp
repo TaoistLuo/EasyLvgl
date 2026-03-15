@@ -49,14 +49,14 @@ int main(void)
     });
 
     LStyle default_style;
-    default_style.bg_color(0x2196F3)
-                 .border_width(2)
-                 .border_color(0x1976D2)
-                 .radius(5)
+    default_style.set_bg_color(0x2196F3)
+                 .set_border_width(2)
+                 .set_border_color(0x1976D2)
+                 .set_radius(5)
                  .apply_to(btn);
 
     LStyle pressed_style;
-    pressed_style.bg_color(0x1976D2).apply_to(btn, LV_STATE_PRESSED);
+    pressed_style.set_bg_color(0x1976D2).apply_to(btn, LV_STATE_PRESSED);
 
     auto label2 = configure(lv_label_create(lv_scr_act()))
         .pos(10, 10)

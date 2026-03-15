@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "name": "BadPropTypeSize",
+  "children": [
+    { "type": "LButton", "id": "btn", "props": { "size": "120,50" } }
+  ]
+}

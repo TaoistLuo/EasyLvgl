@@ -4,10 +4,10 @@
 
 namespace lvgl {
 
-class LTabView : public LWidget {
+class LTabView : public LWidgetCRTP<LTabView> {
 public:
     explicit LTabView(lv_obj_t* parent = nullptr)
-        : LWidget(lv_tabview_create(parent ? parent : lv_scr_act())) {}
+        : LWidgetCRTP(lv_tabview_create(parent ? parent : lv_scr_act())) {}
 
     lv_obj_t* add_tab(const char* name) {
         return lv_tabview_add_tab(m_obj, name);
@@ -18,8 +18,18 @@ public:
         return *this;
     }
 
-    uint32_t get_tab_active() const {
+    uint32_t active_tab() const {
         return lv_tabview_get_tab_active(m_obj);
+    }
+
+    LTabView& set_size(int w, int h) {
+        lv_obj_set_size(m_obj, w, h);
+        return *this;
+    }
+
+    LTabView& set_pos(int x, int y) {
+        lv_obj_set_pos(m_obj, x, y);
+        return *this;
     }
 };
 

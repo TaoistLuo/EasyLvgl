@@ -1,0 +1,1 @@
+#include "panels/ComponentPanel.hpp"
