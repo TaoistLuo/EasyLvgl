@@ -1,216 +1,225 @@
-# LVGL++ - Modern C++ Wrapper for LVGL 9.2
+# LVGL++ - LVGL 9.2 的现代 C++ 封装
 
-**Version:** 2.0.0  
-**Date:** 2026-03-15  
-**Status:** ✅ Production Ready
-
----
-
-## 📖 简介
-
-LVGL++ 是 LVGL 9.2 的现代 C++ 封装库，提供：
-
-- ✅ **32+ 组件封装**：覆盖所有常用 LVGL 组件
-- ✅ **链式 API**：流畅的方法调用体验
-- ✅ **类型安全**：编译时类型检查
-- ✅ **RAII 管理**：自动内存管理
-- ✅ **Qt 风格**：熟悉的命名规范
-- ✅ **完整文档**：Doxygen API 文档
+**版本：** 2.0.0  
+**状态：** 已完成  
+**日期：** 2026-04-06
 
 ---
 
-## 🚀 快速开始
+## 项目简介
+
+LVGL++ 是对 LVGL 9.2 的 Header-Only C++ 封装库，提供 RAII 内存管理、链式 API、类型安全的事件系统。同时包含完整的工具链：luic 编译器、Qt 可视化设计器、VSCode 插件。
+
+- **40 个组件**：35 个 Widget + 5 个 Layout，覆盖 LVGL 全部常用组件
+- **零成本抽象**：编译后与手写 C 代码性能一致
+- **完整工具链**：luic 编译器、Qt 可视化设计器、VSCode 插件
+
+---
+
+## 快速开始
 
 ```cpp
 #include "lvgl++/lvgl_widgets.hpp"
 using namespace lvgl;
 
-// 创建按钮
+// 按钮与链式 API
 LButton btn;
-btn.text("Click Me")
-   .size(120, 50)
+btn.set_text("Click Me")
+   .set_size(120, 50)
    .primary()
-   .on_click([](auto*) {
-       printf("Button clicked!\n");
-   });
+   .on_click([](auto*) { printf("Clicked!\n"); });
 
-// 创建进度条
+// 进度条
 LBar bar;
-bar.range(0, 100)
-   .value(75, LV_ANIM_ON)
-   .colors(0xEEEEEE, 0x4CAF50);
+bar.set_range(0, 100)
+   .set_value(75, LV_ANIM_ON)
+   .set_colors(0xEEEEEE, 0x4CAF50);
+
+// 垂直布局
+LVBoxLayout vbox;
+vbox.set_spacing(10)
+    .set_padding(15);
+
+// 样式构建器
+LStyle btn_style;
+btn_style.set_bg_color(0x2196F3)
+         .set_radius(8)
+         .set_pad_all(10)
+         .apply_to(btn.native());
 ```
 
 ---
 
-## 📊 组件统计
+## 组件总览
 
-| 类别 | 数量 | 状态 |
+### 核心组件（9 个）
+
+| 组件 | 文件 | 说明 |
 |------|------|------|
-| **核心组件** | 8 | ✅ 100% |
-| **高频组件** | 6 | ✅ 100% |
-| **中频组件** | 10 | ✅ 100% |
-| **低频组件** | 7 | ✅ 100% |
-| **特殊组件** | 1 | ✅ 100% |
-| **总计** | 32 | ✅ 72.7% |
+| LButton | `widgets/button.hpp` | 按钮，支持 primary/danger/success/warning 主题 |
+| LLabel | `widgets/label.hpp` | 文本标签 |
+| LSlider | `widgets/slider.hpp` | 滑块 |
+| LCheckbox | `widgets/checkbox.hpp` | 复选框 |
+| LSwitch | `widgets/switch.hpp` | 开关 |
+| LComboBox | `widgets/combobox.hpp` | 下拉列表 |
+| LLineEdit | `widgets/lineedit.hpp` | 单行文本输入 |
+| LTextEdit | `widgets/textedit.hpp` | 多行文本输入 |
+| LImage | `widgets/image.hpp` | 图片 |
+
+### 高频组件（6 个）
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| LArc | `widgets/arc.hpp` | 圆弧进度 |
+| LBar | `widgets/bar.hpp` | 进度条 |
+| LSpinner | `widgets/spinner.hpp` | 加载动画 |
+| LLed | `widgets/led.hpp` | LED 指示灯 |
+| LLine | `widgets/line.hpp` | 线条 |
+| LList | `widgets/list.hpp` | 列表 |
+
+### 中频组件（12 个）
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| LTable | `widgets/table.hpp` | 表格 |
+| LTabView | `widgets/tabview.hpp` | 标签页 |
+| LMenu | `widgets/menu.hpp` | 菜单 |
+| LRoller | `widgets/roller.hpp` | 滚轮选择器 |
+| LScale | `widgets/scale.hpp` | 刻度尺 |
+| LSpan | `widgets/span.hpp` | 富文本片段 |
+| LSpinbox | `widgets/spinbox.hpp` | 数字输入框 |
+| LButtonMatrix | `widgets/buttonmatrix.hpp` | 按钮矩阵 |
+| LImageButton | `widgets/imagebutton.hpp` | 图片按钮 |
+| LMsgBox | `widgets/msgbox.hpp` | 消息对话框 |
+| LGroupBox | `widgets/groupbox.hpp` | 分组框 |
+| LRadioButton | `widgets/radiobutton.hpp` | 单选按钮 |
+
+### 低频组件（8 个）
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| LCalendar | `widgets/calendar.hpp` | 日历 |
+| LChart | `widgets/chart.hpp` | 图表 |
+| LCanvas | `widgets/canvas.hpp` | 画布 |
+| LKeyboard | `widgets/keyboard.hpp` | 虚拟键盘 |
+| LAnimImage | `widgets/animimage.hpp` | 动画图片 |
+| LTileView | `widgets/tileview.hpp` | 平铺视图 |
+| LWin | `widgets/win.hpp` | 窗口 |
+| LLottie | `widgets/lottie.hpp` | Lottie 动画 |
+
+### 布局组件（5 个）
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| LVBoxLayout | `layouts/vbox_layout.hpp` | 垂直 Flex 布局 |
+| LHBoxLayout | `layouts/hbox_layout.hpp` | 水平 Flex 布局 |
+| LGridLayout | `layouts/grid_layout.hpp` | 网格布局 |
+| LFormLayout | `layouts/form_layout.hpp` | 表单布局 |
+| LStackedLayout | `layouts/stacked_layout.hpp` | 堆叠布局 |
 
 ---
 
-## 📁 项目结构
+## 核心特性
 
-```
-lv_port_linux/
-├── lvgl++/                    # LVGL++ 源代码
-│   ├── core/                  # 核心功能
-│   │   ├── widget.hpp         # 基础组件类
-│   │   ├── style.hpp          # 样式系统
-│   │   ├── event.hpp          # 事件系统
-│   │   └── signal_handler.hpp # 信号处理
-│   ├── widgets/               # 组件封装（32个）
-│   ├── containers/            # 容器组件
-│   ├── lvgl_core.hpp          # 核心头文件
-│   └── lvgl_widgets.hpp       # 组件总入口
-├── examples/                  # 示例程序（8个）
-│   ├── layer1_demo.cpp
-│   ├── layer2_demo.cpp
-│   ├── complete_demo.cpp
-│   ├── components_basic_demo.cpp
-│   ├── components_advanced_demo.cpp
-│   ├── components_containers_demo.cpp
-│   ├── all_components_demo.cpp
-│   └── untested_components_demo.cpp
-├── docs/                      # 文档
-│   ├── design/                # 设计文档
-│   ├── guides/                # 使用指南
-│   ├── reports/               # 报告文档
-│   └── api/                   # API 文档
-├── bin/                       # 编译输出
-└── build/                     # 构建目录
-```
+### 1. RAII 内存管理
 
----
-
-## 🔧 编译和运行
-
-### 编译所有示例
-
-```bash
-cd build
-cmake ..
-make -j4
-```
-
-### 运行示例
-
-```bash
-cd bin
-./components_basic_demo      # 基础组件演示
-./components_advanced_demo   # 高级组件演示
-./complete_demo              # 完整功能演示
-```
-
----
-
-## 📚 文档
-
-### 设计文档
-- [00-project-overview.md](docs/design/00-project-overview.md) - 项目概述
-- [01-architecture-design.md](docs/design/01-architecture-design.md) - 架构设计
-- [02-layer1-design.md](docs/design/02-layer1-design.md) - Layer 1 设计
-- [03-layer2-design.md](docs/design/03-layer2-design.md) - Layer 2 设计
-- [04-layer3-design.md](docs/design/04-layer3-design.md) - Layer 3 规划
-- [05-checklist.md](docs/design/05-checklist.md) - 自检清单
-- [06-implementation-progress.md](docs/design/06-implementation-progress.md) - 实施进度
-
-### 使用指南
-- [SIGNAL_HANDLING.md](docs/guides/SIGNAL_HANDLING.md) - 信号处理指南
-
-### 报告文档
-- [COMPONENT_COMPLETION_REPORT.md](docs/reports/COMPONENT_COMPLETION_REPORT.md) - 组件封装完成报告
-- [CTRL_C_FIX_COMPLETE.md](docs/reports/CTRL_C_FIX_COMPLETE.md) - Ctrl+C 修复报告
-
-### API 文档
-- [README.md](docs/api/README.md) - API 概览
-
----
-
-## ✨ 核心特性
-
-### 1. 链式 API
-```cpp
-LButton btn;
-btn.text("Click")
-   .size(100, 50)
-   .pos(10, 10)
-   .primary()
-   .on_click([](auto*) { /* ... */ });
-```
-
-### 2. 类型安全
-```cpp
-LSlider slider;
-slider.range(0, 100)      // 编译时类型检查
-      .value(50)
-      .on_change([](auto* e) { /* ... */ });
-```
-
-### 3. RAII 管理
 ```cpp
 {
-    LButton btn;  // 自动创建
+    LButton btn;  // 自动创建 lv_button_create()
     // ...
-}  // 自动销毁，无需手动释放
+}   // 离开作用域自动 lv_obj_delete()
 ```
 
-### 4. 事件处理
+### 2. 事件处理
+
 ```cpp
-btn.on_click([](lv_event_t* e) {
+btn.on_click([](auto*) {
     printf("Clicked!\n");
+});
+
+// 通用事件连接
+connect_event(obj, LV_EVENT_VALUE_CHANGED, [](lv_event_t* e) {
+    // 处理值变化
 });
 ```
 
----
+### 3. 布局
 
-## 🎯 已封装组件
+```cpp
+LVBoxLayout vbox;
+vbox.set_spacing(10)
+    .set_padding(15)
+    .set_size(300, 400);
 
-### 核心组件（8个）
-- LButton, LLabel, LSlider, LCheckbox
-- LSwitch, LDropdown, LTextArea, LImage
-
-### 高频组件（6个）
-- LArc, LBar, LSpinner, LLed, LLine, LList
-
-### 中频组件（10个）
-- LTable, LTabView, LMenu, LRoller, LScale
-- LSpan, LSpinbox, LButtonMatrix, LImageButton, LMsgBox
-
-### 低频组件（7个）
-- LCalendar, LChart, LCanvas, LKeyboard
-- LAnimImage, LTileView, LWin
-
-### 特殊组件（1个）
-- LLottie（需要 LV_USE_LOTTIE）
+LHBoxLayout hbox;
+hbox.set_spacing(5)
+    .set_align(LV_ALIGN_CENTER);
+```
 
 ---
 
-## 🐛 已知问题
+## 工具链
 
-- ✅ Ctrl+C 崩溃问题已修复
-- ✅ 所有组件测试通过
-- ✅ 内存泄漏已修复
+### luic 编译器
+
+将 `.lui`（JSON）文件编译为 C++ 代码，零运行时开销。详见 [luic 指南](docs/guides/luic_guild.md)。
+
+### Qt 可视化设计器
+
+桌面应用，拖拽设计 UI，自动保存为 `.lui` 文件。位于 `tools/lvgl-designer/`。
+
+详见 [DEVELOPMENT_GUIDELINES.md](DEVELOPMENT_GUIDELINES.md) 了解设计原则。
+
+### VSCode 插件
+
+在 VSCode 中打开 `.lui` 文件时自动启动可视化编辑器。位于 `vscode-lvgl-designer/`。
+
+详见 [VSCode 插件指南](docs/guides/vscode_plugin_guide.md)。
 
 ---
 
-## 📄 许可证
+## 项目结构
+
+```
+lv_port_linux/
+├── lvgl++/                     # C++ 封装库（Header-Only）
+│   ├── core/                   # Layer 1：核心基础设施
+│   ├── widgets/                # Layer 2：35 个 Widget
+│   ├── layouts/                # Layer 2：5 个 Layout
+│   ├── lvgl_core.hpp           # Layer 1 入口
+│   └── lvgl_widgets.hpp        # Layer 2 入口
+├── tools/
+│   ├── luic/                   # luic 编译器（C++）
+│   └── lvgl-designer/          # Qt 可视化设计器
+├── vscode-lvgl-designer/       # VSCode 插件
+├── ui/                         # .lui 界面描述文件
+├── ui_generated/               # luic 自动生成的 C++ 代码
+├── examples/                   # 示例程序
+├── docs/                       # 文档
+└── tests/                      # 测试
+```
+
+---
+
+## 文档
+
+### 设计文档
+
+- [project-overview.md](docs/design/project-overview.md) - 项目概述
+- [architecture-design.md](docs/design/architecture-design.md) - 架构设计
+- [layer1-design.md](docs/design/layer1-design.md) - Layer 1 核心设计
+- [layer2-design.md](docs/design/layer2-design.md) - Layer 2 组件设计
+- [json-ui-format.md](docs/design/json-ui-format.md) - JSON UI 格式规范
+
+### 使用指南
+
+- [signal_handling.md](docs/guides/signal_handling.md) - 信号处理与优雅退出
+- [coding_style.md](docs/guides/coding_style.md) - 编码规范
+- [luic_guild.md](docs/guides/luic_guild.md) - luic 编译器指南
+- [vscode_plugin_guide.md](docs/guides/vscode_plugin_guide.md) - VSCode 插件指南
+
+---
+
+## 许可证
 
 MIT License
-
----
-
-## 👥 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
----
-
-**最后更新：** 2026-03-15

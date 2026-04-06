@@ -50,7 +50,7 @@ int main() {
     SignalHandler signal_handler;
 
     LButton btn;
-    btn.text("Click Me").size(150, 50);
+    btn.set_text("Click Me").set_size(150, 50);
     
     printf("Press Ctrl+C to exit gracefully.\n");
     
@@ -198,7 +198,7 @@ int main() {
     SignalHandler signal_handler;
 
     LButton btn;
-    btn.text("Hello").size(100, 40);
+    btn.set_text("Hello").set_size(100, 40);
     
     while(signal_handler.is_running()) {
         lv_timer_handler();
@@ -215,7 +215,7 @@ int main() {
 SignalHandler signal_handler;
 
 LButton exit_btn;
-exit_btn.text("Exit")
+exit_btn.set_text("Exit")
         .on_click([&signal_handler](auto*) {
             signal_handler.request_exit();  // 手动请求退出
         });
@@ -325,10 +325,8 @@ virtual ~LWidget() {
 
 ## 📚 相关文档
 
-- [LVGL++ 编码规范](CODING_STYLE.md)
-- [组件使用示例](../COMPONENT_EXAMPLES.md)
-- [项目完成报告](../PROJECT_FINAL_COMPLETE.md)
-
+- [LVGL++ 编码规范](coding_style.md)
+- [luic 编译器指南](luic_guild.md)
 ---
 
 ## 🎉 总结

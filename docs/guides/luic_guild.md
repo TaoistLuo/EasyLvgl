@@ -1,6 +1,6 @@
 # luic 编译器使用指南
 
-luic 是 LVGL++ 的 UI 编译器，将 .lui 文件（JSON 格式）编译为 C++ 代码。
+luic 是 LVGL++ 的 UI 编译器（C++ 实现），将 .lui 文件（JSON 格式）编译为 C++ 代码。
 
 ## 快速开始
 
@@ -31,7 +31,7 @@ luic 是 LVGL++ 的 UI 编译器，将 .lui 文件（JSON 格式）编译为 C++
 
 ```bash
 # 手动编译
-bin/luic ui/my_screen.lui -o ui_generated/my_screen_ui.hpp
+tools/luic/bin/luic ui/my_screen.lui -o ui_generated/my_screen_ui.hpp
 
 # 或者用 make 自动编译（推荐）
 cd build && make ui_compile
@@ -78,7 +78,7 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | 字段 | 类型 | 必需 | 说明 |
 |------|------|------|------|
 | version | string | 是 | 格式版本，当前 "1.0" |
-| name | string | 是 | 屏幕名称，用于生成类名 |
+| name | string | 是 | 屏幕名称，用于生成类名（如 MainScreen → MainScreen_UI） |
 | size | [int, int] | 否 | 屏幕尺寸 [宽, 高] |
 | children | array | 是 | 子组件列表 |
 
@@ -86,41 +86,83 @@ luic <input.lui> [-o output.hpp] [--verbose]
 
 | 字段 | 类型 | 必需 | 说明 |
 |------|------|------|------|
-| type | string | 是 | 组件类型（如 "LButton"） |
-| id | string | 是 | 组件 ID，用于生成成员变量名 |
+| type | string | 是 | 组件类型（如 "LButton"，使用实际 C++ 类名） |
+| id | string | 是 | 组件 ID，用于生成成员变量名（如 btn_ok → m_btn_ok） |
 | props | object | 否 | 属性键值对 |
 | events | array | 否 | 事件列表（如 ["clicked"]） |
 | children | array | 否 | 子组件（仅容器组件） |
 
 ### 支持的组件
 
+> **总计 34 个组件** 已在 ComponentRegistry 中注册。
+
 #### 核心组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LButton | text, size, pos, theme | clicked |
-| LLabel | text, color, font_size, pos | - |
-| LSlider | range, value, size, pos | value_changed |
+| LButton | text, size, pos, theme, disabled | clicked, pressed, released |
+| LLabel | text, color, font_size, long_mode, pos | - |
+| LSlider | range, value, left_value, mode, pos | value_changed |
 | LCheckbox | text, checked, pos | value_changed |
-| LSwitch | checked, pos | value_changed |
-| LDropdown | options, selected, size, pos | value_changed |
-| LTextArea | text, placeholder, one_line, size, pos | value_changed |
-| LImage | src, size, pos | - |
+| LSwitch | checked, enabled, pos | value_changed |
+| LComboBox | options, selected, direction, text, pos | value_changed |
+| LLineEdit | text, placeholder, password_mode, max_length, pos | value_changed, ready |
+| LTextEdit | text, placeholder, password_mode, max_length, pos | value_changed, ready |
+| LImage | src, rotation, scale, pivot, offset, opacity, pos | clicked |
 
 #### 高频组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LArc | range, value, rotation, size, pos | value_changed |
-| LBar | range, value, size, pos | - |
-| LSpinner | size, pos | - |
+| LArc | range, value, rotation, mode, bg_angles, angles, pos | value_changed |
+| LBar | range, value, start_value, mode, orientation, pos | - |
+| LSpinner | color, size, pos | - |
 | LLed | color, brightness, on, size, pos | - |
-| LLine | pos | - |
-| LList | size, pos | - |
+| LLine | width, color, y_invert, size, pos | - |
 
-#### 容器组件
+#### 输入组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LVStack | spacing, padding, size, pos | - |
-| LHStack | spacing, padding, size, pos | - |
+| LRoller | options, selected, visible_row_count, pos | value_changed |
+| LSpinbox | range, value, step, digit_format, rollover, pos | value_changed |
+| LButtonMatrix | one_checked, pos | value_changed |
+| LKeyboard | mode, popovers, pos | - |
+| LRadioButton | text, checked, pos | value_changed |
+
+#### 数据展示组件
+| 类型 | 属性 | 事件 |
+|------|------|------|
+| LTable | row_count, column_count, pos | - |
+| LChart | type, point_count, div_line_count, update_mode, pos | - |
+| LScale | mode, range, total_tick_count, major_tick_every, rotation, pos | - |
+| LCalendar | today_date, showed_date, pos | - |
+| LCanvas | size, pos | - |
+
+#### 布局容器
+| 类型 | 属性 | 事件 |
+|------|------|------|
+| LVBoxLayout | spacing, padding, align_main, align_cross, pos | - |
+| LHBoxLayout | spacing, padding, align_main, align_cross, pos | - |
+| LGridLayout | columns, rows, col_spacing, row_spacing, pos | - |
+| LFormLayout | label_width, row_spacing, col_spacing, pos | - |
+| LStackedLayout | current_index, pos | - |
+
+#### 其他容器
+| 类型 | 属性 | 事件 |
+|------|------|------|
+| LList | size, pos | - |
+| LTabView | tab_bar_position, tab_bar_size, pos | - |
+| LMenu | mode_header, mode_root_back_button, pos | - |
+| LTileView | size, pos | - |
+| LWin | size, pos | - |
+| LGroupBox | title, padding, size, pos | - |
+
+#### 特殊组件
+| 类型 | 属性 | 事件 |
+|------|------|------|
+| LMsgBox | title, text | - |
+| LSpan | mode, overflow, indent, pos | - |
+| LAnimImage | duration, repeat_count, pos | - |
+| LImageButton | size, pos | clicked |
+| LLottie | src, loop, speed, pos | ready |
 
 ### 属性类型
 

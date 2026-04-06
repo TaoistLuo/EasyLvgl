@@ -15,11 +15,12 @@
 ```cpp
 // ✅ 正确
 class LButton { };
-class LVStack { };
-class LTextArea { };
-class LImageButton { };
+class LVBoxLayout { };
+class LComboBox { };
+class LLineEdit { };
 class LWidget { };
 class LStyle { };
+class LImageButton { };
 
 // ❌ 错误
 class Button { };           // 缺少 L 前缀
@@ -27,6 +28,9 @@ class button { };           // 不应使用小写
 class l_button { };         // 不应使用蛇形
 class lButton { };          // L 应该是前缀，不是驼峰的一部分
 ```
+
+> **注意：** 布局类使用具体描述名，如 `LVBoxLayout`、`LHBoxLayout`（不是 LVStack/LHStack）。
+> 输入组件使用 `LLineEdit`（单行）和 `LTextEdit`（多行），下拉列表使用 `LComboBox`（不是 LDropdown）。
 
 ### 1.2 结构体名（Struct Names）
 
@@ -120,7 +124,7 @@ bool IsEnabled = true;        // 不应使用大驼峰
 
 ```cpp
 // ✅ 正确
-class Button {
+class LButton {
 private:
     lv_obj_t* m_obj;
     lv_obj_t* m_label;
@@ -131,7 +135,7 @@ private:
 };
 
 // ❌ 错误
-class Button {
+class LButton {
 private:
     lv_obj_t* obj;           // 缺少 m_ 前缀
     lv_obj_t* _label;        // 不应使用 _ 前缀
@@ -144,7 +148,7 @@ private:
 **保护成员和公有成员：** 同样使用 `m_` 前缀
 
 ```cpp
-class Widget {
+class LWidget {
 protected:
     lv_obj_t* m_obj;         // ✅ 保护成员
     
@@ -155,7 +159,7 @@ public:
 
 ### 1.6 函数名（Function Names）
 
-**规则：** 蛇形命名法（snake_case）
+**规则：** 蛇形命名法（snake_case），setter 使用 `set_` 前缀
 
 ```cpp
 // ✅ 正确
@@ -163,6 +167,7 @@ void set_text(const char* text);
 int get_width() const;
 bool is_enabled() const;
 void on_click_handler();
+void bind_events();
 
 // ❌ 错误
 void SetText(const char* text);      // 不应使用大驼峰
@@ -206,12 +211,12 @@ namespace Lvgl { };                  // 不应使用大驼峰
 
 ```cpp
 // ✅ 正确
-#define LVGLPP_VERSION "1.0.0"
+#define LVGLPP_VERSION "2.0.0"
 #define LVGLPP_MAX_WIDGETS 100
 #define LVGLPP_ENABLE_DEBUG 1
 
 // ❌ 错误
-#define version "1.0.0"              // 缺少前缀，不应小写
+#define version "2.0.0"              // 缺少前缀，不应小写
 #define MaxWidgets 100               // 不应使用大驼峰
 ```
 
@@ -226,7 +231,7 @@ namespace Lvgl { };                  // 不应使用大驼峰
 
 ```cpp
 // ✅ 正确
-class Button {
+class LButton {
 public:
     void set_text(const char* text) {
         if (text != nullptr) {
@@ -247,7 +252,7 @@ if (condition) {
     do_something();
 }
 
-class Widget {
+class LWidget {
 public:
     void method() {
         // ...
@@ -292,18 +297,18 @@ if(x>0){                 // 缺少空格
 
 ```cpp
 // ✅ 正确
-button.text("Click Me")
-      .size(100, 50)
-      .primary()
-      .on_click([](auto* e) {
-          printf("Clicked!\n");
-      });
+btn.set_text("Click Me")
+   .set_size(100, 50)
+   .primary()
+   .on_click([](auto* e) {
+       printf("Clicked!\n");
+   });
 
 // ✅ 也可以（不超过 120 字符）
-button.text("Click Me").size(100, 50).primary().on_click([](auto* e) { printf("Clicked!\n"); });
+btn.set_text("Click Me").set_size(100, 50).primary();
 
 // ❌ 错误（超过 120 字符）
-button.text("Very Long Text Here").size(100, 50).primary().secondary().on_click([](auto* e) { printf("Clicked!\n"); });
+btn.set_text("Very Long Text Here").set_size(100, 50).primary().secondary().on_click([](auto* e) { printf("Clicked!\n"); });
 ```
 
 ---
@@ -334,8 +339,8 @@ button.text("Very Long Text Here").size(100, 50).primary().secondary().on_click(
  * 
  * @example
  * LButton btn;
- * btn.text("Click Me")
- *    .size(100, 50)
+ * btn.set_text("Click Me")
+ *    .set_size(100, 50)
  *    .primary()
  *    .on_click([](auto* e) {
  *        printf("Clicked!\n");
@@ -354,7 +359,7 @@ class LButton : public LWidget {
  * @param text Text content (null-terminated string)
  * @return LButton& Reference for chaining
  */
-LButton& text(const char* text);
+LButton& set_text(const char* text);
 ```
 
 ### 3.4 成员变量注释
@@ -364,8 +369,8 @@ class LButton {
 private:
     lv_obj_t* m_obj;      ///< Native LVGL object
     lv_obj_t* m_label;    ///< Button text label
-    int m_width;          ///< Button width in pixels
-    int m_height;         ///< Button height in pixels
+    int m_width;           ///< Button width in pixels
+    int m_height;          ///< Button height in pixels
 };
 ```
 
@@ -442,12 +447,12 @@ private:
 // ✅ 正确
 class LButton {
 public:
-    LButton& text(const char* text) {
+    LButton& set_text(const char* text) {
         // ...
         return *this;
     }
     
-    LButton& size(int w, int h) {
+    LButton& set_size(int w, int h) {
         // ...
         return *this;
     }
@@ -539,7 +544,7 @@ public:
      * @param text Text content
      * @return LButton& Reference for chaining
      */
-    LButton& text(const char* text) {
+    LButton& set_text(const char* text) {
         lv_label_set_text(m_label, text);
         return *this;
     }
@@ -550,7 +555,7 @@ public:
      * @param height Height in pixels
      * @return LButton& Reference for chaining
      */
-    LButton& size(int width, int height) {
+    LButton& set_size(int width, int height) {
         lv_obj_set_size(m_obj, width, height);
         return *this;
     }
@@ -561,7 +566,7 @@ public:
      */
     LButton& primary() {
         LStyle style;
-        style.bg_color(0x2196F3).apply_to(m_obj);
+        style.set_bg_color(0x2196F3).apply_to(m_obj);
         return *this;
     }
     
@@ -586,16 +591,19 @@ public:
 
 | 类型 | 规则 | 示例 |
 |------|------|------|
-| 类名 | `L` + 大驼峰 | `LButton`, `LVStack`, `LTextArea` |
+| 类名 | `L` + 大驼峰 | `LButton`, `LVBoxLayout`, `LComboBox` |
 | 结构体名 | 蛇形 + `_t` | `widget_config_t`, `event_data_t` |
 | 枚举名 | 蛇形 + `_e` | `button_state_e`, `align_mode_e` |
 | 枚举值 | 全大写 + 前缀 | `BUTTON_STATE_NORMAL` |
 | 变量名 | 蛇形 | `button_count`, `user_name` |
 | 成员变量 | `m_` + 蛇形 | `m_obj`, `m_width`, `m_is_enabled` |
-| 函数名 | 蛇形 | `set_text()`, `get_width()` |
+| 函数名 | 蛇形 | `set_text()`, `get_width()`, `bind_events()` |
 | 常量名 | 全大写 | `MAX_SIZE`, `DEFAULT_WIDTH` |
 | 命名空间 | 全小写 | `lvgl`, `internal` |
 | 宏定义 | 全大写 + 前缀 | `LVGLPP_VERSION` |
+
+> **关于布局类名：** 早期设计使用 `LVStack`/`LHStack`，实际实现中使用更具描述性的 `LVBoxLayout`/`LHBoxLayout`。
+> 两者都遵循 `L` + PascalCase 的命名规则。
 
 ---
 
@@ -603,12 +611,12 @@ public:
 
 在提交代码前，请确认：
 
-- [ ] 类名使用 `L` + 大驼峰（如 `LButton`）
+- [ ] 类名使用 `L` + 大驼峰（如 `LButton`、`LVBoxLayout`）
 - [ ] 结构体名使用蛇形 + `_t`
 - [ ] 枚举名使用蛇形 + `_e`
 - [ ] 变量名使用蛇形
 - [ ] 成员变量使用 `m_` + 蛇形
-- [ ] 函数名使用蛇形
+- [ ] 函数名使用蛇形，setter 用 `set_` 前缀
 - [ ] 使用 4 空格缩进
 - [ ] 左大括号不换行
 - [ ] 每行不超过 120 字符
@@ -647,6 +655,6 @@ insert_final_newline = true
 
 ---
 
-**版本：** 1.0  
+**版本：** 2.0  
 **日期：** 2026-03-15  
 **状态：** 正式发布

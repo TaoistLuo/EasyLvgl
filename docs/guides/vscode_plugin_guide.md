@@ -5,6 +5,12 @@
 LVGL++ Designer 是一个 VSCode 插件，提供可视化编辑 .lui 文件的能力。
 拖拽组件到画布，编辑属性，保存后自动生成 C++ 代码。
 
+> **注意：** 除了 VSCode 插件，你也可以使用 Qt 桌面设计器来编辑 .lui 文件：
+> ```bash
+> ./bin/lvgl-designer
+> ```
+> Qt 设计器支持 LVGL 真实渲染预览，功能更完整。
+
 ## 环境要求
 
 - Node.js 18+
@@ -28,6 +34,8 @@ npm run compile
 # 在 VSCode 中按 F5 启动 Extension Development Host
 # 这会打开一个新的 VSCode 窗口，插件已加载
 ```
+
+> **注意：** 修改 `src/` 下的 TypeScript 文件后，需要重新运行 `npm run compile` 来更新 `out/extension.js`。
 
 ### 方式 2：打包为 .vsix 安装包
 
@@ -153,16 +161,19 @@ public:
 | LBar | 📊 | 进度条 |
 | LCheckbox | ☑️ | 复选框 |
 | LSwitch | 🔀 | 开关 |
-| LDropdown | 📋 | 下拉列表 |
-| LTextArea | 📄 | 文本输入 |
+| LComboBox | 📋 | 下拉列表 |
+| LLineEdit | 📄 | 单行文本输入 |
+| LTextEdit | 📄 | 多行文本输入 |
 | LArc | ⭕ | 圆弧进度 |
 | LSpinner | 🔄 | 加载动画 |
 | LLed | 💡 | LED 指示灯 |
-| LVStack | 📦 | 垂直布局 |
-| LHStack | 📦 | 水平布局 |
+| LVBoxLayout | 📦 | 垂直布局 |
+| LHBoxLayout | 📦 | 水平布局 |
 | LTable | 📋 | 表格 |
 | LChart | 📈 | 图表 |
 | LImage | 🖼️ | 图片 |
+
+> **总计 34 个组件** 已在 ComponentRegistry 中注册。
 
 ## 故障排除
 
@@ -176,9 +187,12 @@ public:
 - 右键文件 → "Open With..." → 选择 "LVGL++ Designer"
 
 ### 编译失败
-- 确认 `bin/luic` 存在且可执行
-- 运行 `cd build && make luic` 重新编译 luic
+- 确认 `tools/luic/bin/luic` 存在且可执行
+- 运行 `cd tools/luic/build && cmake .. && make` 重新编译 luic
 - 检查 .lui 文件 JSON 格式是否正确
+
+### out/extension.js 未更新
+- 运行 `cd vscode-lvgl-designer && npm run compile` 重新编译
 
 ## 项目结构
 
@@ -187,7 +201,9 @@ vscode-lvgl-designer/
 ├── package.json              # 插件配置
 ├── tsconfig.json             # TypeScript 配置
 ├── README.md                 # 说明文档
-└── src/
-    ├── extension.ts          # 插件入口
-    └── LuiEditorProvider.ts  # 可视化编辑器
+├── src/
+│   ├── extension.ts          # 插件入口
+│   └── LuiEditorProvider.ts  # 可视化编辑器
+└── out/
+    └── extension.js          # 编译产物（npm run compile 生成）
 ```
