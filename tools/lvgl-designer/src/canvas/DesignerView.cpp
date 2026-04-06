@@ -6,9 +6,10 @@ namespace designer {
 DesignerView::DesignerView(QWidget* parent)
     : QGraphicsView(parent) {
     setRenderHint(QPainter::Antialiasing);
-    setDragMode(QGraphicsView::NoDrag);
+    setAcceptDrops(true);
+    setDragMode(QGraphicsView::RubberBandDrag);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-    setBackgroundBrush(QColor(0x1a, 0x1a, 0x1a));
+    setBackgroundBrush(QColor(0xb8, 0xb8, 0xb8));
     setFrameShape(QFrame::NoFrame);
 }
 

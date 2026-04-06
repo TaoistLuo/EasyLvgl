@@ -5,6 +5,9 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 void print_usage() {
     printf("Usage: luic <input.lui> [-o output.hpp] [--verbose]\n");
@@ -18,6 +21,31 @@ std::string replace_ext(const std::string& path, const std::string& new_ext) {
     auto dot = path.rfind('.');
     if (dot == std::string::npos) return path + new_ext;
     return path.substr(0, dot) + new_ext;
+}
+
+bool mkdir_p(const std::string& path) {
+    for (size_t i = 1; i < path.size(); i++) {
+        if (path[i] == '/') {
+            std::string dir = path.substr(0, i);
+            struct stat st;
+            if (stat(dir.c_str(), &st) != 0) {
+                if (mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST) {
+                    fprintf(stderr, "luic: cannot create directory %s: %s\n",
+                            dir.c_str(), strerror(errno));
+                    return false;
+                }
+            }
+        }
+    }
+    struct stat st;
+    if (stat(path.c_str(), &st) != 0) {
+        if (mkdir(path.c_str(), 0755) != 0 && errno != EEXIST) {
+            fprintf(stderr, "luic: cannot create directory %s: %s\n",
+                    path.c_str(), strerror(errno));
+            return false;
+        }
+    }
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -56,7 +84,6 @@ int main(int argc, char* argv[]) {
         printf("luic: %s -> %s\n", input_file.c_str(), output_file.c_str());
     }
 
-    // 1. Parse
     luic::Parser parser;
     auto doc = parser.parse(input_file);
     if (!doc) {
@@ -68,7 +95,6 @@ int main(int argc, char* argv[]) {
         printf("luic: parsed '%s' (%zu nodes)\n", doc->name.c_str(), nodes.size());
     }
 
-    // 2. Validate
     luic::ComponentRegistry registry;
     luic::Validator validator(registry);
     auto errors = validator.validate(*doc);
@@ -80,11 +106,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 3. Generate
     luic::CodeGenerator codegen(registry);
     std::string code = codegen.generate(*doc);
 
-    // 4. Write output
+    auto slash = output_file.rfind('/');
+    if (slash != std::string::npos) {
+        if (!mkdir_p(output_file.substr(0, slash))) {
+            return 1;
+        }
+    }
+
     std::ofstream out(output_file);
     if (!out.is_open()) {
         fprintf(stderr, "luic: cannot write to %s\n", output_file.c_str());

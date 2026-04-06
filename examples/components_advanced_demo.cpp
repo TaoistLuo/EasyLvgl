@@ -22,6 +22,9 @@ int main(void) {
          .set_color(0x2196F3);
 
     LTable table;
+        table.set_row_count(4)
+             .set_column_count(3)
+             .set_size(300, 150);
     table.set_row_count(4)
          .set_column_count(3)
          .set_pos(10, 50)

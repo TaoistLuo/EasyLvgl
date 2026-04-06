@@ -75,12 +75,8 @@ public:
     }
 
     LSwitch& set_colors(uint32_t bg_color, uint32_t checked_color) {
-        LStyle style_default;
-        style_default.set_bg_color(bg_color).apply_to(m_obj, LV_PART_MAIN | LV_STATE_DEFAULT);
-        
-        LStyle style_checked;
-        style_checked.set_bg_color(checked_color).apply_to(m_obj, LV_PART_INDICATOR | LV_STATE_CHECKED);
-        
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(bg_color), LV_PART_MAIN);
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(checked_color), LV_PART_INDICATOR);
         return *this;
     }
 };

@@ -2,13 +2,17 @@
 #include <QWidget>
 #include <QFormLayout>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QLabel>
 #include <QScrollArea>
 #include <QGroupBox>
-#include "canvas/WidgetItem.hpp"
-#include "canvas/DesignerScene.hpp"
+#include <QPushButton>
+#include <QColorDialog>
+#include <QUndoStack>
+#include "model/LuiDocument.hpp"
+#include "model/ComponentSchema.hpp"
 #include "commands/UndoCommands.hpp"
 
 namespace designer {
@@ -18,7 +22,8 @@ class PropertyPanel : public QScrollArea {
     QWidget* m_content;
     QVBoxLayout* m_topLayout;
     std::string m_currentId;
-    DesignerScene* m_scene = nullptr;
+    LuiDocument* m_doc = nullptr;
+    QUndoStack* m_undoStack = nullptr;
 
 public:
     explicit PropertyPanel(QWidget* parent = nullptr) : QScrollArea(parent) {
@@ -28,25 +33,24 @@ public:
         m_topLayout->setSpacing(4);
         setWidget(m_content);
         setWidgetResizable(true);
+        m_topLayout->addWidget(new QLabel("Select a widget"));
+        setContextMenuPolicy(Qt::NoContextMenu);
     }
 
-    void setScene(DesignerScene* scene) { m_scene = scene; }
+    void setDocument(LuiDocument* doc) { m_doc = doc; }
+    void setUndoStack(QUndoStack* stack) { m_undoStack = stack; }
+    std::string currentId() const { return m_currentId; }
 
-    void showWidget(WidgetItem* item) {
+    void showWidget(WidgetNode* node) {
         clearLayout();
 
-        if (!item || !m_scene || !m_scene->document()) {
+        if (!node || !m_doc) {
             m_currentId.clear();
             m_topLayout->addWidget(new QLabel("Select a widget"));
             return;
         }
 
-        m_currentId = item->nodeId();
-        auto* node = m_scene->document()->findById(m_currentId);
-        if (!node) {
-            m_topLayout->addWidget(new QLabel("Node not found"));
-            return;
-        }
+        m_currentId = node->id;
 
         auto* idGroup = new QGroupBox("Identity");
         auto* idLayout = new QFormLayout(idGroup);
@@ -58,14 +62,13 @@ public:
 
         auto* idField = new QLineEdit(QString::fromStdString(node->id));
         connect(idField, &QLineEdit::editingFinished, [this, idField]() {
-            if (!m_scene || !m_scene->document()) return;
-            auto* n = m_scene->document()->findById(m_currentId);
+            if (!m_doc) return;
+            auto* n = m_doc->findById(m_currentId);
             if (n) {
                 n->id = idField->text().toStdString();
                 m_currentId = n->id;
-                m_scene->document()->markModified();
-                m_scene->scheduleRebuild();
-                emit m_scene->documentModified();
+                m_doc->markModified();
+                emit documentModified();
             }
         });
         idLayout->addRow("ID", idField);
@@ -80,7 +83,6 @@ public:
             for (auto& prop : group.props) {
                 QString qkey = QString::fromStdString(prop.name);
                 std::string key = prop.name;
-
                 QVariant val = readProp(node, key, prop.defaultVal);
 
                 if (prop.type == "bool") {
@@ -90,6 +92,51 @@ public:
                         writeProp(key, QVariant(checked));
                     });
                     glayout->addRow(qkey, cb);
+                } else if (prop.type == "hex") {
+                    auto* container = new QWidget();
+                    auto* hbox = new QHBoxLayout(container);
+                    hbox->setContentsMargins(0, 0, 0, 0);
+                    hbox->setSpacing(4);
+
+                    auto* swatch = new QPushButton();
+                    swatch->setFixedSize(32, 22);
+                    auto* hexField = new QLineEdit(val.toString());
+
+                    QString hexStr = val.toString();
+                    hexStr.remove("0x").remove("0X");
+                    QColor initialColor = QColor(hexStr.toInt(nullptr, 16));
+                    if (!initialColor.isValid()) initialColor = QColor(0, 0, 0);
+                    swatch->setStyleSheet(QString("background-color: %1; border: 1px solid #555; border-radius: 2px;").arg(initialColor.name()));
+
+                    connect(swatch, &QPushButton::clicked, [this, hexField, swatch]() {
+                        QString curHex = hexField->text();
+                        curHex.remove("0x").remove("0X");
+                        QColor curColor = QColor(curHex.toInt(nullptr, 16));
+                        if (!curColor.isValid()) curColor = QColor(0, 0, 1);
+
+                        QColor chosen = QColorDialog::getColor(curColor, nullptr, "Select Color");
+                        if (chosen.isValid()) {
+                            QString newHex = "0x" + QString("%1%2%3")
+                                .arg(chosen.red(), 2, 16, QChar('0'))
+                                .arg(chosen.green(), 2, 16, QChar('0'))
+                                .arg(chosen.blue(), 2, 16, QChar('0'))
+                                .toUpper();
+                            hexField->setText(newHex);
+                            swatch->setStyleSheet(QString("background-color: %1; border: 1px solid #555; border-radius: 2px;").arg(chosen.name()));
+                            emit hexField->editingFinished();
+                        }
+                    });
+
+                    connect(hexField, &QLineEdit::editingFinished, [this, hexField, swatch, key]() {
+                        QString colorHex = hexField->text();
+                        colorHex.remove("0x").remove("0X");
+                        QColor c = QColor(colorHex.toInt(nullptr, 16));
+                        if (c.isValid()) {
+                            swatch->setStyleSheet(QString("background-color: %1; border: 1px solid #555; border-radius: 2px;").arg(c.name()));
+                        }
+                        writeProp(key, QVariant(hexField->text()));
+                    });
+                    glayout->addRow(qkey, container);
                 } else if (prop.type == "int_pair" || prop.type == "int_triple") {
                     auto list = val.toList();
                     QString text;
@@ -109,18 +156,12 @@ public:
                 } else {
                     auto* field = new QLineEdit(val.toString());
                     connect(field, &QLineEdit::editingFinished, [this, field, key, prop]() {
-                        QVariant newVal;
-                        if (prop.type == "int") {
-                            newVal = QVariant(field->text().toInt());
-                        } else {
-                            newVal = QVariant(field->text());
-                        }
+                        QVariant newVal = (prop.type == "int") ? QVariant(field->text().toInt()) : QVariant(field->text());
                         writeProp(key, newVal);
                     });
                     glayout->addRow(qkey, field);
                 }
             }
-
             m_topLayout->addWidget(gbox);
         }
 
@@ -133,99 +174,96 @@ public:
         m_topLayout->addWidget(new QLabel("Select a widget"));
     }
 
+signals:
+    void documentModified();
+
 private:
     QVariant readProp(WidgetNode* node, const std::string& key, const QVariant& def) {
+        if (!node) return def;
         if (key == "x") {
-            auto it = node->props.find("pos");
-            if (it != node->props.end() && it->second.toList().size() >= 2)
-                return it->second.toList()[0];
-            return def;
-        }
-        if (key == "y") {
-            auto it = node->props.find("pos");
-            if (it != node->props.end() && it->second.toList().size() >= 2)
-                return it->second.toList()[1];
-            return def;
-        }
-        if (key == "width") {
-            auto it = node->props.find("size");
-            if (it != node->props.end()) {
-                if (it->second.toList().size() >= 2)
-                    return it->second.toList()[0];
-                return it->second;
-            }
-            return def;
-        }
-        if (key == "height") {
-            auto it = node->props.find("size");
-            if (it != node->props.end()) {
-                if (it->second.toList().size() >= 2)
-                    return it->second.toList()[1];
-                return it->second;
-            }
-            return def;
+            return QVariant((int)node->pos().x());
+        } else if (key == "y") {
+            return QVariant((int)node->pos().y());
+        } else if (key == "width") {
+            return QVariant((int)node->size().width());
+        } else if (key == "height") {
+            return QVariant((int)node->size().height());
         }
         auto it = node->props.find(key);
-        return (it != node->props.end()) ? it->second : def;
+        if (it != node->props.end()) return it->second;
+        return def;
     }
 
     void writeProp(const std::string& key, const QVariant& newVal) {
-        if (!m_scene || !m_scene->document()) return;
-        auto* n = m_scene->document()->findById(m_currentId);
-        if (!n) return;
+        if (!m_doc) return;
+        auto* node = m_doc->findById(m_currentId);
+        if (!node) return;
+
+        QVariant oldVal = readProp(node, key, QVariant());
 
         if (key == "x" || key == "y") {
-            auto it = n->props.find("pos");
-            QVariantList pos;
-            if (it != n->props.end() && it->second.toList().size() >= 2) {
-                pos = it->second.toList();
+            QPointF p = node->pos();
+            if (key == "x") p.setX(newVal.toInt());
+            else p.setY(newVal.toInt());
+            QVariantList oldPos, newPos;
+            oldPos.append(QVariant((int)node->pos().x()));
+            oldPos.append(QVariant((int)node->pos().y()));
+            newPos.append(QVariant((int)p.x()));
+            newPos.append(QVariant((int)p.y()));
+            if (m_undoStack) {
+                m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, "pos", QVariant(oldPos), QVariant(newPos)));
             } else {
-                pos.append(QVariant(0));
-                pos.append(QVariant(0));
+                node->setPos(p);
             }
-            if (key == "x") pos[0] = newVal;
-            else pos[1] = newVal;
-            n->props["pos"] = QVariant(pos);
-        } else if (key == "width" || key == "height") {
-            auto it = n->props.find("size");
-            bool square = n->usesSquareSize();
-            if (square) {
-                n->props["size"] = newVal;
+            m_doc->markModified();
+            emit documentModified();
+            return;
+        }
+        if (key == "width" || key == "height") {
+            QSizeF s = node->size();
+            if (key == "width") s.setWidth(newVal.toInt());
+            else s.setHeight(newVal.toInt());
+            QVariant oldSize, newSize;
+            if (node->usesSquareSize()) {
+                oldSize = node->props.count("size") ? node->props["size"] : QVariant((int)node->size().width());
+                newSize = QVariant((int)s.width());
             } else {
-                QVariantList sz;
-                if (it != n->props.end() && it->second.toList().size() >= 2) {
-                    sz = it->second.toList();
-                } else {
-                    sz.append(QVariant(0));
-                    sz.append(QVariant(0));
-                }
-                if (key == "width") sz[0] = newVal;
-                else sz[1] = newVal;
-                n->props["size"] = QVariant(sz);
+                QVariantList oldSl;
+                oldSl.append(QVariant((int)node->size().width()));
+                oldSl.append(QVariant((int)node->size().height()));
+                oldSize = QVariant(oldSl);
+                QVariantList ns;
+                ns.append(QVariant((int)s.width()));
+                ns.append(QVariant((int)s.height()));
+                newSize = QVariant(ns);
             }
+            if (m_undoStack) {
+                m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, "size", oldSize, newSize));
+            } else {
+                node->setSize(s);
+            }
+            m_doc->markModified();
+            emit documentModified();
+            return;
+        }
+
+        if (m_undoStack) {
+            m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, key, oldVal, newVal));
         } else {
-            n->props[key] = newVal;
+            node->props[key] = newVal;
         }
-
-        n->props.erase("_dirty");
-        m_scene->document()->markModified();
-
-        if (m_scene->undoStack()) {
-            m_scene->undoStack()->push(
-                new PropertyChangeCommand(m_scene, m_currentId, key, QVariant(), newVal));
-        }
-
-        m_scene->scheduleRebuild();
-        emit m_scene->documentModified();
+        m_doc->markModified();
+        emit documentModified();
     }
 
     void clearLayout() {
         QLayoutItem* item;
         while ((item = m_topLayout->takeAt(0)) != nullptr) {
             if (item->widget()) {
-                delete item->widget();
+                item->widget()->deleteLater();
+            } else {
+                delete item;
             }
-            delete item;
         }
     }
 };

@@ -7,9 +7,9 @@ namespace lvgl {
 
 class Nested_UI {
 protected:
-    LVStack* m_main_panel = nullptr;
+    LVBoxLayout* m_main_panel = nullptr;
     LLabel* m_header = nullptr;
-    LHStack* m_row1 = nullptr;
+    LHBoxLayout* m_row1 = nullptr;
     LButton* m_btn_ok = nullptr;
     LButton* m_btn_cancel = nullptr;
     LSlider* m_volume = nullptr;
@@ -29,7 +29,7 @@ public:
     void setup(lv_obj_t* parent = nullptr) {
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
-        m_main_panel = new LVStack(root);
+        m_main_panel = new LVBoxLayout(root);
         m_main_panel->set_padding(20)
               .set_pos(40, -50)
               .set_size(518, 378)
@@ -38,7 +38,7 @@ public:
         m_header = new LLabel(m_main_panel->native());
         m_header->set_text("Settings");
 
-        m_row1 = new LHStack(m_main_panel->native());
+        m_row1 = new LHBoxLayout(m_main_panel->native());
         m_row1->set_spacing(10);
 
         m_btn_ok = new LButton(m_row1->native());

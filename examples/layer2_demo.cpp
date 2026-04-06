@@ -30,7 +30,7 @@ int main(void)
 
     printf("=== LVGL++ Layer 2 Demo ===\n");
 
-    LVStack main_container;
+    LVBoxLayout main_container;
     main_container.set_spacing(20)
                   .set_padding(30)
                   .set_size(400, 500)
@@ -46,7 +46,7 @@ int main(void)
             .set_color(0x666666)
             .set_font_size(14);
 
-    LHStack button_row(main_container.native());
+    LHBoxLayout button_row(main_container.native());
     button_row.set_spacing(10);
 
     LButton btn1(button_row.native());
@@ -73,7 +73,7 @@ int main(void)
             printf("Danger button clicked!\n");
         });
 
-    LHStack button_row2(main_container.native());
+    LHBoxLayout button_row2(main_container.native());
     button_row2.set_spacing(10);
 
     LButton btn4(button_row2.native());
@@ -113,7 +113,7 @@ int main(void)
     printf("Features:\n");
     printf("- LButton component with themes\n");
     printf("- LLabel component with colors\n");
-    printf("- LVStack/LHStack layouts\n");
+    printf("- LVBoxLayout/LHBoxLayout layouts\n");
     printf("- Event handling\n");
 
     while(1) {

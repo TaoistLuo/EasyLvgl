@@ -33,59 +33,67 @@ public:
             group->setExpanded(true);
         };
 
-        addGroup("Basic", {
-            {"LButton",   "Button"},
-            {"LLabel",    "Label"},
-            {"LImage",    "Image"},
+        addGroup("Layouts", {
+            {"LVBoxLayout",    "VBox Layout"},
+            {"LHBoxLayout",    "HBox Layout"},
+            {"LGridLayout",    "Grid Layout"},
+            {"LStackedLayout", "Stacked Layout"},
+        });
+
+        addGroup("Buttons", {
+            {"LButton",        "Push Button"},
+            {"LImageButton",   "Image Button"},
+            {"LCheckbox",      "Check Box"},
+            {"LRadioButton",   "Radio Button"},
+            {"LSwitch",        "Switch"},
+            {"LButtonMatrix",  "Button Matrix"},
+        });
+
+        addGroup("Containers", {
+            {"LGroupBox",      "Group Box"},
+            {"LList",          "List"},
+            {"LTabView",       "Tab View"},
+            {"LMenu",          "Menu"},
+            {"LTileView",      "Tile View"},
+            {"LWin",           "Window"},
+            {"LCanvas",        "Canvas"},
         });
 
         addGroup("Input", {
-            {"LSlider",       "Slider"},
-            {"LCheckbox",     "Checkbox"},
-            {"LSwitch",       "Switch"},
-            {"LDropdown",     "Dropdown"},
-            {"LTextArea",     "TextArea"},
-            {"LRoller",       "Roller"},
-            {"LSpinbox",      "Spinbox"},
-            {"LKeyboard",     "Keyboard"},
-            {"LButtonMatrix", "ButtonMatrix"},
+            {"LLineEdit",      "Line Edit"},
+            {"LTextEdit",      "Text Edit"},
+            {"LComboBox",      "Combo Box"},
+            {"LSlider",        "Slider"},
+            {"LSpinbox",       "Spin Box"},
+            {"LRoller",        "Roller"},
+            {"LKeyboard",      "Keyboard"},
         });
 
         addGroup("Display", {
-            {"LBar",      "Bar"},
-            {"LArc",      "Arc"},
-            {"LSpinner",  "Spinner"},
-            {"LLed",      "Led"},
-            {"LLine",     "Line"},
-            {"LChart",    "Chart"},
-            {"LTable",    "Table"},
-            {"LScale",    "Scale"},
-            {"LCalendar", "Calendar"},
-            {"LCanvas",   "Canvas"},
-            {"LSpan",     "Span"},
+            {"LLabel",         "Label"},
+            {"LImage",         "Image"},
+            {"LBar",           "Bar"},
+            {"LArc",           "Arc"},
+            {"LSpinner",       "Spinner"},
+            {"LLed",           "LED"},
+            {"LLine",          "Line"},
+            {"LScale",         "Scale"},
+            {"LSpan",          "Span"},
         });
 
-        addGroup("Container", {
-            {"LVStack",   "VStack"},
-            {"LHStack",   "HStack"},
-            {"LList",     "List"},
-            {"LTabView",  "TabView"},
-            {"LMenu",     "Menu"},
-            {"LTileView", "TileView"},
-            {"LWin",      "Win"},
+        addGroup("Views / Data", {
+            {"LTable",         "Table"},
+            {"LChart",         "Chart"},
+            {"LCalendar",      "Calendar"},
         });
 
-        addGroup("Dialog", {
-            {"LMsgBox",   "MsgBox"},
+        addGroup("Dialogs", {
+            {"LMsgBox",        "Message Box"},
         });
 
         addGroup("Animation", {
-            {"LAnimImage",   "AnimImage"},
-            {"LLottie",      "Lottie"},
-        });
-
-        addGroup("Advanced", {
-            {"LImageButton", "ImageButton"},
+            {"LAnimImage",     "Animated Image"},
+            {"LLottie",        "Lottie"},
         });
     }
 

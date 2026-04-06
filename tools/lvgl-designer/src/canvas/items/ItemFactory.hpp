@@ -39,10 +39,7 @@ public:
         item->applyObjectProps();
 
         for (auto& child : node.children) {
-            auto* childItem = create(child, item);
-            if (childItem) {
-                childItem->setScene(item->designerScene());
-            }
+            create(child, item);
         }
 
         return item;

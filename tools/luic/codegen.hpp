@@ -9,8 +9,24 @@ namespace luic {
 class CodeGenerator {
     const ComponentRegistry& m_registry;
 
+    std::string escape_string(const std::string& s) {
+        std::string out;
+        out.reserve(s.size());
+        for (char c : s) {
+            switch (c) {
+                case '\n': out += "\\n"; break;
+                case '\r': out += "\\r"; break;
+                case '\t': out += "\\t"; break;
+                case '"':  out += "\\\""; break;
+                case '\\': out += "\\\\"; break;
+                default:   out += c; break;
+            }
+        }
+        return out;
+    }
+
     std::string format_value(const prop_def_t& def, const property_t& prop) {
-        if (def.type == "string")   return "\"" + prop.str_val + "\"";
+        if (def.type == "string")   return "\"" + escape_string(prop.str_val) + "\"";
         if (def.type == "int")      return std::to_string(prop.int_val);
         if (def.type == "hex")      return prop.str_val;
         if (def.type == "int_pair") return std::to_string(prop.int_val) + ", " + std::to_string(prop.int_val2);

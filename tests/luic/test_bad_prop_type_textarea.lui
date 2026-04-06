@@ -2,6 +2,6 @@
   "version": "1.0",
   "name": "BadPropTypeTextArea",
   "children": [
-    { "type": "LTextArea", "id": "ta", "props": { "placeholder": 123, "one_line": "yes" } }
+    { "type": "LLineEdit", "id": "ta", "props": { "placeholder": 123, "one_line": "yes" } }
   ]
 }

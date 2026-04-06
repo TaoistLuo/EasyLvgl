@@ -34,22 +34,20 @@ int main(void)
     printf("Testing 7 previously untested components.\n");
     printf("Press Ctrl+C to exit gracefully.\n\n");
 
-    LVStack main_container;
+    LVBoxLayout main_container;
     main_container.set_spacing(10)
                   .set_padding(15)
-                  .set_size(750, 550)
-                  .set_align(LV_ALIGN_CENTER);
+                  .set_size(750, 550);
 
-    printf("1. Testing LTextArea...\n");
+    printf("1. Testing LLineEdit...\n");
     {
         LLabel title(main_container.native());
         title.set_text("1. TextArea - Text Input").set_color(0x2196F3);
 
-        LTextArea textarea(main_container.native());
+        LTextEdit textarea(main_container.native());
         textarea.set_placeholder("Enter your text here...")
                 .set_size(700, 60)
-                .set_one_line(false)
-                .on_value_changed([](lv_event_t* e) {
+        .on_change([](lv_event_t* e) {
                     lv_obj_t* ta = static_cast<lv_obj_t*>(lv_event_get_target(e));
                     printf("   TextArea value: %s\n", lv_textarea_get_text(ta));
                 });

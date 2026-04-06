@@ -8,7 +8,6 @@
  */
 
 #include "lvgl++/core/widget.hpp"
-#include "lvgl++/core/style.hpp"
 #include "lvgl++/core/event.hpp"
 #include "lvgl/lvgl.h"
 
@@ -58,38 +57,30 @@ public:
     }
     
     LButton& primary() {
-        LStyle style;
-        style.set_bg_color(0x2196F3)
-             .set_radius(8)
-             .set_pad_all(10)
-             .apply_to(m_obj);
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(0x2196F3), 0);
+        lv_obj_set_style_radius(m_obj, 8, 0);
+        lv_obj_set_style_pad_all(m_obj, 10, 0);
         return *this;
     }
     
     LButton& danger() {
-        LStyle style;
-        style.set_bg_color(0xF44336)
-             .set_radius(8)
-             .set_pad_all(10)
-             .apply_to(m_obj);
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(0xF44336), 0);
+        lv_obj_set_style_radius(m_obj, 8, 0);
+        lv_obj_set_style_pad_all(m_obj, 10, 0);
         return *this;
     }
     
     LButton& success() {
-        LStyle style;
-        style.set_bg_color(0x4CAF50)
-             .set_radius(8)
-             .set_pad_all(10)
-             .apply_to(m_obj);
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(0x4CAF50), 0);
+        lv_obj_set_style_radius(m_obj, 8, 0);
+        lv_obj_set_style_pad_all(m_obj, 10, 0);
         return *this;
     }
     
     LButton& warning() {
-        LStyle style;
-        style.set_bg_color(0xFF9800)
-             .set_radius(8)
-             .set_pad_all(10)
-             .apply_to(m_obj);
+        lv_obj_set_style_bg_color(m_obj, lv_color_hex(0xFF9800), 0);
+        lv_obj_set_style_radius(m_obj, 8, 0);
+        lv_obj_set_style_pad_all(m_obj, 10, 0);
         return *this;
     }
     

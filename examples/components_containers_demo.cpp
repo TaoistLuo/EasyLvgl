@@ -1,6 +1,6 @@
 #include "lvgl/lvgl.h"
 #include "lvgl++/lvgl_widgets.hpp"
-#include "lvgl++/containers/vstack.hpp"
+#include "lvgl++/layouts/layout.hpp"
 #include "lvgl++/core/signal_handler.hpp"
 #include <unistd.h>
 #include <cstdio>
@@ -22,7 +22,7 @@ int main(void) {
          .set_pos(10, 10)
          .set_color(0x2196F3);
 
-    LVStack vstack;
+    LVBoxLayout vstack;
     vstack.set_pos(10, 50)
           .set_size(200, 400);
 

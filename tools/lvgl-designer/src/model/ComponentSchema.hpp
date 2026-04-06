@@ -190,10 +190,13 @@ struct ComponentSchema {
         } else if (type == "LCheckbox") {
             comp.props.push_back({"text", "string", QVariant(QString("Checkbox"))});
             comp.props.push_back({"checked", "bool", QVariant(false)});
+        } else if (type == "LRadioButton") {
+            comp.props.push_back({"text", "string", QVariant(QString("Radio"))});
+            comp.props.push_back({"checked", "bool", QVariant(false)});
         } else if (type == "LSwitch") {
             comp.props.push_back({"checked", "bool", QVariant(false)});
             comp.props.push_back({"enabled", "bool", QVariant(true)});
-        } else if (type == "LDropdown") {
+        } else if (type == "LComboBox") {
             comp.props.push_back({"options", "string", QVariant(QString("Option 1\\nOption 2\\nOption 3"))});
             comp.props.push_back({"selected", "int", QVariant(0)});
             comp.props.push_back({"direction", "int", QVariant(0)});
@@ -201,10 +204,19 @@ struct ComponentSchema {
             comp.props.push_back({"text", "string", QVariant(QString(""))});
             comp.props.push_back({"selected_highlight", "bool", QVariant(true)});
             comp.props.push_back({"enabled", "bool", QVariant(true)});
-        } else if (type == "LTextArea") {
+        } else if (type == "LLineEdit") {
             comp.props.push_back({"text", "string", QVariant(QString(""))});
             comp.props.push_back({"placeholder", "string", QVariant(QString("Enter text..."))});
-            comp.props.push_back({"one_line", "bool", QVariant(false)});
+            comp.props.push_back({"password_mode", "bool", QVariant(false)});
+            comp.props.push_back({"password_show_time", "int", QVariant(1500)});
+            comp.props.push_back({"max_length", "int", QVariant(0)});
+            comp.props.push_back({"accepted_chars", "string", QVariant(QString(""))});
+            comp.props.push_back({"cursor_click_pos", "bool", QVariant(true)});
+            comp.props.push_back({"text_selection", "bool", QVariant(false)});
+            comp.props.push_back({"enabled", "bool", QVariant(true)});
+        } else if (type == "LTextEdit") {
+            comp.props.push_back({"text", "string", QVariant(QString(""))});
+            comp.props.push_back({"placeholder", "string", QVariant(QString("Enter text..."))});
             comp.props.push_back({"password_mode", "bool", QVariant(false)});
             comp.props.push_back({"password_show_time", "int", QVariant(1500)});
             comp.props.push_back({"max_length", "int", QVariant(0)});
@@ -243,6 +255,7 @@ struct ComponentSchema {
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"orientation", "int", QVariant(0)});
         } else if (type == "LSpinner") {
+            comp.props.push_back({"color", "hex", QVariant(QString("0x2196F3"))});
             comp.props.push_back({"anim_speed", "int", QVariant(1000)});
             comp.props.push_back({"anim_period", "int", QVariant(1000)});
         } else if (type == "LLed") {
@@ -307,10 +320,44 @@ struct ComponentSchema {
             showed.append(QVariant(1));
             comp.props.push_back({"showed_date", "int_pair", QVariant(showed)});
             comp.props.push_back({"chinese_mode", "bool", QVariant(false)});
-        } else if (type == "LVStack" || type == "LHStack") {
+        } else if (type == "LGroupBox") {
+            comp.props.push_back({"title", "string", QVariant(QString("Group"))});
+            comp.props.push_back({"spacing", "int", QVariant(5)});
+            comp.props.push_back({"padding", "int", QVariant(10)});
+        } else if (type == "LList") {
+            comp.props.push_back({"spacing", "int", QVariant(2)});
+            comp.props.push_back({"padding", "int", QVariant(5)});
+        } else if (type == "LTileView") {
+            comp.props.push_back({"columns", "int", QVariant(1)});
+            comp.props.push_back({"rows", "int", QVariant(1)});
+            comp.props.push_back({"anim_time", "int", QVariant(300)});
+        } else if (type == "LCanvas") {
+            comp.props.push_back({"buffer_width", "int", QVariant(200)});
+            comp.props.push_back({"buffer_height", "int", QVariant(200)});
+        } else if (type == "LWin") {
+            comp.props.push_back({"title", "string", QVariant(QString("Window"))});
+        } else if (type == "LVBoxLayout") {
             comp.props.push_back({"spacing", "int", QVariant(10)});
             comp.props.push_back({"padding", "int", QVariant(10)});
             comp.props.push_back({"align_items", "int", QVariant(0)});
+        } else if (type == "LHBoxLayout") {
+            comp.props.push_back({"spacing", "int", QVariant(10)});
+            comp.props.push_back({"padding", "int", QVariant(10)});
+            comp.props.push_back({"align_items", "int", QVariant(0)});
+        } else if (type == "LGridLayout") {
+            comp.props.push_back({"columns", "int", QVariant(2)});
+            comp.props.push_back({"rows", "int", QVariant(2)});
+            comp.props.push_back({"col_spacing", "int", QVariant(5)});
+            comp.props.push_back({"row_spacing", "int", QVariant(5)});
+            comp.props.push_back({"padding", "int", QVariant(10)});
+        } else if (type == "LFormLayout") {
+            comp.props.push_back({"row_spacing", "int", QVariant(10)});
+            comp.props.push_back({"col_spacing", "int", QVariant(10)});
+            comp.props.push_back({"label_width", "int", QVariant(80)});
+            comp.props.push_back({"padding", "int", QVariant(10)});
+        } else if (type == "LStackedLayout") {
+            comp.props.push_back({"current_index", "int", QVariant(0)});
+            comp.props.push_back({"padding", "int", QVariant(0)});
         } else if (type == "LSpan") {
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"overflow", "int", QVariant(0)});
@@ -333,10 +380,13 @@ struct ComponentSchema {
             comp.props.push_back({"mode_root_back_button", "int", QVariant(0)});
         } else if (type == "LImageButton") {
             comp.props.push_back({"state", "int", QVariant(0)});
+            comp.props.push_back({"src_released", "string", QVariant(QString(""))});
+            comp.props.push_back({"src_pressed", "string", QVariant(QString(""))});
+            comp.props.push_back({"src_disabled", "string", QVariant(QString(""))});
         }
 
         if (!comp.props.empty()) {
-            groups.push_back(std::move(comp));
+            groups.insert(groups.begin() + 1, std::move(comp));
         }
 
         return groups;

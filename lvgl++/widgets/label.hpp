@@ -10,7 +10,6 @@
 #include "lvgl++/core/widget.hpp"
 #include "lvgl++/core/style.hpp"
 #include "lvgl/lvgl.h"
-#include <cstdarg>
 
 namespace lvgl {
 
@@ -28,17 +27,14 @@ public:
         return *this;
     }
     
-    LLabel& set_text_fmt(const char* fmt, ...) {
-        va_list args;
-        va_start(args, fmt);
-        lv_label_set_text_fmt(m_obj, fmt, args);
-        va_end(args);
+    template<typename... Args>
+    LLabel& set_text_fmt(const char* fmt, Args&&... args) {
+        lv_label_set_text_fmt(m_obj, fmt, std::forward<Args>(args)...);
         return *this;
     }
     
     LLabel& set_color(uint32_t hex) {
-        LStyle style;
-        style.set_text_color(hex).apply_to(m_obj);
+        lv_obj_set_style_text_color(m_obj, lv_color_hex(hex), 0);
         return *this;
     }
     
@@ -66,8 +62,7 @@ public:
             default: font = LV_FONT_DEFAULT; break;
         }
         if (font) {
-            LStyle style;
-            style.set_text_font(font).apply_to(m_obj);
+            lv_obj_set_style_text_font(m_obj, font, 0);
         }
         return *this;
     }

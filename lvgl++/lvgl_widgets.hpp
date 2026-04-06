@@ -10,50 +10,52 @@
  * Include this single file to access all 32+ widget components.
  */
 
-// Core widgets (8)
+// Buttons
 #include "lvgl++/widgets/button.hpp"
-#include "lvgl++/widgets/label.hpp"
-#include "lvgl++/widgets/slider.hpp"
+#include "lvgl++/widgets/imagebutton.hpp"
 #include "lvgl++/widgets/checkbox.hpp"
+#include "lvgl++/widgets/radiobutton.hpp"
 #include "lvgl++/widgets/switch.hpp"
-#include "lvgl++/widgets/dropdown.hpp"
-#include "lvgl++/widgets/textarea.hpp"
-#include "lvgl++/widgets/image.hpp"
+#include "lvgl++/widgets/buttonmatrix.hpp"
 
-// High-frequency widgets (6)
-#include "lvgl++/widgets/arc.hpp"
+// Input
+#include "lvgl++/widgets/lineedit.hpp"
+#include "lvgl++/widgets/textedit.hpp"
+#include "lvgl++/widgets/combobox.hpp"
+#include "lvgl++/widgets/spinbox.hpp"
+#include "lvgl++/widgets/slider.hpp"
+#include "lvgl++/widgets/roller.hpp"
+
+// Display
+#include "lvgl++/widgets/label.hpp"
+#include "lvgl++/widgets/image.hpp"
 #include "lvgl++/widgets/bar.hpp"
+#include "lvgl++/widgets/arc.hpp"
 #include "lvgl++/widgets/spinner.hpp"
 #include "lvgl++/widgets/led.hpp"
 #include "lvgl++/widgets/line.hpp"
-#include "lvgl++/widgets/list.hpp"
-
-// Medium-frequency widgets (10)
-#include "lvgl++/widgets/table.hpp"
-#include "lvgl++/widgets/tabview.hpp"
-#include "lvgl++/widgets/menu.hpp"
-#include "lvgl++/widgets/roller.hpp"
 #include "lvgl++/widgets/scale.hpp"
-#include "lvgl++/widgets/span.hpp"
-#include "lvgl++/widgets/spinbox.hpp"
-#include "lvgl++/widgets/buttonmatrix.hpp"
-#include "lvgl++/widgets/imagebutton.hpp"
-#include "lvgl++/widgets/msgbox.hpp"
-
-// Low-frequency widgets (7)
 #include "lvgl++/widgets/calendar.hpp"
 #include "lvgl++/widgets/chart.hpp"
+#include "lvgl++/widgets/table.hpp"
 #include "lvgl++/widgets/canvas.hpp"
+#include "lvgl++/widgets/span.hpp"
 #include "lvgl++/widgets/keyboard.hpp"
 #include "lvgl++/widgets/animimage.hpp"
+
+// Containers
+#include "lvgl++/widgets/groupbox.hpp"
+#include "lvgl++/widgets/list.hpp"
+#include "lvgl++/widgets/tabview.hpp"
+#include "lvgl++/widgets/menu.hpp"
 #include "lvgl++/widgets/tileview.hpp"
 #include "lvgl++/widgets/win.hpp"
 
-// Special widgets (requires LV_USE_LOTTIE)
-// #include "lvgl++/widgets/lottie.hpp"
+// Dialogs
+#include "lvgl++/widgets/msgbox.hpp"
 
-// Containers
-#include "lvgl++/containers/vstack.hpp"
+// Layouts
+#include "lvgl++/layouts/layout.hpp"
 
 /**
  * @namespace lvgl

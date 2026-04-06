@@ -1,6 +1,5 @@
 #pragma once
 #include "lvgl++/core/widget.hpp"
-#include "lvgl++/core/style.hpp"
 #include "lvgl/lvgl.h"
 
 namespace lvgl {
@@ -16,14 +15,12 @@ public:
     }
 
     LLine& set_width(int width) {
-        LStyle style;
-        style.set_border_width(width).apply_to(m_obj);
+        lv_obj_set_style_line_width(m_obj, width, 0);
         return *this;
     }
 
     LLine& set_color(uint32_t color) {
-        LStyle style;
-        style.set_border_color(color).apply_to(m_obj);
+        lv_obj_set_style_line_color(m_obj, lv_color_hex(color), 0);
         return *this;
     }
 

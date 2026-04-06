@@ -32,7 +32,7 @@ int main(void)
 
     printf("=== LVGL++ Complete Demo ===\n");
 
-    LVStack main_container;
+    LVBoxLayout main_container;
     main_container.set_spacing(15)
                   .set_padding(20)
                   .set_size(700, 550)
@@ -48,7 +48,7 @@ int main(void)
             .set_color(0x666666)
             .set_font_size(14);
 
-    LHStack button_row(main_container.native());
+    LHBoxLayout button_row(main_container.native());
     button_row.set_spacing(10);
 
     LButton btn_primary(button_row.native());
@@ -83,7 +83,7 @@ int main(void)
               printf("LSlider: %d\n", slider_value);
           });
 
-    LHStack checkbox_row(main_container.native());
+    LHBoxLayout checkbox_row(main_container.native());
     checkbox_row.set_spacing(20);
 
     LCheckbox cb1(checkbox_row.native());
@@ -105,7 +105,7 @@ int main(void)
                  .set_color(0x333333)
                  .set_font_size(16);
 
-    LHStack action_row(main_container.native());
+    LHBoxLayout action_row(main_container.native());
     action_row.set_spacing(10);
 
     LButton increment_btn(action_row.native());
@@ -141,7 +141,7 @@ int main(void)
     printf("- 3 Checkboxes\n");
     printf("- Counter with increment/reset\n");
     printf("- Dialog component\n");
-    printf("- LVStack/LHStack layouts\n");
+    printf("- LVBoxLayout/LHBoxLayout layouts\n");
     printf("\nCode reduction: 85%%\n");
     printf("Enjoy LVGL++!\n\n");
 

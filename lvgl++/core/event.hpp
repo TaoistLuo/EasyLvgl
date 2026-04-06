@@ -24,14 +24,19 @@ namespace lvgl {
  */
 template<typename F>
 void connect_event(lv_obj_t* obj, lv_event_code_t code, F&& callback) {
-    auto* cb = new typename std::decay<F>::type(std::forward<F>(callback));
+    using CallbackType = typename std::decay<F>::type;
+    auto* cb = new CallbackType(std::forward<F>(callback));
     
     lv_obj_add_event_cb(obj, [](lv_event_t* e) {
-        auto* f = static_cast<typename std::decay<F>::type*>(
-            lv_event_get_user_data(e)
-        );
+        auto* f = static_cast<CallbackType*>(lv_event_get_user_data(e));
         (*f)(e);
     }, code, cb);
+
+    // Register cleanup: delete the heap-allocated callback when the object is deleted
+    lv_obj_add_event_cb(obj, [](lv_event_t* e) {
+        auto* f = static_cast<CallbackType*>(lv_event_get_user_data(e));
+        delete f;
+    }, LV_EVENT_DELETE, cb);
 }
 
 /**
@@ -43,14 +48,18 @@ void connect_event(lv_obj_t* obj, lv_event_code_t code, F&& callback) {
  */
 template<typename F>
 void on_clicked(lv_obj_t* obj, F&& callback) {
-    auto* cb = new typename std::decay<F>::type(std::forward<F>(callback));
+    using CallbackType = typename std::decay<F>::type;
+    auto* cb = new CallbackType(std::forward<F>(callback));
     
     lv_obj_add_event_cb(obj, [](lv_event_t* e) {
-        auto* f = static_cast<typename std::decay<F>::type*>(
-            lv_event_get_user_data(e)
-        );
+        auto* f = static_cast<CallbackType*>(lv_event_get_user_data(e));
         (*f)();
     }, LV_EVENT_CLICKED, cb);
+
+    lv_obj_add_event_cb(obj, [](lv_event_t* e) {
+        auto* f = static_cast<CallbackType*>(lv_event_get_user_data(e));
+        delete f;
+    }, LV_EVENT_DELETE, cb);
 }
 
 /**

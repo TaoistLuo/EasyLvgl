@@ -10,6 +10,6 @@
     { "type": "LSwitch",   "id": "sw",     "props": { "checked": false }, "events": ["value_changed"] },
     { "type": "LBar",      "id": "bar",    "props": { "range": [0, 100], "value": 75, "size": [200, 20] } },
     { "type": "LArc",      "id": "arc",    "props": { "range": [0, 100], "value": 60, "size": 120 } },
-    { "type": "LDropdown", "id": "dd",     "props": { "options": "A\\nB\\nC", "size": [150, 40] }, "events": ["value_changed"] }
+    { "type": "LComboBox", "id": "dd",     "props": { "options": "A\\nB\\nC", "size": [150, 40] }, "events": ["value_changed"] }
   ]
 }

@@ -36,8 +36,19 @@ public:
     }
 
     void close() {
-        lv_msgbox_close(m_obj);
+        if (m_obj) {
+            lv_msgbox_close(m_obj);
+            m_obj = nullptr;
+        }
     }
+
+    ~LMsgBox() override {
+        if (m_obj) {
+            lv_msgbox_close(m_obj);
+            m_obj = nullptr;
+        }
+    }
+
 };
 
 } // namespace lvgl

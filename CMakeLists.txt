@@ -5,6 +5,10 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 add_subdirectory(lvgl)
@@ -19,7 +23,7 @@ target_include_directories(luic PRIVATE ${PROJECT_SOURCE_DIR}/tools/luic)
 target_compile_features(luic PRIVATE cxx_std_17)
 set_target_properties(luic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-# --- Auto-compile .lui files ---
+# --- Auto-compile .lui files (SDK-level .lui only) ---
 file(GLOB LUI_FILES "${CMAKE_SOURCE_DIR}/ui/*.lui")
 set(LUI_GENERATED "")
 foreach(LUI_FILE ${LUI_FILES})
@@ -80,4 +84,33 @@ add_executable(luic_demo examples/luic_demo.cpp)
 add_dependencies(luic_demo ui_compile)
 target_link_libraries(luic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
 add_custom_target(run_luic_demo COMMAND ${EXECUTABLE_OUTPUT_PATH}/luic_demo DEPENDS luic_demo)
+
+# ── 合并为单一库 liblvglcpp.a ───────────────────────────────────────
+set(LVGLCPP_LIB "${CMAKE_BINARY_DIR}/lib/liblvglcpp.a")
+
+add_custom_command(
+    OUTPUT ${LVGLCPP_LIB}
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/lib"
+    COMMAND ${CMAKE_COMMAND}
+        -D "LIB_OUT=${LVGLCPP_LIB}"
+        -D "LIB_A=${CMAKE_BINARY_DIR}/lib/liblvgl.a"
+        -D "LIB_B=${CMAKE_BINARY_DIR}/lib/liblvgl_demos.a"
+        -D "LIB_C=${CMAKE_BINARY_DIR}/lib/liblvgl_thorvg.a"
+        -D "AR=${CMAKE_AR}"
+        -P "${CMAKE_SOURCE_DIR}/cmake/merge_libs.cmake"
+    DEPENDS lvgl lvgl_demos lvgl_thorvg
+    COMMENT "Merging -> liblvglcpp.a"
+)
+add_custom_target(lvglcpp_lib ALL DEPENDS ${LVGLCPP_LIB})
+
+install(FILES ${LVGLCPP_LIB} DESTINATION lib)
+install(TARGETS luic RUNTIME DESTINATION bin)
+install(FILES ${PROJECT_SOURCE_DIR}/lv_conf.h DESTINATION include)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/lvgl/ DESTINATION include/lvgl
+        FILES_MATCHING PATTERN "*.h"
+        PATTERN "demos" EXCLUDE
+        PATTERN "examples" EXCLUDE)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/lvgl++/ DESTINATION include/lvgl++
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
 

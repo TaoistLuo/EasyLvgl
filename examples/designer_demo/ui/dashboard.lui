@@ -1,0 +1,593 @@
+{
+    "children": [
+        {
+            "id": "lbl_title",
+            "props": {
+                "color": "0xFFFFFF",
+                "font_size": 28,
+                "pos": [
+                    20,
+                    10
+                ],
+                "text": "Smart Home Dashboard"
+            },
+            "type": "LLabel"
+        },
+        {
+            "children": [
+                {
+                    "children": [
+                        {
+                            "id": "lbl_temp",
+                            "parentId": "temp_panel",
+                            "props": {
+                                "font_size": 16,
+                                "text": "Temperature: 24 C"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "id": "bar_temp",
+                            "parentId": "temp_panel",
+                            "props": {
+                                "range": [
+                                    0,
+                                    50
+                                ],
+                                "size": [
+                                    160,
+                                    15
+                                ],
+                                "value": 24
+                            },
+                            "type": "LBar"
+                        }
+                    ],
+                    "id": "temp_panel",
+                    "parentId": "top_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            0,
+                            2
+                        ],
+                        "size": [
+                            180,
+                            67
+                        ],
+                        "spacing": 5
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_humidity",
+                            "parentId": "humidity_panel",
+                            "props": {
+                                "font_size": 16,
+                                "text": "Humidity: 65%"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "id": "bar_humidity",
+                            "parentId": "humidity_panel",
+                            "props": {
+                                "range": [
+                                    0,
+                                    100
+                                ],
+                                "size": [
+                                    160,
+                                    15
+                                ],
+                                "value": 65
+                            },
+                            "type": "LBar"
+                        }
+                    ],
+                    "id": "humidity_panel",
+                    "parentId": "top_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            195,
+                            10
+                        ],
+                        "size": [
+                            180,
+                            70
+                        ],
+                        "spacing": 5
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_light",
+                            "parentId": "light_panel",
+                            "props": {
+                                "font_size": 16,
+                                "text": "Lighting: 80%"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "events": [
+                                "value_changed"
+                            ],
+                            "id": "slider_light",
+                            "parentId": "light_panel",
+                            "props": {
+                                "range": [
+                                    0,
+                                    100
+                                ],
+                                "size": [
+                                    160,
+                                    10
+                                ],
+                                "value": 80
+                            },
+                            "type": "LSlider"
+                        }
+                    ],
+                    "id": "light_panel",
+                    "parentId": "top_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            390,
+                            9
+                        ],
+                        "size": [
+                            180,
+                            71
+                        ],
+                        "spacing": 5
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_status",
+                            "parentId": "status_panel",
+                            "props": {
+                                "font_size": 16,
+                                "text": "System Status"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "id": "spinner_status",
+                            "parentId": "status_panel",
+                            "props": {
+                                "pos": [
+                                    44,
+                                    23
+                                ],
+                                "size": 29
+                            },
+                            "type": "LSpinner"
+                        }
+                    ],
+                    "id": "status_panel",
+                    "parentId": "top_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            585,
+                            0
+                        ],
+                        "size": [
+                            159,
+                            79
+                        ],
+                        "spacing": 5
+                    },
+                    "type": "LVBoxLayout"
+                }
+            ],
+            "id": "top_row",
+            "props": {
+                "padding": 10,
+                "pos": [
+                    10,
+                    50
+                ],
+                "size": [
+                    780,
+                    100
+                ],
+                "spacing": 15
+            },
+            "type": "LHBoxLayout"
+        },
+        {
+            "children": [
+                {
+                    "children": [
+                        {
+                            "id": "lbl_devices",
+                            "parentId": "device_ctrl_panel",
+                            "props": {
+                                "text": "Device Control"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "children": [
+                                {
+                                    "id": "led_living",
+                                    "parentId": "led_row",
+                                    "props": {
+                                        "color": "0x4CAF50",
+                                        "on": true,
+                                        "size": 20
+                                    },
+                                    "type": "LLed"
+                                },
+                                {
+                                    "id": "led_bedroom",
+                                    "parentId": "led_row",
+                                    "props": {
+                                        "color": "0x2196F3",
+                                        "on": true,
+                                        "size": 20
+                                    },
+                                    "type": "LLed"
+                                },
+                                {
+                                    "id": "led_kitchen",
+                                    "parentId": "led_row",
+                                    "props": {
+                                        "color": "0xFF9800",
+                                        "on": false,
+                                        "size": 20
+                                    },
+                                    "type": "LLed"
+                                },
+                                {
+                                    "id": "led_garage",
+                                    "parentId": "led_row",
+                                    "props": {
+                                        "color": "0xF44336",
+                                        "on": false,
+                                        "size": 20
+                                    },
+                                    "type": "LLed"
+                                }
+                            ],
+                            "id": "led_row",
+                            "parentId": "device_ctrl_panel",
+                            "props": {
+                                "padding": 5,
+                                "pos": [
+                                    0,
+                                    24
+                                ],
+                                "size": [
+                                    345,
+                                    34
+                                ],
+                                "spacing": 20
+                            },
+                            "type": "LHBoxLayout"
+                        },
+                        {
+                            "id": "lbl_led_status",
+                            "parentId": "device_ctrl_panel",
+                            "props": {
+                                "font_size": 12,
+                                "pos": [
+                                    46,
+                                    66
+                                ],
+                                "size": [
+                                    254,
+                                    22
+                                ],
+                                "text": "Living:ON | Bed:ON | Kit:OFF | Garage:OFF"
+                            },
+                            "type": "LLabel"
+                        }
+                    ],
+                    "id": "device_ctrl_panel",
+                    "parentId": "control_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            0,
+                            1
+                        ],
+                        "size": [
+                            380,
+                            107
+                        ],
+                        "spacing": 8
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_actions",
+                            "parentId": "action_panel",
+                            "props": {
+                                "text": "Quick Actions"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "children": [
+                                {
+                                    "events": [
+                                        "clicked"
+                                    ],
+                                    "id": "btn_all_on",
+                                    "parentId": "btn_row",
+                                    "props": {
+                                        "pos": [
+                                            0,
+                                            6
+                                        ],
+                                        "size": [
+                                            100,
+                                            28
+                                        ],
+                                        "text": "All On",
+                                        "theme": "primary"
+                                    },
+                                    "type": "LButton"
+                                },
+                                {
+                                    "events": [
+                                        "clicked"
+                                    ],
+                                    "id": "btn_all_off",
+                                    "parentId": "btn_row",
+                                    "props": {
+                                        "pos": [
+                                            110,
+                                            5
+                                        ],
+                                        "size": [
+                                            91,
+                                            30
+                                        ],
+                                        "text": "All Off",
+                                        "theme": "danger"
+                                    },
+                                    "type": "LButton"
+                                },
+                                {
+                                    "events": [
+                                        "clicked"
+                                    ],
+                                    "id": "btn_scene",
+                                    "parentId": "btn_row",
+                                    "props": {
+                                        "pos": [
+                                            211,
+                                            1
+                                        ],
+                                        "size": [
+                                            86,
+                                            27
+                                        ],
+                                        "text": "Night Mode"
+                                    },
+                                    "type": "LButton"
+                                }
+                            ],
+                            "id": "btn_row",
+                            "parentId": "action_panel",
+                            "props": {
+                                "padding": 5,
+                                "pos": [
+                                    0,
+                                    24
+                                ],
+                                "size": [
+                                    338,
+                                    59
+                                ],
+                                "spacing": 10
+                            },
+                            "type": "LHBoxLayout"
+                        }
+                    ],
+                    "id": "action_panel",
+                    "parentId": "control_row",
+                    "props": {
+                        "padding": 10,
+                        "size": [
+                            380,
+                            110
+                        ],
+                        "spacing": 8
+                    },
+                    "type": "LVBoxLayout"
+                }
+            ],
+            "id": "control_row",
+            "props": {
+                "padding": 10,
+                "pos": [
+                    8,
+                    162
+                ],
+                "size": [
+                    780,
+                    133
+                ],
+                "spacing": 15
+            },
+            "type": "LHBoxLayout"
+        },
+        {
+            "children": [
+                {
+                    "children": [
+                        {
+                            "id": "lbl_security",
+                            "parentId": "security_panel",
+                            "props": {
+                                "text": "Security Settings"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "events": [
+                                "value_changed"
+                            ],
+                            "id": "sw_alarm",
+                            "parentId": "security_panel",
+                            "props": {
+                                "checked": true
+                            },
+                            "type": "LSwitch"
+                        },
+                        {
+                            "id": "lbl_alarm_status",
+                            "parentId": "security_panel",
+                            "props": {
+                                "font_size": 14,
+                                "text": "Alarm: ARMED"
+                            },
+                            "type": "LLabel"
+                        }
+                    ],
+                    "id": "security_panel",
+                    "parentId": "bottom_row",
+                    "props": {
+                        "padding": 10,
+                        "size": [
+                            250,
+                            130
+                        ],
+                        "spacing": 8
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_door",
+                            "parentId": "door_panel",
+                            "props": {
+                                "text": "Door Lock"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "events": [
+                                "value_changed"
+                            ],
+                            "id": "cb_front_door",
+                            "parentId": "door_panel",
+                            "props": {
+                                "checked": true,
+                                "text": "Front Door Locked"
+                            },
+                            "type": "LCheckbox"
+                        },
+                        {
+                            "events": [
+                                "value_changed"
+                            ],
+                            "id": "cb_back_door",
+                            "parentId": "door_panel",
+                            "props": {
+                                "checked": false,
+                                "text": "Back Door Locked"
+                            },
+                            "type": "LCheckbox"
+                        }
+                    ],
+                    "id": "door_panel",
+                    "parentId": "bottom_row",
+                    "props": {
+                        "padding": 10,
+                        "size": [
+                            250,
+                            130
+                        ],
+                        "spacing": 8
+                    },
+                    "type": "LVBoxLayout"
+                },
+                {
+                    "children": [
+                        {
+                            "id": "lbl_settings",
+                            "parentId": "settings_panel",
+                            "props": {
+                                "text": "Quick Settings"
+                            },
+                            "type": "LLabel"
+                        },
+                        {
+                            "events": [
+                                "value_changed"
+                            ],
+                            "id": "dd_mode",
+                            "parentId": "settings_panel",
+                            "props": {
+                                "options": "Home\nAway\nSleep\nVacation",
+                                "pos": [
+                                    0,
+                                    24
+                                ],
+                                "selected": 0,
+                                "size": [
+                                    133,
+                                    40
+                                ]
+                            },
+                            "type": "LComboBox"
+                        }
+                    ],
+                    "id": "settings_panel",
+                    "parentId": "bottom_row",
+                    "props": {
+                        "padding": 10,
+                        "pos": [
+                            530,
+                            0
+                        ],
+                        "size": [
+                            172,
+                            130
+                        ],
+                        "spacing": 8
+                    },
+                    "type": "LVBoxLayout"
+                }
+            ],
+            "id": "bottom_row",
+            "props": {
+                "padding": 10,
+                "pos": [
+                    7,
+                    305
+                ],
+                "size": [
+                    780,
+                    173
+                ],
+                "spacing": 15
+            },
+            "type": "LHBoxLayout"
+        }
+    ],
+    "name": "Dashboard",
+    "size": [
+        800,
+        480
+    ],
+    "version": "1.0"
+}

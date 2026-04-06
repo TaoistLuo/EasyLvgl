@@ -45,7 +45,7 @@
                     "props": {
                         "spacing": 10
                     },
-                    "type": "LHStack"
+                    "type": "LHBoxLayout"
                 },
                 {
                     "events": [
@@ -75,7 +75,7 @@
                 ],
                 "spacing": 10
             },
-            "type": "LVStack"
+            "type": "LVBoxLayout"
         },
         {
             "id": "led_0",

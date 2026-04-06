@@ -71,9 +71,9 @@ int main(void) {
           });
     }
 
-    printf("6. LDropdown\n");
+    printf("6. LComboBox\n");
     {
-        LDropdown dd;
+        LComboBox dd;
         dd.set_options("Option 1\nOption 2\nOption 3")
           .set_pos(10, 200)
           .set_selected(0)
@@ -84,9 +84,9 @@ int main(void) {
           });
     }
 
-    printf("7. LTextArea\n");
+    printf("7. LLineEdit\n");
     {
-        LTextArea ta;
+        LLineEdit ta;
         ta.set_text("Type here...")
           .set_pos(10, 250)
           .set_size(200, 80)
@@ -388,7 +388,7 @@ int main(void) {
 
     printf("28. LKeyboard\n");
     {
-        LTextArea ta_kb;
+        LLineEdit ta_kb;
         ta_kb.set_pos(10, 960)
              .set_size(400, 80)
              .set_placeholder("Type with keyboard...");

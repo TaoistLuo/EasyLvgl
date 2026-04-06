@@ -1,5 +1,6 @@
 #pragma once
 #include <QTreeWidget>
+#include <QSignalBlocker>
 #include "model/LuiDocument.hpp"
 
 namespace designer {
@@ -21,12 +22,37 @@ public:
     }
 
     void rebuild() {
-        clear();
-        if (!m_doc) return;
-        for (auto& child : m_doc->children()) {
-            addNodeItem(child, nullptr);
+        QSignalBlocker blocker(this);
+        setUpdatesEnabled(false);
+        while (topLevelItemCount() > 0) {
+            delete takeTopLevelItem(0);
         }
-        expandAll();
+        if (m_doc) {
+            for (auto& child : m_doc->children()) {
+                addNodeItem(child, nullptr);
+            }
+        }
+        setUpdatesEnabled(true);
+    }
+
+    void selectById(const std::string& id) {
+        QSignalBlocker blocker(this);
+        auto matches = findItems(QString::fromStdString(id), Qt::MatchExactly | Qt::MatchRecursive, 0);
+        if (matches.isEmpty()) {
+            clearSelection();
+            setCurrentItem(nullptr);
+            return;
+        }
+        clearSelection();
+        setCurrentItem(matches.first());
+        matches.first()->setSelected(true);
+        scrollToItem(matches.first());
+    }
+
+    void clearCurrentSelection() {
+        QSignalBlocker blocker(this);
+        clearSelection();
+        setCurrentItem(nullptr);
     }
 
 signals:
@@ -43,6 +69,10 @@ private:
 
         for (auto& child : node.children) {
             addNodeItem(child, item);
+        }
+
+        if (parent) {
+            parent->setExpanded(true);
         }
     }
 

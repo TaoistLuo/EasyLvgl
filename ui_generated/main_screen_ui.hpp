@@ -9,7 +9,7 @@ class MainScreen_UI {
 protected:
     LLabel* m_title = nullptr;
     LButton* m_btn_login = nullptr;
-    LVStack* m_info_panel = nullptr;
+    LVBoxLayout* m_info_panel = nullptr;
     LSlider* m_brightness = nullptr;
     LBar* m_progress = nullptr;
     LCheckbox* m_cb_enable = nullptr;
@@ -27,7 +27,7 @@ public:
         m_btn_login->set_size(120, 50)
               .set_text("Login").primary();
 
-        m_info_panel = new LVStack(root);
+        m_info_panel = new LVBoxLayout(root);
         m_info_panel->set_padding(15)
               .set_size(400, 300)
               .set_spacing(10);

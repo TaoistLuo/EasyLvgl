@@ -120,44 +120,6 @@ public:
             }
         });
 
-        reg("LDropdown", {
-            .is_container = false,
-            .props = {
-                {"options",  "string",   "set_options"},
-                {"selected", "int",      "set_selected"},
-                {"direction","int",      "set_direction"},
-                {"symbol",   "string",   "set_symbol"},
-                {"text",     "string",   "set_text"},
-                {"enabled",  "bool",     "set_enabled"},
-                {"size",     "int_pair", "set_size"},
-                {"pos",      "int_pair", "set_pos"},
-            },
-            .events = {
-                {"value_changed", "on_change"},
-            }
-        });
-
-        reg("LTextArea", {
-            .is_container = false,
-            .props = {
-                {"text",              "string", "set_text"},
-                {"placeholder",       "string", "set_placeholder"},
-                {"one_line",          "bool",   "set_one_line"},
-                {"password_mode",     "bool",   "set_password_mode"},
-                {"max_length",        "int",    "set_max_length"},
-                {"cursor_click_pos",  "bool",   "set_cursor_click_pos"},
-                {"text_align",        "int",    "set_text_align"},
-                {"accepted_chars",    "string", "set_accepted_chars"},
-                {"enabled",           "bool",   "set_enabled"},
-                {"size",              "int_pair", "set_size"},
-                {"pos",               "int_pair", "set_pos"},
-            },
-            .events = {
-                {"value_changed", "on_change"},
-                {"ready",         "on_ready"},
-            }
-        });
-
         // ===== Display Widgets =====
 
         reg("LImage", {
@@ -476,26 +438,149 @@ public:
 
         // ===== Layout Containers =====
 
-        reg("LVStack", {
+        reg("LVBoxLayout", {
             .is_container = true,
             .props = {
                 {"spacing",     "int",      "set_spacing"},
                 {"padding",     "int",      "set_padding"},
-                {"align_items", "int",      "set_align_items"},
+                {"align_main",  "int",      "set_align_main"},
+                {"align_cross", "int",      "set_align_cross"},
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
             .events = {}
         });
 
-        reg("LHStack", {
+        reg("LHBoxLayout", {
             .is_container = true,
             .props = {
                 {"spacing",     "int",      "set_spacing"},
                 {"padding",     "int",      "set_padding"},
-                {"align_items", "int",      "set_align_items"},
+                {"align_main",  "int",      "set_align_main"},
+                {"align_cross", "int",      "set_align_cross"},
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        reg("LGridLayout", {
+            .is_container = true,
+            .props = {
+                {"columns",      "int",      "set_columns"},
+                {"rows",         "int",      "set_rows"},
+                {"col_spacing",  "int",      "set_column_spacing"},
+                {"row_spacing",  "int",      "set_row_spacing"},
+                {"size",         "int_pair", "set_size"},
+                {"pos",          "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        reg("LFormLayout", {
+            .is_container = true,
+            .props = {
+                {"label_width",    "int",      "set_label_width"},
+                {"row_spacing",     "int",      "set_row_spacing"},
+                {"col_spacing",     "int",      "set_column_spacing"},
+                {"size",        "int_pair", "set_size"},
+                {"pos",         "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        reg("LStackedLayout", {
+            .is_container = true,
+            .props = {
+                {"current_index", "int",      "set_current_index"},
+                {"size",          "int_pair", "set_size"},
+                {"pos",           "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        // ===== New Widgets =====
+
+        reg("LComboBox", {
+            .is_container = false,
+            .props = {
+                {"options",            "string",   "set_options"},
+                {"selected",           "int",      "set_selected"},
+                {"direction",          "int",      "set_direction"},
+                {"symbol",             "string",   "set_symbol"},
+                {"text",               "string",   "set_text"},
+                {"selected_highlight", "bool",     "set_selected_highlight"},
+                {"enabled",            "bool",     "set_enabled"},
+                {"size",               "int_pair", "set_size"},
+                {"pos",                "int_pair", "set_pos"},
+            },
+            .events = {
+                {"value_changed", "on_change"},
+            }
+        });
+
+        reg("LLineEdit", {
+            .is_container = false,
+            .props = {
+                {"text",              "string",   "set_text"},
+                {"placeholder",       "string",   "set_placeholder"},
+                {"password_mode",     "bool",     "set_password_mode"},
+                {"password_show_time","int",      "set_password_show_time"},
+                {"max_length",        "int",      "set_max_length"},
+                {"accepted_chars",    "string",   "set_accepted_chars"},
+                {"cursor_click_pos",  "bool",     "set_cursor_click_pos"},
+                {"text_selection",    "bool",     "set_text_selection"},
+                {"enabled",           "bool",     "set_enabled"},
+                {"size",              "int_pair", "set_size"},
+                {"pos",               "int_pair", "set_pos"},
+            },
+            .events = {
+                {"value_changed", "on_change"},
+                {"ready",         "on_ready"},
+            }
+        });
+
+        reg("LTextEdit", {
+            .is_container = false,
+            .props = {
+                {"text",              "string",   "set_text"},
+                {"placeholder",       "string",   "set_placeholder"},
+                {"password_mode",     "bool",     "set_password_mode"},
+                {"password_show_time","int",      "set_password_show_time"},
+                {"max_length",        "int",      "set_max_length"},
+                {"accepted_chars",    "string",   "set_accepted_chars"},
+                {"cursor_click_pos",  "bool",     "set_cursor_click_pos"},
+                {"text_selection",    "bool",     "set_text_selection"},
+                {"enabled",           "bool",     "set_enabled"},
+                {"size",              "int_pair", "set_size"},
+                {"pos",               "int_pair", "set_pos"},
+            },
+            .events = {
+                {"value_changed", "on_change"},
+                {"ready",         "on_ready"},
+            }
+        });
+
+        reg("LRadioButton", {
+            .is_container = false,
+            .props = {
+                {"text",    "string",   "set_text"},
+                {"checked", "bool",     "set_checked"},
+                {"size",    "int_pair", "set_size"},
+                {"pos",     "int_pair", "set_pos"},
+            },
+            .events = {
+                {"value_changed", "on_change"},
+            }
+        });
+
+        reg("LGroupBox", {
+            .is_container = true,
+            .props = {
+                {"title",   "string",   "set_title"},
+                {"padding", "int",      "set_padding"},
+                {"size",    "int_pair", "set_size"},
+                {"pos",     "int_pair", "set_pos"},
             },
             .events = {}
         });

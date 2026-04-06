@@ -6,30 +6,27 @@
 
 namespace lvgl {
 
-/**
- * @brief LDropdown component (select from list)
- */
-class LDropdown : public LWidgetCRTP<LDropdown> {
+class LComboBox : public LWidgetCRTP<LComboBox> {
 public:
-    explicit LDropdown(lv_obj_t* parent = nullptr)
+    explicit LComboBox(lv_obj_t* parent = nullptr)
         : LWidgetCRTP(lv_dropdown_create(parent ? parent : lv_scr_act())) {}
 
-    LDropdown& set_options(const char* opts) {
+    LComboBox& set_options(const char* opts) {
         lv_dropdown_set_options(m_obj, opts);
         return *this;
     }
 
-    LDropdown& add_option(const char* opt, uint32_t pos = LV_DROPDOWN_POS_LAST) {
+    LComboBox& add_option(const char* opt, uint32_t pos = LV_DROPDOWN_POS_LAST) {
         lv_dropdown_add_option(m_obj, opt, pos);
         return *this;
     }
 
-    LDropdown& clear_options() {
+    LComboBox& clear_options() {
         lv_dropdown_clear_options(m_obj);
         return *this;
     }
 
-    LDropdown& set_selected(uint16_t idx) {
+    LComboBox& set_selected(uint16_t idx) {
         lv_dropdown_set_selected(m_obj, idx);
         return *this;
     }
@@ -46,22 +43,22 @@ public:
         return lv_dropdown_get_option_count(m_obj);
     }
 
-    LDropdown& set_direction(lv_dir_t dir) {
+    LComboBox& set_direction(lv_dir_t dir) {
         lv_dropdown_set_dir(m_obj, dir);
         return *this;
     }
 
-    LDropdown& set_symbol(const char* symbol) {
+    LComboBox& set_symbol(const char* symbol) {
         lv_dropdown_set_symbol(m_obj, symbol);
         return *this;
     }
 
-    LDropdown& set_text(const char* txt) {
+    LComboBox& set_text(const char* txt) {
         lv_dropdown_set_text(m_obj, txt);
         return *this;
     }
 
-    LDropdown& open(bool open = true) {
+    LComboBox& open(bool open = true) {
         if (open) {
             lv_dropdown_open(m_obj);
         } else {
@@ -74,23 +71,23 @@ public:
         lv_dropdown_close(m_obj);
     }
 
-    LDropdown& set_size(int w, int h) {
+    LComboBox& set_size(int w, int h) {
         lv_obj_set_size(m_obj, w, h);
         return *this;
     }
 
-    LDropdown& set_pos(int x, int y) {
+    LComboBox& set_pos(int x, int y) {
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }
 
     template<typename Func>
-    LDropdown& on_change(Func&& callback) {
+    LComboBox& on_change(Func&& callback) {
         connect_event(m_obj, LV_EVENT_VALUE_CHANGED, std::forward<Func>(callback));
         return *this;
     }
 
-    LDropdown& set_enabled(bool enabled) {
+    LComboBox& set_enabled(bool enabled) {
         if (enabled) {
             lv_obj_remove_state(m_obj, LV_STATE_DISABLED);
         } else {

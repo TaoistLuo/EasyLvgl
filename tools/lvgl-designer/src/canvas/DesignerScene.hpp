@@ -45,8 +45,10 @@ public:
     void setGridSize(int size) { m_gridSize = size; update(); }
     QPointF snapToGrid(QPointF pos) const;
 
+    void emitWidgetsSelected();
+
 signals:
-    void selectionChanged(WidgetItem* item);
+    void widgetsSelected(const QList<WidgetItem*>& items);
     void documentModified();
 
 protected:
@@ -54,7 +56,9 @@ protected:
     void dragEnterEvent(QGraphicsSceneDragDropEvent* event) override;
     void dragMoveEvent(QGraphicsSceneDragDropEvent* event) override;
     void dropEvent(QGraphicsSceneDragDropEvent* event) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+private:
+    void assignSceneRecursive(WidgetItem* item);
 };
 
 }

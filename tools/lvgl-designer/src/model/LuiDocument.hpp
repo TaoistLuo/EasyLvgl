@@ -17,6 +17,7 @@ namespace designer {
 struct WidgetNode {
     std::string type;
     std::string id;
+    std::string parentId;
     std::map<std::string, QVariant> props;
     std::vector<std::string> events;
     std::vector<WidgetNode> children;
@@ -69,20 +70,45 @@ struct WidgetNode {
     QSizeF defaultSize() const {
         if (type == "LButton") return QSizeF(120, 50);
         if (type == "LLabel") return QSizeF(100, 30);
-        if (type == "LSlider") return QSizeF(200, 10);
+        if (type == "LSlider") return QSizeF(200, 15);
         if (type == "LBar") return QSizeF(200, 20);
         if (type == "LCheckbox") return QSizeF(140, 30);
+        if (type == "LRadioButton") return QSizeF(140, 30);
         if (type == "LSwitch") return QSizeF(50, 25);
-        if (type == "LDropdown") return QSizeF(150, 40);
-        if (type == "LTextArea") return QSizeF(200, 80);
+        if (type == "LComboBox") return QSizeF(150, 40);
+        if (type == "LLineEdit") return QSizeF(200, 40);
+        if (type == "LTextEdit") return QSizeF(200, 100);
+        if (type == "LImage") return QSizeF(100, 100);
         if (type == "LArc") return QSizeF(100, 100);
         if (type == "LSpinner") return QSizeF(50, 50);
         if (type == "LLed") return QSizeF(30, 30);
-        if (type == "LVStack") return QSizeF(300, 400);
-        if (type == "LHStack") return QSizeF(400, 100);
+        if (type == "LLine") return QSizeF(200, 2);
         if (type == "LTable") return QSizeF(300, 200);
         if (type == "LChart") return QSizeF(300, 200);
-        if (type == "LImage") return QSizeF(100, 100);
+        if (type == "LScale") return QSizeF(200, 80);
+        if (type == "LSpinbox") return QSizeF(120, 40);
+        if (type == "LRoller") return QSizeF(120, 120);
+        if (type == "LKeyboard") return QSizeF(300, 120);
+        if (type == "LButtonMatrix") return QSizeF(200, 100);
+        if (type == "LSpan") return QSizeF(200, 50);
+        if (type == "LAnimImage") return QSizeF(100, 100);
+        if (type == "LCalendar") return QSizeF(250, 220);
+        if (type == "LGroupBox") return QSizeF(300, 200);
+        if (type == "LList") return QSizeF(200, 200);
+        if (type == "LTabView") return QSizeF(300, 250);
+        if (type == "LMenu") return QSizeF(250, 300);
+        if (type == "LTileView") return QSizeF(300, 250);
+        if (type == "LCanvas") return QSizeF(200, 200);
+        if (type == "LMsgBox") return QSizeF(300, 180);
+        if (type == "LImageButton") return QSizeF(100, 40);
+        if (type == "LWin") return QSizeF(300, 250);
+        if (type == "LLottie") return QSizeF(100, 100);
+        // Layouts - larger default containers
+        if (type == "LVBoxLayout") return QSizeF(300, 400);
+        if (type == "LHBoxLayout") return QSizeF(400, 100);
+        if (type == "LGridLayout") return QSizeF(300, 300);
+        if (type == "LFormLayout") return QSizeF(300, 300);
+        if (type == "LStackedLayout") return QSizeF(300, 300);
         return QSizeF(100, 40);
     }
 
@@ -129,25 +155,50 @@ struct WidgetNode {
         } else if (type == "LCheckbox") {
             props.emplace("text", QVariant(QString("Checkbox")));
             props.emplace("checked", QVariant(false));
+        } else if (type == "LRadioButton") {
+            props.emplace("text", QVariant(QString("Radio")));
+            props.emplace("checked", QVariant(false));
         } else if (type == "LSwitch") {
             props.emplace("checked", QVariant(false));
             props.emplace("enabled", QVariant(true));
-        } else if (type == "LDropdown") {
+        } else if (type == "LComboBox") {
             props.emplace("options", QVariant(QString("Option 1\\nOption 2\\nOption 3")));
             props.emplace("selected", QVariant(0));
             props.emplace("direction", QVariant(0));
+            props.emplace("symbol", QVariant(QString("")));
+            props.emplace("text", QVariant(QString("")));
+            props.emplace("selected_highlight", QVariant(true));
             props.emplace("enabled", QVariant(true));
-        } else if (type == "LTextArea") {
+        } else if (type == "LLineEdit") {
             props.emplace("text", QVariant(QString("")));
             props.emplace("placeholder", QVariant(QString("Enter text...")));
-            props.emplace("one_line", QVariant(false));
             props.emplace("password_mode", QVariant(false));
+            props.emplace("password_show_time", QVariant(1500));
             props.emplace("max_length", QVariant(0));
+            props.emplace("accepted_chars", QVariant(QString("")));
+            props.emplace("cursor_click_pos", QVariant(true));
+            props.emplace("text_selection", QVariant(false));
+            props.emplace("enabled", QVariant(true));
+        } else if (type == "LTextEdit") {
+            props.emplace("text", QVariant(QString("")));
+            props.emplace("placeholder", QVariant(QString("Enter text...")));
+            props.emplace("password_mode", QVariant(false));
+            props.emplace("password_show_time", QVariant(1500));
+            props.emplace("max_length", QVariant(0));
+            props.emplace("accepted_chars", QVariant(QString("")));
+            props.emplace("cursor_click_pos", QVariant(true));
+            props.emplace("text_selection", QVariant(false));
             props.emplace("enabled", QVariant(true));
         } else if (type == "LImage") {
             props.emplace("src", QVariant(QString("")));
             props.emplace("rotation", QVariant(0));
             props.emplace("scale", QVariant(256));
+            props.emplace("scale_x", QVariant(256));
+            props.emplace("scale_y", QVariant(256));
+            props.emplace("pivot", QVariant(pair0));
+            props.emplace("offset", QVariant(pair0));
+            props.emplace("antialias", QVariant(true));
+            props.emplace("inner_align", QVariant(0));
             props.emplace("opacity", QVariant(255));
         } else if (type == "LArc") {
             props.emplace("range", QVariant(pair100));
@@ -158,13 +209,19 @@ struct WidgetNode {
             angles.append(QVariant(0));
             angles.append(QVariant(360));
             props.emplace("bg_angles", QVariant(angles));
+            props.emplace("angles", QVariant(angles));
+            props.emplace("change_rate", QVariant(0));
+            props.emplace("knob_offset", QVariant(0));
         } else if (type == "LBar") {
             props.emplace("range", QVariant(pair100));
             props.emplace("value", QVariant(0));
             props.emplace("start_value", QVariant(0));
             props.emplace("mode", QVariant(0));
+            props.emplace("orientation", QVariant(0));
         } else if (type == "LSpinner") {
             props.emplace("color", QVariant(QString("0x2196F3")));
+            props.emplace("anim_speed", QVariant(1000));
+            props.emplace("anim_period", QVariant(1000));
         } else if (type == "LLed") {
             props.emplace("color", QVariant(QString("0x00FF00")));
             props.emplace("brightness", QVariant(255));
@@ -173,6 +230,9 @@ struct WidgetNode {
             props.emplace("width", QVariant(2));
             props.emplace("color", QVariant(QString("0xFFFFFF")));
             props.emplace("y_invert", QVariant(false));
+            props.emplace("dash_width", QVariant(0));
+            props.emplace("dash_gap", QVariant(0));
+            props.emplace("rounded", QVariant(false));
         } else if (type == "LRoller") {
             props.emplace("options", QVariant(QString("Item 1\\nItem 2\\nItem 3")));
             props.emplace("selected", QVariant(0));
@@ -186,6 +246,8 @@ struct WidgetNode {
             df.append(QVariant(0));
             props.emplace("digit_format", QVariant(df));
             props.emplace("rollover", QVariant(false));
+            props.emplace("cursor_pos", QVariant(0));
+            props.emplace("digit_step_direction", QVariant(0));
         } else if (type == "LButtonMatrix") {
             props.emplace("one_checked", QVariant(false));
         } else if (type == "LKeyboard") {
@@ -197,6 +259,10 @@ struct WidgetNode {
         } else if (type == "LChart") {
             props.emplace("type", QVariant(0));
             props.emplace("point_count", QVariant(10));
+            QVariantList divLines;
+            divLines.append(QVariant(3));
+            divLines.append(QVariant(5));
+            props.emplace("div_line_count", QVariant(divLines));
             props.emplace("update_mode", QVariant(0));
         } else if (type == "LScale") {
             props.emplace("mode", QVariant(0));
@@ -204,11 +270,9 @@ struct WidgetNode {
             props.emplace("total_tick_count", QVariant(11));
             props.emplace("major_tick_every", QVariant(5));
             props.emplace("rotation", QVariant(0));
+            props.emplace("angle_range", QVariant(270));
             props.emplace("label_show", QVariant(true));
-        } else if (type == "LVStack" || type == "LHStack") {
-            props.emplace("spacing", QVariant(10));
-            props.emplace("padding", QVariant(10));
-            props.emplace("align_items", QVariant(0));
+            props.emplace("draw_ticks_on_top", QVariant(false));
         } else if (type == "LSpan") {
             props.emplace("mode", QVariant(0));
             props.emplace("overflow", QVariant(0));
@@ -229,6 +293,60 @@ struct WidgetNode {
         } else if (type == "LMenu") {
             props.emplace("mode_header", QVariant(0));
             props.emplace("mode_root_back_button", QVariant(0));
+        } else if (type == "LCalendar") {
+            QVariantList today;
+            today.append(QVariant(2026));
+            today.append(QVariant(1));
+            today.append(QVariant(1));
+            props.emplace("today_date", QVariant(today));
+            QVariantList showed;
+            showed.append(QVariant(2026));
+            showed.append(QVariant(1));
+            props.emplace("showed_date", QVariant(showed));
+            props.emplace("chinese_mode", QVariant(false));
+        } else if (type == "LGroupBox") {
+            props.emplace("title", QVariant(QString("Group")));
+            props.emplace("spacing", QVariant(5));
+            props.emplace("padding", QVariant(10));
+        } else if (type == "LList") {
+            props.emplace("spacing", QVariant(2));
+            props.emplace("padding", QVariant(5));
+        } else if (type == "LTileView") {
+            props.emplace("columns", QVariant(1));
+            props.emplace("rows", QVariant(1));
+            props.emplace("anim_time", QVariant(300));
+        } else if (type == "LCanvas") {
+            props.emplace("buffer_width", QVariant(200));
+            props.emplace("buffer_height", QVariant(200));
+        } else if (type == "LImageButton") {
+            props.emplace("state", QVariant(0));
+            props.emplace("src_released", QVariant(QString("")));
+            props.emplace("src_pressed", QVariant(QString("")));
+            props.emplace("src_disabled", QVariant(QString("")));
+        } else if (type == "LWin") {
+            props.emplace("title", QVariant(QString("Window")));
+        } else if (type == "LVBoxLayout") {
+            props.emplace("spacing", QVariant(10));
+            props.emplace("padding", QVariant(10));
+            props.emplace("align_items", QVariant(0));
+        } else if (type == "LHBoxLayout") {
+            props.emplace("spacing", QVariant(10));
+            props.emplace("padding", QVariant(10));
+            props.emplace("align_items", QVariant(0));
+        } else if (type == "LGridLayout") {
+            props.emplace("columns", QVariant(2));
+            props.emplace("rows", QVariant(2));
+            props.emplace("col_spacing", QVariant(5));
+            props.emplace("row_spacing", QVariant(5));
+            props.emplace("padding", QVariant(10));
+        } else if (type == "LFormLayout") {
+            props.emplace("row_spacing", QVariant(10));
+            props.emplace("col_spacing", QVariant(10));
+            props.emplace("label_width", QVariant(80));
+            props.emplace("padding", QVariant(10));
+        } else if (type == "LStackedLayout") {
+            props.emplace("current_index", QVariant(0));
+            props.emplace("padding", QVariant(0));
         }
 
         setSize(defaultSize());
@@ -319,12 +437,96 @@ public:
     }
 
     void addChild(WidgetNode node) {
+        node.parentId.clear();
+        node.parent = nullptr;
+        syncParentLinks(node);
         m_children.push_back(std::move(node));
         m_modified = true;
     }
 
+    bool addChildTo(const std::string& parentId, WidgetNode node) {
+        if (parentId.empty()) {
+            addChild(std::move(node));
+            return true;
+        }
+        auto* parentNode = findById(parentId);
+        if (!parentNode) return false;
+        node.parentId = parentId;
+        node.parent = parentNode;
+        syncParentLinks(node);
+        parentNode->children.push_back(std::move(node));
+        m_modified = true;
+        return true;
+    }
+
     bool removeById(const std::string& id) {
         return removeByIdFrom(m_children, id);
+    }
+
+    void createNew() {
+        m_version = "1.0";
+        m_name = "Unnamed";
+        m_width = 800;
+        m_height = 480;
+        m_children.clear();
+        m_filePath.clear();
+        m_modified = false;
+    }
+
+    std::string generateUniqueId(const std::string& type) {
+        std::string prefix = type;
+        if (!prefix.empty() && prefix.front() == 'L') prefix.erase(prefix.begin());
+        for (auto& ch : prefix) ch = std::tolower(static_cast<unsigned char>(ch));
+
+        int counter = 1;
+        while (true) {
+            std::string candidate = prefix + "_" + std::to_string(counter++);
+            if (!findById(candidate)) return candidate;
+        }
+    }
+
+    WidgetNode* findParentOf(const std::string& id) {
+        return findParentOfIn(m_children, id);
+    }
+
+    bool insertChildAt(const std::string& parentId, int index, WidgetNode node) {
+        if (parentId.empty()) {
+            node.parentId.clear();
+            node.parent = nullptr;
+            syncParentLinks(node);
+            index = std::max(0, std::min(index, (int)m_children.size()));
+            m_children.insert(m_children.begin() + index, std::move(node));
+            m_modified = true;
+            return true;
+        }
+
+        auto* parentNode = findById(parentId);
+        if (!parentNode) return false;
+        node.parentId = parentId;
+        node.parent = parentNode;
+        syncParentLinks(node);
+        index = std::max(0, std::min(index, (int)parentNode->children.size()));
+        parentNode->children.insert(parentNode->children.begin() + index, std::move(node));
+        m_modified = true;
+        return true;
+    }
+
+    int childIndex(const std::string& id) {
+        auto* vec = siblingsOf(id);
+        if (!vec) return -1;
+        for (int i = 0; i < (int)vec->size(); ++i) {
+            if ((*vec)[i].id == id) return i;
+        }
+        return -1;
+    }
+
+    std::vector<WidgetNode>* siblingsOf(const std::string& id) {
+        auto* parentNode = findParentOf(id);
+        if (parentNode) return &parentNode->children;
+        for (auto& child : m_children) {
+            if (child.id == id) return &m_children;
+        }
+        return nullptr;
     }
 
     int nextAutoId() {
@@ -333,10 +535,19 @@ public:
     }
 
 private:
+    void syncParentLinks(WidgetNode& node) {
+        for (auto& child : node.children) {
+            child.parentId = node.id;
+            child.parent = &node;
+            syncParentLinks(child);
+        }
+    }
+
     WidgetNode parseNode(const QJsonObject& obj) {
         WidgetNode node;
         node.type = obj["type"].toString().toStdString();
         node.id = obj["id"].toString().toStdString();
+        node.parentId = obj["parentId"].toString().toStdString();
 
         if (obj.contains("props") && obj["props"].isObject()) {
             auto propsObj = obj["props"].toObject();
@@ -354,6 +565,7 @@ private:
         if (obj.contains("children") && obj["children"].isArray()) {
             for (auto val : obj["children"].toArray()) {
                 auto child = parseNode(val.toObject());
+                child.parentId = node.id;
                 child.parent = &node;
                 node.children.push_back(std::move(child));
             }
@@ -366,6 +578,7 @@ private:
         QJsonObject obj;
         obj["type"] = QString::fromStdString(node.type);
         obj["id"] = QString::fromStdString(node.id);
+        if (!node.parentId.empty()) obj["parentId"] = QString::fromStdString(node.parentId);
 
         if (!node.props.empty()) {
             QJsonObject propsObj;
@@ -421,6 +634,17 @@ private:
         for (auto& n : nodes) {
             if (n.id == id) return &n;
             auto* found = findByIdIn(n.children, id);
+            if (found) return found;
+        }
+        return nullptr;
+    }
+
+    WidgetNode* findParentOfIn(std::vector<WidgetNode>& nodes, const std::string& id) {
+        for (auto& n : nodes) {
+            for (auto& child : n.children) {
+                if (child.id == id) return &n;
+            }
+            auto* found = findParentOfIn(n.children, id);
             if (found) return found;
         }
         return nullptr;

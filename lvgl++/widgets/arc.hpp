@@ -78,11 +78,8 @@ public:
     }
 
     LArc& set_colors(uint32_t bg_color, uint32_t fg_color) {
-        LStyle bg_style;
-        bg_style.set_bg_color(bg_color).apply_to(m_obj, LV_PART_MAIN);
-        
-        LStyle fg_style;
-        fg_style.set_bg_color(fg_color).apply_to(m_obj, LV_PART_INDICATOR);
+        lv_obj_set_style_arc_color(m_obj, lv_color_hex(bg_color), LV_PART_MAIN);
+        lv_obj_set_style_arc_color(m_obj, lv_color_hex(fg_color), LV_PART_INDICATOR);
         
         return *this;
     }

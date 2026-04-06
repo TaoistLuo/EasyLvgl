@@ -23,7 +23,7 @@
       "events": ["clicked"]
     },
     {
-      "type": "LVStack",
+      "type": "LVBoxLayout",
       "id": "info_panel",
       "props": {
         "spacing": 10,

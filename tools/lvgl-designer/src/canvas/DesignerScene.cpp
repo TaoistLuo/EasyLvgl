@@ -3,13 +3,27 @@
 #include "canvas/items/ItemFactory.hpp"
 #include "commands/UndoCommands.hpp"
 #include <QPainter>
-#include <QGraphicsSceneMouseEvent>
 #include <cmath>
 
 namespace designer {
 
+namespace {
+
+QStringList collectSelectedIds(const QList<QGraphicsItem*>& items) {
+    QStringList ids;
+    for (auto* gi : items) {
+        auto* wi = dynamic_cast<WidgetItem*>(gi);
+        if (wi) ids.append(QString::fromStdString(wi->nodeId()));
+    }
+    return ids;
+}
+
+}
+
 DesignerScene::DesignerScene(QObject* parent)
-    : QGraphicsScene(parent), m_canvasBg(0x2d, 0x2d, 0x2d) {}
+    : QGraphicsScene(parent), m_canvasBg(Qt::white) {
+    connect(this, &QGraphicsScene::selectionChanged, this, &DesignerScene::emitWidgetsSelected);
+}
 
 void DesignerScene::setDocument(LuiDocument* doc) {
     m_doc = doc;
@@ -17,6 +31,9 @@ void DesignerScene::setDocument(LuiDocument* doc) {
 }
 
 void DesignerScene::rebuild() {
+    const QStringList selectedIds = collectSelectedIds(selectedItems());
+
+    blockSignals(true);
     m_selectedItem = nullptr;
     m_rebuildPending = false;
 
@@ -26,17 +43,30 @@ void DesignerScene::rebuild() {
         delete gi;
     }
 
-    if (!m_doc) return;
+    if (!m_doc) {
+        blockSignals(false);
+        return;
+    }
 
     setSceneRect(0, 0, m_doc->width(), m_doc->height());
 
     for (auto& node : m_doc->children()) {
         auto* item = ItemFactory::create(node);
         if (item) {
-            item->setScene(this);
+            assignSceneRecursive(item);
             addItem(item);
         }
     }
+
+    for (auto* gi : items()) {
+        auto* wi = dynamic_cast<WidgetItem*>(gi);
+        if (wi && selectedIds.contains(QString::fromStdString(wi->nodeId()))) {
+            wi->setSelected(true);
+        }
+    }
+
+    blockSignals(false);
+    emitWidgetsSelected();
 }
 
 void DesignerScene::scheduleRebuild() {
@@ -92,7 +122,7 @@ void DesignerScene::deleteSelected() {
 
     std::string id = m_selectedItem->nodeId();
     m_selectedItem = nullptr;
-    emit selectionChanged(nullptr);
+    clearSelection();
 
     if (m_undoStack) {
         m_undoStack->push(new DeleteWidgetCommand(this, id));
@@ -105,11 +135,9 @@ void DesignerScene::deleteSelected() {
 }
 
 void DesignerScene::selectItem(WidgetItem* item) {
-    if (m_selectedItem && m_selectedItem != item)
-        m_selectedItem->setSelected(false);
+    clearSelection();
     m_selectedItem = item;
     if (m_selectedItem) m_selectedItem->setSelected(true);
-    emit selectionChanged(item);
 }
 
 void DesignerScene::commitMoveResize(const std::string& nodeId,
@@ -117,14 +145,18 @@ void DesignerScene::commitMoveResize(const std::string& nodeId,
                                       QSizeF oldSize, QSizeF newSize) {
     if (!m_doc) return;
 
-    auto* node = m_doc->findById(nodeId);
-    if (node) {
-        node->setPos(newPos);
-        node->setSize(newSize);
-        m_doc->markModified();
+    if (m_undoStack) {
+        m_undoStack->push(new MoveResizeCommand(this, nodeId,
+                                                 oldPos, newPos, oldSize, newSize));
+    } else {
+        auto* node = m_doc->findById(nodeId);
+        if (node) {
+            node->setPos(newPos);
+            node->setSize(newSize);
+            m_doc->markModified();
+        }
+        emit documentModified();
     }
-
-    emit documentModified();
 }
 
 QPointF DesignerScene::snapToGrid(QPointF pos) const {
@@ -174,10 +206,25 @@ void DesignerScene::dropEvent(QGraphicsSceneDragDropEvent* event) {
     event->acceptProposedAction();
 }
 
-void DesignerScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    QGraphicsScene::mousePressEvent(event);
-    auto* item = dynamic_cast<WidgetItem*>(itemAt(event->scenePos(), QTransform()));
-    selectItem(item);
+void DesignerScene::emitWidgetsSelected() {
+    QList<WidgetItem*> result;
+    for (auto* gi : selectedItems()) {
+        auto* wi = dynamic_cast<WidgetItem*>(gi);
+        if (wi) result.append(wi);
+    }
+    m_selectedItem = result.isEmpty() ? nullptr : result.first();
+    emit widgetsSelected(result);
+}
+
+void DesignerScene::assignSceneRecursive(WidgetItem* item) {
+    if (!item) return;
+    item->setScene(this);
+
+    const auto childItems = item->childItems();
+    for (auto* child : childItems) {
+        auto* widgetChild = dynamic_cast<WidgetItem*>(child);
+        if (widgetChild) assignSceneRecursive(widgetChild);
+    }
 }
 
 }

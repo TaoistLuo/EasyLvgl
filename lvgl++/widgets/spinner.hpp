@@ -1,6 +1,5 @@
 #pragma once
 #include "lvgl++/core/widget.hpp"
-#include "lvgl++/core/style.hpp"
 #include "lvgl/lvgl.h"
 
 namespace lvgl {
@@ -18,8 +17,7 @@ public:
     }
 
     LSpinner& set_color(uint32_t color) {
-        LStyle style;
-        style.set_bg_color(color).apply_to(m_obj, LV_PART_INDICATOR);
+        lv_obj_set_style_arc_color(m_obj, lv_color_hex(color), LV_PART_INDICATOR);
         return *this;
     }
 

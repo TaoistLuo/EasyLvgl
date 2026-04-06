@@ -48,10 +48,10 @@ public:
         return *this;
     }
 
-    LImage& set_antialias(bool enable) {
-        lv_obj_set_style_image_opa(m_obj, enable ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
-        return *this;
-    }
+LImage& set_antialias(bool enable) {
+    lv_image_set_antialias(m_obj, enable);
+    return *this;
+}
 
     LImage& set_opacity(uint8_t opa) {
         lv_obj_set_style_image_opa(m_obj, opa, 0);
