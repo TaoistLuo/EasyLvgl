@@ -79,6 +79,7 @@ private:
     void destroyHandles();
     void updateHandlePositions();
     bool isLayoutChild(lv_obj_t* obj) const;
+    void applyStackedVisibility(lv_obj_t* stackedObj, int currentIndex);
 
 };
 

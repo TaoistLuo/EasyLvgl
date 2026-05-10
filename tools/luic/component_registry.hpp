@@ -493,6 +493,7 @@ public:
             .is_container = true,
             .props = {
                 {"current_index", "int",      "set_current_index"},
+                {"padding",       "int",      "set_padding"},
                 {"size",          "int_pair", "set_size"},
                 {"pos",           "int_pair", "set_pos"},
             },

@@ -339,11 +339,11 @@ struct ComponentSchema {
         } else if (type == "LVBoxLayout") {
             comp.props.push_back({"spacing", "int", QVariant(10)});
             comp.props.push_back({"padding", "int", QVariant(10)});
-            comp.props.push_back({"align_items", "int", QVariant(0)});
+            comp.props.push_back({"align_cross", "int", QVariant(0)});
         } else if (type == "LHBoxLayout") {
             comp.props.push_back({"spacing", "int", QVariant(10)});
             comp.props.push_back({"padding", "int", QVariant(10)});
-            comp.props.push_back({"align_items", "int", QVariant(0)});
+            comp.props.push_back({"align_cross", "int", QVariant(0)});
         } else if (type == "LGridLayout") {
             comp.props.push_back({"columns", "int", QVariant(2)});
             comp.props.push_back({"rows", "int", QVariant(2)});
@@ -357,7 +357,7 @@ struct ComponentSchema {
             comp.props.push_back({"padding", "int", QVariant(10)});
         } else if (type == "LStackedLayout") {
             comp.props.push_back({"current_index", "int", QVariant(0)});
-            comp.props.push_back({"padding", "int", QVariant(0)});
+            comp.props.push_back({"padding", "int", QVariant(6)});
         } else if (type == "LSpan") {
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"overflow", "int", QVariant(0)});

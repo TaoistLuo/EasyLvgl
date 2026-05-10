@@ -1,0 +1,6 @@
+# Hashes of file build rules.
+1686ac0f70ec223a15235611057c800d CMakeFiles/lvgl-designer_autogen
+2866c7f2e5cedb49643ee41b8029c07d lvgl_build/CMakeFiles/lvgl_autogen
+7f2847252d862f797a8b0e7c35897117 lvgl_build/CMakeFiles/lvgl_demos_autogen
+836bed3ca6588496b68ba4b838cb7a1c lvgl_build/CMakeFiles/lvgl_examples_autogen
+73dcbd075f012d00beb45f868525e334 lvgl_build/CMakeFiles/lvgl_thorvg_autogen

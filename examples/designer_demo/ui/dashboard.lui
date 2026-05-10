@@ -392,7 +392,7 @@
                                     24
                                 ],
                                 "size": [
-                                    338,
+                                    310,
                                     59
                                 ],
                                 "spacing": 10
@@ -405,7 +405,7 @@
                     "props": {
                         "padding": 10,
                         "size": [
-                            380,
+                            350,
                             110
                         ],
                         "spacing": 8
@@ -421,7 +421,7 @@
                     162
                 ],
                 "size": [
-                    780,
+                    782,
                     133
                 ],
                 "spacing": 15
@@ -537,7 +537,7 @@
                             "id": "dd_mode",
                             "parentId": "settings_panel",
                             "props": {
-                                "options": "Home\nAway\nSleep\nVacation",
+                                "options": "A\nB\nC\nD\nD",
                                 "pos": [
                                     0,
                                     24
@@ -577,11 +577,81 @@
                 ],
                 "size": [
                     780,
-                    173
+                    167
                 ],
                 "spacing": 15
             },
             "type": "LHBoxLayout"
+        },
+        {
+            "children": [
+                {
+                    "id": "button_1",
+                    "parentId": "vboxlayout_1",
+                    "props": {
+                        "disabled": false,
+                        "pos": [
+                            54,
+                            44
+                        ],
+                        "size": [
+                            120,
+                            50
+                        ],
+                        "text": "test",
+                        "theme": "primary"
+                    },
+                    "type": "LButton"
+                },
+                {
+                    "id": "checkbox_1",
+                    "parentId": "vboxlayout_1",
+                    "props": {
+                        "checked": false,
+                        "pos": [
+                            163,
+                            34
+                        ],
+                        "size": [
+                            140,
+                            30
+                        ],
+                        "text": "Checkbox"
+                    },
+                    "type": "LCheckbox"
+                }
+            ],
+            "id": "vboxlayout_1",
+            "props": {
+                "align_cross": 0,
+                "padding": 10,
+                "pos": [
+                    16,
+                    493
+                ],
+                "size": [
+                    300,
+                    108
+                ],
+                "spacing": 10
+            },
+            "type": "LVBoxLayout"
+        },
+        {
+            "id": "switch_1",
+            "props": {
+                "checked": false,
+                "enabled": true,
+                "pos": [
+                    352,
+                    503
+                ],
+                "size": [
+                    50,
+                    25
+                ]
+            },
+            "type": "LSwitch"
         }
     ],
     "name": "Dashboard",

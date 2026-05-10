@@ -38,6 +38,10 @@ public:
         lv_slider_set_mode(m_obj, mode);
         return *this;
     }
+
+    LSlider& set_mode(int mode) {
+        return set_mode(static_cast<lv_slider_mode_t>(mode));
+    }
     
     int value() const {
         return lv_slider_get_value(m_obj);

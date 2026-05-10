@@ -85,8 +85,8 @@ public:
     using WidgetItem::WidgetItem;
     void paintWidget(QPainter* painter, const QRectF& body) override {
         bool checked = propBool("checked", false);
-        double boxSize = qMin(body.height() - 4, 18.0);
-        QRectF box(body.left() + 2, body.center().y() - boxSize/2, boxSize, boxSize);
+        double boxSize = qMin(body.height() - 6, 18.0);
+        QRectF box(body.left() + 3, body.center().y() - boxSize / 2.0, boxSize, boxSize);
 
         painter->setPen(QPen(QColor(0x88, 0x88, 0x88), 1.5));
         painter->setBrush(checked ? QColor(0x0e, 0x63, 0x9c) : QColor(0x3c, 0x3c, 0x3c));
@@ -102,7 +102,37 @@ public:
 
         painter->setPen(QColor(0xcc, 0xcc, 0xcc));
         painter->setFont(QFont("Sans", 11));
-        QRectF textRect(box.right() + 6, body.top(), body.width() - boxSize - 8, body.height());
+        QRectF textRect(box.right() + 8, body.top(), body.width() - boxSize - 11, body.height());
+        painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, displayName());
+    }
+};
+
+class RadioButtonItem : public WidgetItem {
+public:
+    using WidgetItem::WidgetItem;
+    void paintWidget(QPainter* painter, const QRectF& body) override {
+        bool checked = propBool("checked", false);
+        double outerSize = qMin(body.height() - 6, 18.0);
+        QRectF outer(body.left() + 3, body.center().y() - outerSize / 2.0, outerSize, outerSize);
+
+        painter->setPen(QPen(QColor(0x88, 0x88, 0x88), 1.8));
+        painter->setBrush(QColor(0x3c, 0x3c, 0x3c));
+        painter->drawEllipse(outer);
+
+        if (checked) {
+            double innerSize = qMax(outerSize * 0.52, 7.0);
+            QRectF inner(outer.center().x() - innerSize / 2.0,
+                         outer.center().y() - innerSize / 2.0,
+                         innerSize,
+                         innerSize);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(0x0e, 0x63, 0x9c));
+            painter->drawEllipse(inner);
+        }
+
+        painter->setPen(QColor(0xcc, 0xcc, 0xcc));
+        painter->setFont(QFont("Sans", 11));
+        QRectF textRect(outer.right() + 8, body.top(), body.width() - outerSize - 11, body.height());
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, displayName());
     }
 };
@@ -137,7 +167,8 @@ public:
         painter->setFont(QFont("Sans", 11));
         QRectF textRect(body.left() + 8, body.top(), body.width() - 32, body.height());
         QString opts = propStr("options", "Select...");
-        QString first = opts.split("\\n").first();
+        opts.replace("\\n", "\n");
+        QString first = opts.split("\n").first();
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, first);
 
         painter->setPen(QPen(QColor(0xaa, 0xaa, 0xaa), 1.5));

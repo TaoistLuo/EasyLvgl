@@ -19,6 +19,7 @@ public:
         else if (t == "LSlider")   item = new SliderItem(node.id, t, p, s, parentItem);
         else if (t == "LBar")      item = new BarItem(node.id, t, p, s, parentItem);
         else if (t == "LCheckbox") item = new CheckboxItem(node.id, t, p, s, parentItem);
+        else if (t == "LRadioButton") item = new RadioButtonItem(node.id, t, p, s, parentItem);
         else if (t == "LSwitch")   item = new SwitchItem(node.id, t, p, s, parentItem);
         else if (t == "LDropdown") item = new DropdownItem(node.id, t, p, s, parentItem);
         else if (t == "LTextArea") item = new TextAreaItem(node.id, t, p, s, parentItem);

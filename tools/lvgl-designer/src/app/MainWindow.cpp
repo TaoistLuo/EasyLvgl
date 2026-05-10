@@ -237,6 +237,10 @@ void MainWindow::setupConnections() {
         scheduleRebuild();
     });
 
+    m_propPanel->setRebuildCallback([this]() {
+        scheduleRebuild();
+    });
+
     connect(m_lvglWidget, &SDL2Widget::widgetDropped, this, [this](const QString& widgetType, int x, int y) {
         WidgetNode node;
         node.type = widgetType.toStdString();

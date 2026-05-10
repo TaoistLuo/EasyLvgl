@@ -56,6 +56,76 @@ static void applyTheme(lv_obj_t* obj, const std::string& theme) {
     }
 }
 
+static void applyRadioButtonStyle(lv_obj_t* obj) {
+    if (!obj) return;
+    lv_obj_remove_style_all(obj);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(obj, 0, LV_PART_MAIN);
+
+    lv_obj_t* ring = lv_obj_get_child(obj, 0);
+    lv_obj_t* dot = ring ? lv_obj_get_child(ring, 0) : nullptr;
+    lv_obj_t* label = lv_obj_get_child(obj, 1);
+    if (!ring || !dot || !label) return;
+
+    lv_obj_remove_style_all(ring);
+    lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_border_width(ring, 2, LV_PART_MAIN);
+    lv_obj_set_style_border_color(ring, lv_color_hex(0x888888), LV_PART_MAIN);
+    lv_obj_set_style_radius(ring, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(ring, 0, LV_PART_MAIN);
+    lv_obj_clear_flag(ring, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_remove_style_all(dot);
+    lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(dot, lv_color_hex(0x0e639c), LV_PART_MAIN);
+    lv_obj_set_style_border_width(dot, 0, LV_PART_MAIN);
+    lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+    lv_obj_clear_flag(dot, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_clear_flag(label, LV_OBJ_FLAG_CLICKABLE);
+
+    const int height = lv_obj_get_height(obj);
+    const int width = lv_obj_get_width(obj);
+    int ring_size = height - 8;
+    if (ring_size > 18) ring_size = 18;
+    if (ring_size < 8) ring_size = 8;
+    const int x = 3;
+    const int y = (height - ring_size) / 2;
+    const int gap = 8;
+
+    lv_obj_set_pos(ring, x, y);
+    lv_obj_set_size(ring, ring_size, ring_size);
+
+    int dot_size = ring_size / 2;
+    if (dot_size < 6) dot_size = 6;
+    lv_obj_set_size(dot, dot_size, dot_size);
+    lv_obj_center(dot);
+
+    lv_obj_set_pos(label, x + ring_size + gap, 0);
+    int label_width = width - (x + ring_size + gap);
+    if (label_width < 0) label_width = 0;
+    lv_obj_set_size(label, label_width, height);
+
+    if (lv_obj_has_state(obj, LV_STATE_CHECKED)) lv_obj_clear_flag(dot, LV_OBJ_FLAG_HIDDEN);
+    else lv_obj_add_flag(dot, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void applyCheckableAlignment(lv_obj_t* obj) {
+    if (!obj) return;
+    const lv_font_t* font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+    const int font_h = font ? lv_font_get_line_height(font) : 14;
+    const int obj_h = lv_obj_get_height(obj);
+    const int extra = obj_h > font_h ? (obj_h - font_h) / 2 : 0;
+    const int top_extra = extra > 0 ? extra + 1 : 0;
+    const int bottom_extra = extra > 0 ? extra - 1 : 0;
+
+    lv_obj_set_style_pad_top(obj, top_extra, LV_PART_MAIN);
+    lv_obj_set_style_pad_bottom(obj, bottom_extra, LV_PART_MAIN);
+    lv_obj_set_style_pad_column(obj, 6, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(obj, 1, LV_PART_INDICATOR);
+}
+
 lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
     lv_obj_t* obj = nullptr;
     lv_obj_t* targetParent = parent ? parent : lv_scr_act();
@@ -70,6 +140,7 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         obj = lv_bar_create(targetParent);
     } else if (node.type == "LCheckbox") {
         obj = lv_checkbox_create(targetParent);
+        applyCheckableAlignment(obj);
     } else if (node.type == "LSwitch") {
         obj = lv_switch_create(targetParent);
     } else if (node.type == "LComboBox") {
@@ -124,7 +195,11 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
     } else if (node.type == "LButtonMatrix") {
         obj = lv_buttonmatrix_create(targetParent);
     } else if (node.type == "LRadioButton") {
-        obj = lv_checkbox_create(targetParent);
+        obj = lv_obj_create(targetParent);
+        lv_obj_t* ring = lv_obj_create(obj);
+        lv_obj_t* dot = lv_obj_create(ring);
+        lv_obj_add_flag(dot, LV_OBJ_FLAG_HIDDEN);
+        lv_label_create(obj);
     } else if (node.type == "LGroupBox") {
         obj = lv_obj_create(targetParent);
         lv_obj_set_style_border_width(obj, 2, 0);
@@ -165,6 +240,13 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
     if (obj) {
         registerObject(node.id, node.type, obj);
         applyProps(obj, node);
+
+        if (node.type == "LCheckbox") {
+            applyCheckableAlignment(obj);
+        } else if (node.type == "LRadioButton") {
+            applyRadioButtonStyle(obj);
+        }
+
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 
         if (node.type == "LVBoxLayout" || node.type == "LHBoxLayout"
@@ -202,14 +284,10 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
             }
         }
 
-        if (node.type == "LStackedLayout" && node.props.count("current_index")) {
-            int idx = node.propInt("current_index", 0);
-            int childCount = lv_obj_get_child_count(obj);
-            for (int i = 0; i < childCount; i++) {
-                lv_obj_t* c = lv_obj_get_child(obj, i);
-                if (i == idx) lv_obj_clear_flag(c, LV_OBJ_FLAG_HIDDEN);
-                else lv_obj_add_flag(c, LV_OBJ_FLAG_HIDDEN);
-            }
+        if (node.type == "LStackedLayout") {
+            int idx = node.props.count("current_index")
+                ? node.propInt("current_index", 0) : 0;
+            applyStackedVisibility(obj, idx);
         }
     }
 
@@ -512,10 +590,10 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("text_selection")) lv_textarea_set_text_selection(obj, propBool("text_selection"));
         if (node.props.count("enabled") && !propBool("enabled")) lv_obj_add_state(obj, LV_STATE_DISABLED);
     } else if (node.type == "LRadioButton") {
-        if (node.props.count("text")) lv_checkbox_set_text(obj, propStr("text").c_str());
-        if (node.props.count("checked") && propBool("checked")) {
-            lv_obj_add_state(obj, LV_STATE_CHECKED);
-        }
+        lv_obj_t* label = lv_obj_get_child(obj, 1);
+        if (label && node.props.count("text")) lv_label_set_text(label, propStr("text").c_str());
+        if (node.props.count("checked") && propBool("checked")) lv_obj_add_state(obj, LV_STATE_CHECKED);
+        else lv_obj_remove_state(obj, LV_STATE_CHECKED);
     } else if (node.type == "LGroupBox") {
         if (node.props.count("title")) {
             // GroupBox title rendered as a child label
@@ -639,9 +717,14 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             !node.props.count("pad_left") && !node.props.count("pad_right")) {
             lv_obj_set_style_pad_all(obj, propInt("padding"), 0);
         }
-        if (node.props.count("align_items")) {
-            lv_flex_align_t align = (lv_flex_align_t)propInt("align_items");
-            lv_obj_set_flex_align(obj, align, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+        if (node.props.count("align_cross") || node.props.count("align_items")) {
+            lv_flex_align_t align = (lv_flex_align_t)(node.props.count("align_cross")
+                ? propInt("align_cross")
+                : propInt("align_items"));
+            lv_obj_set_flex_align(obj,
+                                  lv_obj_get_style_flex_main_place(obj, 0),
+                                  align,
+                                  lv_obj_get_style_flex_track_place(obj, 0));
         }
     } else if (node.type == "LGridLayout") {
         if (node.props.count("col_spacing")) lv_obj_set_style_pad_column(obj, propInt("col_spacing"), 0);
@@ -747,6 +830,35 @@ bool LvglRenderer::isLayoutChild(lv_obj_t* obj) const {
            t == "LGridLayout" || t == "LStackedLayout";
 }
 
+void LvglRenderer::applyStackedVisibility(lv_obj_t* stackedObj, int currentIndex) {
+    if (!stackedObj) return;
+    lv_obj_update_layout(stackedObj);
+    int childCount = lv_obj_get_child_count(stackedObj);
+    if (childCount <= 0) return;
+    if (currentIndex < 0 || currentIndex >= childCount) currentIndex = 0;
+
+    lv_area_t objectArea;
+    lv_area_t contentArea;
+    lv_obj_get_coords(stackedObj, &objectArea);
+    lv_obj_get_content_coords(stackedObj, &contentArea);
+    int width = contentArea.x2 - contentArea.x1 + 1;
+    int height = contentArea.y2 - contentArea.y1 + 1;
+    if (width < 0) width = 0;
+    if (height < 0) height = 0;
+
+    for (int i = 0; i < childCount; i++) {
+        lv_obj_t* child = lv_obj_get_child(stackedObj, i);
+        if (!child) continue;
+        lv_obj_set_pos(child, 0, 0);
+        lv_obj_set_size(child, width, height);
+        if (i == currentIndex) {
+            lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+}
+
 void LvglRenderer::registerObject(const std::string& id, const std::string& type, lv_obj_t* obj) {
     m_objects[id] = obj;
     m_idMap[obj] = id;
@@ -761,8 +873,21 @@ void LvglRenderer::registerObject(const std::string& id, const std::string& type
         auto* self = static_cast<LvglRenderer*>(lv_event_get_user_data(e));
         if (!self) return;
         lv_obj_t* target = static_cast<lv_obj_t*>(lv_event_get_target(e));
-        if (target == self->m_selectedObj) return;
-        auto it = self->m_idMap.find(target);
+        lv_obj_t* selectionTarget = target;
+
+        lv_obj_t* parent = lv_obj_get_parent(target);
+        if (parent && parent != lv_scr_act()) {
+            auto parentIt = self->m_idMap.find(parent);
+            if (parentIt != self->m_idMap.end()) {
+                auto typeIt = self->m_types.find(parentIt->second);
+                if (typeIt != self->m_types.end() && typeIt->second == "LStackedLayout") {
+                    selectionTarget = parent;
+                }
+            }
+        }
+
+        if (selectionTarget == self->m_selectedObj) return;
+        auto it = self->m_idMap.find(selectionTarget);
         if (it != self->m_idMap.end()) {
             PendingEvent evt;
             evt.type = PendingEvent::Click;

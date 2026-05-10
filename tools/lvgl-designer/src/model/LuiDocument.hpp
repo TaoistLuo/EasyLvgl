@@ -346,7 +346,7 @@ struct WidgetNode {
             props.emplace("padding", QVariant(10));
         } else if (type == "LStackedLayout") {
             props.emplace("current_index", QVariant(0));
-            props.emplace("padding", QVariant(0));
+            props.emplace("padding", QVariant(6));
         }
 
         setSize(defaultSize());

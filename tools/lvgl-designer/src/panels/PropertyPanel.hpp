@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QCheckBox>
 #include <QLabel>
 #include <QScrollArea>
@@ -24,6 +25,7 @@ class PropertyPanel : public QScrollArea {
     std::string m_currentId;
     LuiDocument* m_doc = nullptr;
     QUndoStack* m_undoStack = nullptr;
+    RebuildCallback m_rebuild;
 
 public:
     explicit PropertyPanel(QWidget* parent = nullptr) : QScrollArea(parent) {
@@ -39,6 +41,7 @@ public:
 
     void setDocument(LuiDocument* doc) { m_doc = doc; }
     void setUndoStack(QUndoStack* stack) { m_undoStack = stack; }
+    void setRebuildCallback(RebuildCallback rebuild) { m_rebuild = std::move(rebuild); }
     std::string currentId() const { return m_currentId; }
 
     void showWidget(WidgetNode* node) {
@@ -51,6 +54,8 @@ public:
         }
 
         m_currentId = node->id;
+        WidgetNode* parent = m_doc->findParentOf(node->id);
+        const bool is_stacked_child = parent && parent->type == "LStackedLayout";
 
         auto* idGroup = new QGroupBox("Identity");
         auto* idLayout = new QFormLayout(idGroup);
@@ -81,6 +86,11 @@ public:
             glayout->setContentsMargins(6, 6, 6, 6);
 
             for (auto& prop : group.props) {
+                if (is_stacked_child && (prop.name == "x" || prop.name == "y" ||
+                                         prop.name == "width" || prop.name == "height")) {
+                    continue;
+                }
+
                 QString qkey = QString::fromStdString(prop.name);
                 std::string key = prop.name;
                 QVariant val = readProp(node, key, prop.defaultVal);
@@ -153,6 +163,15 @@ public:
                         writeProp(key, QVariant(newList));
                     });
                     glayout->addRow(qkey, field);
+                } else if (prop.type == "string" && key == "options" &&
+                           (node->type == "LComboBox" || node->type == "LRoller")) {
+                    auto* field = new QPlainTextEdit(val.toString());
+                    field->setTabChangesFocus(true);
+                    field->setMinimumHeight(72);
+                    connect(field, &QPlainTextEdit::textChanged, [this, field, key]() {
+                        writeProp(key, QVariant(field->toPlainText()));
+                    });
+                    glayout->addRow(qkey, field);
                 } else {
                     auto* field = new QLineEdit(val.toString());
                     connect(field, &QLineEdit::editingFinished, [this, field, key, prop]() {
@@ -211,9 +230,10 @@ private:
             newPos.append(QVariant((int)p.x()));
             newPos.append(QVariant((int)p.y()));
             if (m_undoStack) {
-                m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, "pos", QVariant(oldPos), QVariant(newPos)));
+                m_undoStack->push(new PropertyChangeCommand(m_doc, m_rebuild, m_currentId, "pos", QVariant(oldPos), QVariant(newPos)));
             } else {
                 node->setPos(p);
+                if (m_rebuild) m_rebuild();
             }
             m_doc->markModified();
             emit documentModified();
@@ -238,9 +258,10 @@ private:
                 newSize = QVariant(ns);
             }
             if (m_undoStack) {
-                m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, "size", oldSize, newSize));
+                m_undoStack->push(new PropertyChangeCommand(m_doc, m_rebuild, m_currentId, "size", oldSize, newSize));
             } else {
                 node->setSize(s);
+                if (m_rebuild) m_rebuild();
             }
             m_doc->markModified();
             emit documentModified();
@@ -248,9 +269,10 @@ private:
         }
 
         if (m_undoStack) {
-            m_undoStack->push(new PropertyChangeCommand(m_doc, nullptr, m_currentId, key, oldVal, newVal));
+            m_undoStack->push(new PropertyChangeCommand(m_doc, m_rebuild, m_currentId, key, oldVal, newVal));
         } else {
             node->props[key] = newVal;
+            if (m_rebuild) m_rebuild();
         }
         m_doc->markModified();
         emit documentModified();
