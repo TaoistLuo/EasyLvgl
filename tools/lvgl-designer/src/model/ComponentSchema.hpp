@@ -121,6 +121,9 @@ struct ComponentSchema {
         misc.props.push_back({"base_dir", "int", QVariant(0)});
         groups.push_back(std::move(misc));
 
+        const bool hasText = type != "LImage" && type != "LCanvas"
+                          && type != "LAnimImage" && type != "LLottie";
+        if (hasText) {
         PropGroup text;
         text.groupName = "文本样式";
         text.props.push_back({"text_color", "hex", QVariant(QString("0xFFFFFF"))});
@@ -131,6 +134,7 @@ struct ComponentSchema {
         text.props.push_back({"text_align", "int", QVariant(0)});
         text.props.push_back({"text_decor", "int", QVariant(0)});
         groups.push_back(std::move(text));
+        }
 
         PropGroup transform;
         transform.groupName = "变换";
@@ -145,30 +149,37 @@ struct ComponentSchema {
         transform.props.push_back({"transform_skew_y", "int", QVariant(0)});
         groups.push_back(std::move(transform));
 
-        PropGroup lineStyle;
-        lineStyle.groupName = "线条样式";
-        lineStyle.props.push_back({"line_color", "hex", QVariant(QString("0xFFFFFF"))});
-        lineStyle.props.push_back({"line_width", "int", QVariant(1)});
-        lineStyle.props.push_back({"line_opa", "int", QVariant(255)});
-        lineStyle.props.push_back({"line_dash_width", "int", QVariant(0)});
-        lineStyle.props.push_back({"line_dash_gap", "int", QVariant(0)});
-        lineStyle.props.push_back({"line_rounded", "bool", QVariant(false)});
-        groups.push_back(std::move(lineStyle));
+        // line_* 只对真正画线的对象有效（lv_line 等），对按钮之类的对象设置后不会有任何视觉变化
+        if (type == "LLine") {
+            PropGroup lineStyle;
+            lineStyle.groupName = "线条样式";
+            lineStyle.props.push_back({"line_color", "hex", QVariant(QString("0xFFFFFF"))});
+            lineStyle.props.push_back({"line_width", "int", QVariant(1)});
+            lineStyle.props.push_back({"line_opa", "int", QVariant(255)});
+            lineStyle.props.push_back({"line_dash_width", "int", QVariant(0)});
+            lineStyle.props.push_back({"line_dash_gap", "int", QVariant(0)});
+            lineStyle.props.push_back({"line_rounded", "bool", QVariant(false)});
+            groups.push_back(std::move(lineStyle));
+        }
 
-        PropGroup arcStyle;
-        arcStyle.groupName = "圆弧样式";
-        arcStyle.props.push_back({"arc_color", "hex", QVariant(QString("0xFFFFFF"))});
-        arcStyle.props.push_back({"arc_width", "int", QVariant(2)});
-        arcStyle.props.push_back({"arc_opa", "int", QVariant(255)});
-        arcStyle.props.push_back({"arc_rounded", "bool", QVariant(false)});
-        groups.push_back(std::move(arcStyle));
+        if (type == "LArc") {
+            PropGroup arcStyle;
+            arcStyle.groupName = "圆弧样式";
+            arcStyle.props.push_back({"arc_color", "hex", QVariant(QString("0xFFFFFF"))});
+            arcStyle.props.push_back({"arc_width", "int", QVariant(2)});
+            arcStyle.props.push_back({"arc_opa", "int", QVariant(255)});
+            arcStyle.props.push_back({"arc_rounded", "bool", QVariant(false)});
+            groups.push_back(std::move(arcStyle));
+        }
 
-        PropGroup imgStyle;
-        imgStyle.groupName = "图片样式";
-        imgStyle.props.push_back({"image_opa", "int", QVariant(255)});
-        imgStyle.props.push_back({"image_recolor", "hex", QVariant(QString("0x000000"))});
-        imgStyle.props.push_back({"image_recolor_opa", "int", QVariant(0)});
-        groups.push_back(std::move(imgStyle));
+        if (type == "LImage" || type == "LImageButton" || type == "LAnimImage") {
+            PropGroup imgStyle;
+            imgStyle.groupName = "图片样式";
+            imgStyle.props.push_back({"image_opa", "int", QVariant(255)});
+            imgStyle.props.push_back({"image_recolor", "hex", QVariant(QString("0x000000"))});
+            imgStyle.props.push_back({"image_recolor_opa", "int", QVariant(0)});
+            groups.push_back(std::move(imgStyle));
+        }
 
         PropGroup comp;
         comp.groupName = type;
@@ -326,7 +337,6 @@ struct ComponentSchema {
             showed.append(QVariant(2026));
             showed.append(QVariant(1));
             comp.props.push_back({"showed_date", "int_pair", QVariant(showed)});
-            comp.props.push_back({"chinese_mode", "bool", QVariant(false)});
         } else if (type == "LGroupBox") {
             comp.props.push_back({"title", "string", QVariant(QString("Group"))});
             comp.props.push_back({"padding", "int", QVariant(10)});

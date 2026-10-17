@@ -148,6 +148,8 @@ public:
                         }
                         writeProp(key, QVariant(hexField->text()));
                     });
+                    hbox->addWidget(swatch);
+                    hbox->addWidget(hexField);
                     glayout->addRow(qkey, container);
                 } else if (prop.type == "int_pair" || prop.type == "int_triple") {
                     auto list = val.toList();

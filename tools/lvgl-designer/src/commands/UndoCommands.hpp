@@ -16,7 +16,7 @@ class AddWidgetCommand : public QUndoCommand {
     WidgetNode m_node;
 public:
     AddWidgetCommand(LuiDocument* doc, RebuildCallback rebuild, WidgetNode node)
-        : QUndoCommand("Add Widget"), m_doc(doc), m_rebuild(std::move(rebuild)), m_node(std::move(node)) {}
+        : QUndoCommand("添加组件"), m_doc(doc), m_rebuild(std::move(rebuild)), m_node(std::move(node)) {}
     void redo() override;
     void undo() override;
 };
@@ -30,7 +30,7 @@ class DeleteWidgetCommand : public QUndoCommand {
     int m_childIndex;
 public:
     DeleteWidgetCommand(LuiDocument* doc, RebuildCallback rebuild, const std::string& id)
-        : QUndoCommand("Delete Widget"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id), m_childIndex(-1) {}
+        : QUndoCommand("删除组件"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id), m_childIndex(-1) {}
     void redo() override;
     void undo() override;
 };
@@ -44,7 +44,7 @@ class MoveResizeCommand : public QUndoCommand {
 public:
     MoveResizeCommand(LuiDocument* doc, RebuildCallback rebuild, const std::string& id,
                       QPointF oldPos, QPointF newPos, QSizeF oldSize, QSizeF newSize)
-        : QUndoCommand("Move/Resize"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
+        : QUndoCommand("移动/缩放"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
           m_oldPos(oldPos), m_newPos(newPos), m_oldSize(oldSize), m_newSize(newSize) {}
     void redo() override;
     void undo() override;
@@ -59,7 +59,7 @@ class PropertyChangeCommand : public QUndoCommand {
 public:
     PropertyChangeCommand(LuiDocument* doc, RebuildCallback rebuild, const std::string& id,
                           const std::string& key, QVariant oldVal, QVariant newVal)
-        : QUndoCommand("Change Property"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
+        : QUndoCommand("修改属性"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
           m_key(key), m_oldVal(std::move(oldVal)), m_newVal(std::move(newVal)) {}
     void redo() override;
     void undo() override;
@@ -77,7 +77,7 @@ class ReparentCommand : public QUndoCommand {
 public:
     ReparentCommand(LuiDocument* doc, RebuildCallback rebuild, const std::string& id,
                     const std::string& newParentId)
-        : QUndoCommand("Reparent Widget"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
+        : QUndoCommand("改变父级"), m_doc(doc), m_rebuild(std::move(rebuild)), m_id(id),
           m_oldIndex(-1), m_newParentId(newParentId), m_newIndex(-1) {}
     void redo() override;
     void undo() override;
