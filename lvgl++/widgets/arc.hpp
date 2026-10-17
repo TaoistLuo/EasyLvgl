@@ -32,6 +32,10 @@ public:
         return *this;
     }
 
+    LArc& set_mode(int mode) {
+        return set_mode(static_cast<lv_arc_mode_t>(mode));
+    }
+
     LArc& set_rotation(uint16_t rotation) {
         lv_arc_set_rotation(m_obj, rotation);
         return *this;

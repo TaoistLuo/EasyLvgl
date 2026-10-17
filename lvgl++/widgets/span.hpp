@@ -34,6 +34,10 @@ public:
         lv_spangroup_set_mode(m_obj, mode);
         return *this;
     }
+
+    LSpan& set_mode(int mode) {
+        return set_mode(static_cast<lv_span_mode_t>(mode));
+    }
 };
 
 } // namespace lvgl

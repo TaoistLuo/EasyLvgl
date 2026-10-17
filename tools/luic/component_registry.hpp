@@ -11,6 +11,8 @@ struct prop_def_t {
     std::string method;   // C++ method name, e.g. "text", "size", "range"
     bool is_theme = false;
     bool after_children = false;  // emit after children are created (layout state depending on child count)
+    std::string prefix_arg;       // fixed leading argument, e.g. "LV_IMAGEBUTTON_STATE_RELEASED"
+    std::string expand;           // special expansion: "argv", "lines", "cells", ...
 };
 
 struct event_def_t {
@@ -243,6 +245,8 @@ public:
         reg("LButtonMatrix", {
             .is_container = false,
             .props = {
+                {"map",         "string",   "set_map", false, false, "", "argv"},
+                {"selected",    "int",      "set_selected"},
                 {"one_checked", "bool",     "set_one_checked"},
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
@@ -255,6 +259,7 @@ public:
         reg("LKeyboard", {
             .is_container = false,
             .props = {
+                {"textarea", "string",   "set_textarea", false, false, "", "ref"},
                 {"mode",     "int",      "set_mode"},
                 {"popovers", "bool",     "set_popovers"},
                 {"size",     "int_pair", "set_size"},
@@ -266,8 +271,12 @@ public:
         reg("LImageButton", {
             .is_container = false,
             .props = {
-                {"size", "int_pair", "set_size"},
-                {"pos",  "int_pair", "set_pos"},
+                {"state",        "int",      "set_state"},
+                {"src_released", "string",   "set_src", false, false, "LV_IMAGEBUTTON_STATE_RELEASED"},
+                {"src_pressed",  "string",   "set_src", false, false, "LV_IMAGEBUTTON_STATE_PRESSED"},
+                {"src_disabled", "string",   "set_src", false, false, "LV_IMAGEBUTTON_STATE_DISABLED"},
+                {"size",         "int_pair", "set_size"},
+                {"pos",          "int_pair", "set_pos"},
             },
             .events = {
                 {"clicked", "on_click"},
@@ -279,10 +288,12 @@ public:
         reg("LTable", {
             .is_container = false,
             .props = {
-                {"row_count",    "int",      "set_row_count"},
-                {"column_count", "int",      "set_column_count"},
-                {"size",         "int_pair", "set_size"},
-                {"pos",          "int_pair", "set_pos"},
+                {"row_count",     "int",      "set_row_count"},
+                {"column_count",  "int",      "set_column_count"},
+                {"column_widths", "string",   "set_column_width", false, false, "", "int_2arg"},
+                {"data",          "string",   "set_cell_value", false, false, "", "cells"},
+                {"size",          "int_pair", "set_size"},
+                {"pos",           "int_pair", "set_pos"},
             },
             .events = {}
         });
@@ -294,6 +305,7 @@ public:
                 {"point_count",    "int",      "set_point_count"},
                 {"div_line_count", "int_pair", "set_div_line_count"},
                 {"update_mode",    "int",      "set_update_mode"},
+                {"series",         "string",   "set_next_value", false, false, "", "series"},
                 {"size",           "int_pair", "set_size"},
                 {"pos",            "int_pair", "set_pos"},
             },
@@ -341,8 +353,9 @@ public:
         reg("LList", {
             .is_container = true,
             .props = {
-                {"size", "int_pair", "set_size"},
-                {"pos",  "int_pair", "set_pos"},
+                {"items", "string",   "add_button", false, false, "", "list_items"},
+                {"size",  "int_pair", "set_size"},
+                {"pos",   "int_pair", "set_pos"},
             },
             .events = {}
         });
@@ -350,6 +363,7 @@ public:
         reg("LTabView", {
             .is_container = true,
             .props = {
+                {"tabs",             "string",   "add_tab", false, false, "", "lines"},
                 {"tab_bar_position", "int",      "set_tab_bar_position"},
                 {"tab_bar_size",     "int",      "set_tab_bar_size"},
                 {"size",             "int_pair", "set_size"},
@@ -381,8 +395,9 @@ public:
         reg("LWin", {
             .is_container = true,
             .props = {
-                {"size", "int_pair", "set_size"},
-                {"pos",  "int_pair", "set_pos"},
+                {"title", "string",   "add_title"},
+                {"size",  "int_pair", "set_size"},
+                {"pos",   "int_pair", "set_pos"},
             },
             .events = {}
         });

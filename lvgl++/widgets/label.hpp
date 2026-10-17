@@ -72,6 +72,10 @@ public:
         return *this;
     }
 
+    LLabel& set_long_mode(int mode) {
+        return set_long_mode(static_cast<lv_label_long_mode_t>(mode));
+    }
+
     LLabel& set_size(int w, int h) {
         lv_obj_set_size(m_obj, w, h);
         return *this;

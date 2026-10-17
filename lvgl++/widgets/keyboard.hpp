@@ -19,6 +19,10 @@ public:
         return *this;
     }
 
+    LKeyboard& set_mode(int mode) {
+        return set_mode(static_cast<lv_keyboard_mode_t>(mode));
+    }
+
     LKeyboard& set_popovers(bool en) {
         lv_keyboard_set_popovers(m_obj, en);
         return *this;

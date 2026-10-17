@@ -8,6 +8,7 @@ namespace luic {
 
 class CodeGenerator {
     const ComponentRegistry& m_registry;
+    std::vector<std::string> m_pendingRefs;
 
     std::string escape_string(const std::string& s) {
         std::string out;
@@ -38,6 +39,87 @@ class CodeGenerator {
         return def.type == "bool" && (def.method == "on" || def.method == "off");
     }
 
+    static std::vector<std::string> split(const std::string& s, char sep) {
+        std::vector<std::string> out;
+        std::string cur;
+        for (char c : s) {
+            if (c == sep) { out.push_back(cur); cur.clear(); }
+            else cur += c;
+        }
+        out.push_back(cur);
+        return out;
+    }
+
+    void emit_expand(std::ostringstream& out, const std::string& pad,
+                     const std::string& id, const prop_def_t& def,
+                     const property_t& prop) {
+        if (def.expand == "argv") {
+            auto rows = split(prop.str_val, '\n');
+            out << pad << "static const char* _m_" << id << "[] = {";
+            bool first_row = true;
+            for (auto& row : rows) {
+                if (!first_row) out << "\"\\n\", ";
+                for (auto& item : split(row, ' ')) {
+                    if (item.empty()) continue;
+                    out << "\"" << escape_string(item) << "\", ";
+                }
+                first_row = false;
+            }
+            out << "NULL};\n";
+            out << pad << "m_" << id << "->" << def.method << "(_m_" << id << ");\n";
+        } else if (def.expand == "lines") {
+            for (auto& line : split(prop.str_val, '\n')) {
+                if (line.empty()) continue;
+                out << pad << "m_" << id << "->" << def.method
+                    << "(\"" << escape_string(line) << "\");\n";
+            }
+        } else if (def.expand == "cells") {
+            auto rows = split(prop.str_val, '\n');
+            for (size_t r = 0; r < rows.size(); r++) {
+                auto cells = split(rows[r], '|');
+                for (size_t c = 0; c < cells.size(); c++) {
+                    if (cells[c].empty()) continue;
+                    out << pad << "m_" << id << "->set_cell_value(" << r << ", "
+                        << c << ", \"" << escape_string(cells[c]) << "\");\n";
+                }
+            }
+        } else if (def.expand == "int_2arg") {
+            auto vals = split(prop.str_val, ',');
+            for (size_t i = 0; i < vals.size(); i++) {
+                std::string v = vals[i];
+                while (!v.empty() && v.front() == ' ') v.erase(v.begin());
+                if (v.empty()) continue;
+                out << pad << "m_" << id << "->" << def.method
+                    << "(" << i << ", " << v << ");\n";
+            }
+        } else if (def.expand == "list_items") {
+            for (auto& line : split(prop.str_val, '\n')) {
+                if (line.empty()) continue;
+                if (line[0] == '#')
+                    out << pad << "m_" << id << "->add_text(\""
+                        << escape_string(line.substr(1)) << "\");\n";
+                else
+                    out << pad << "m_" << id << "->add_button(NULL, \""
+                        << escape_string(line) << "\");\n";
+            }
+        } else if (def.expand == "series") {
+            for (auto& ser : split(prop.str_val, ';')) {
+                if (ser.empty()) continue;
+                out << pad << "{ lv_chart_series_t* _s = m_" << id
+                    << "->add_series(0xFF0000, LV_CHART_AXIS_PRIMARY_Y);\n";
+                for (auto& v : split(ser, ',')) {
+                    std::string val = v;
+                    while (!val.empty() && val.front() == ' ') val.erase(val.begin());
+                    if (val.empty()) continue;
+                    out << pad << "  m_" << id << "->set_next_value(_s, " << val << ");\n";
+                }
+            out << pad << "}\n";
+            }
+        } else if (def.expand == "ref") {
+            m_pendingRefs.push_back("m_" + id + "->" + def.method + "(m_" + prop.str_val + "->native());");
+        }
+    }
+
     void gen_node(std::ostringstream& out, const widget_node_t& node,
                   const std::string& parent_expr, int indent) {
         std::string pad(indent, ' ');
@@ -55,6 +137,13 @@ class CodeGenerator {
 
             if (pdef->after_children) {
                 deferred.push_back(&prop);
+                continue;
+            }
+
+            if (!pdef->expand.empty()) {
+                if (has_chain) { out << ";\n"; has_chain = false; }
+                out << "\n";
+                emit_expand(out, pad, node.id, *pdef, prop);
                 continue;
             }
 
@@ -76,11 +165,13 @@ class CodeGenerator {
             } else {
                 std::string val = format_value(*pdef, prop);
                 if (!has_chain) {
-                    out << pad << "m_" << node.id << "->" << pdef->method << "(" << val << ")";
+                    out << pad << "m_" << node.id << "->" << pdef->method << "(";
                     has_chain = true;
                 } else {
-                    out << "\n" << pad << "      ." << pdef->method << "(" << val << ")";
+                    out << "\n" << pad << "      ." << pdef->method << "(";
                 }
+                if (!pdef->prefix_arg.empty()) out << pdef->prefix_arg << ", ";
+                out << val << ")";
             }
         }
         if (has_chain) out << ";\n";
@@ -93,8 +184,13 @@ class CodeGenerator {
         for (auto* prop : deferred) {
             auto* pdef = comp->find_prop(prop->name);
             if (!pdef) continue;
-            out << "\n" << pad << "m_" << node.id << "->" << pdef->method
-                << "(" << format_value(*pdef, *prop) << ");\n";
+            if (!pdef->expand.empty()) {
+                emit_expand(out, pad, node.id, *pdef, *prop);
+                continue;
+            }
+            out << "\n" << pad << "m_" << node.id << "->" << pdef->method << "(";
+            if (!pdef->prefix_arg.empty()) out << pdef->prefix_arg << ", ";
+            out << format_value(*pdef, *prop) << ");\n";
         }
     }
 
@@ -125,6 +221,12 @@ public:
         for (auto& child : doc.children) {
             gen_node(out, child, "root", 8);
             out << "\n";
+        }
+        if (!m_pendingRefs.empty()) {
+            out << "        // cross-references\n";
+            for (auto& r : m_pendingRefs) out << "        " << r << "\n";
+            out << "\n";
+            m_pendingRefs.clear();
         }
         out << "    }\n";
 

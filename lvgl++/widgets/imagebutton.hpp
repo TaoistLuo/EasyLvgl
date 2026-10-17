@@ -20,6 +20,10 @@ public:
         return *this;
     }
 
+    LImageButton& set_state(int state) {
+        return set_state(static_cast<lv_imagebutton_state_t>(state));
+    }
+
     LImageButton& set_size(int w, int h) {
         lv_obj_set_size(m_obj, w, h);
         return *this;

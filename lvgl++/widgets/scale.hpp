@@ -14,6 +14,10 @@ public:
         return *this;
     }
 
+    LScale& set_mode(int mode) {
+        return set_mode(static_cast<lv_scale_mode_t>(mode));
+    }
+
     LScale& set_range(int32_t min, int32_t max) {
         lv_scale_set_range(m_obj, min, max);
         return *this;

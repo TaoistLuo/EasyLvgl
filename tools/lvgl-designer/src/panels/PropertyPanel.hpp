@@ -163,8 +163,10 @@ public:
                         writeProp(key, QVariant(newList));
                     });
                     glayout->addRow(qkey, field);
-                } else if (prop.type == "string" && key == "options" &&
-                           (node->type == "LComboBox" || node->type == "LRoller")) {
+                } else if (prop.type == "string" &&
+                           (key == "options" || key == "map" || key == "data" ||
+                            key == "items" || key == "tabs" || key == "series" ||
+                            key == "column_widths")) {
                     auto* field = new QPlainTextEdit(val.toString());
                     field->setTabChangesFocus(true);
                     field->setMinimumHeight(72);

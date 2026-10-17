@@ -35,6 +35,10 @@ public:
         return *this;
     }
 
+    LBar& set_mode(int mode) {
+        return set_mode(static_cast<lv_bar_mode_t>(mode));
+    }
+
     LBar& set_orientation(bool horizontal) {
         if (horizontal) {
             lv_obj_set_size(m_obj, 200, 20);

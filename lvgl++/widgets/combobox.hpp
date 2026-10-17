@@ -48,6 +48,10 @@ public:
         return *this;
     }
 
+    LComboBox& set_direction(int dir) {
+        return set_direction(static_cast<lv_dir_t>(dir));
+    }
+
     LComboBox& set_symbol(const char* symbol) {
         lv_dropdown_set_symbol(m_obj, symbol);
         return *this;

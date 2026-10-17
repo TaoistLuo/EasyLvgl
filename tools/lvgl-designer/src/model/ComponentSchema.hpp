@@ -285,13 +285,18 @@ struct ComponentSchema {
             comp.props.push_back({"cursor_pos", "int", QVariant(0)});
             comp.props.push_back({"digit_step_direction", "int", QVariant(0)});
         } else if (type == "LButtonMatrix") {
+            comp.props.push_back({"map", "string", QVariant(QString("A B C\\nD E F"))});
+            comp.props.push_back({"selected", "int", QVariant(0)});
             comp.props.push_back({"one_checked", "bool", QVariant(false)});
         } else if (type == "LKeyboard") {
+            comp.props.push_back({"textarea", "string", QVariant(QString(""))});
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"popovers", "bool", QVariant(false)});
         } else if (type == "LTable") {
             comp.props.push_back({"row_count", "int", QVariant(3)});
             comp.props.push_back({"column_count", "int", QVariant(3)});
+            comp.props.push_back({"column_widths", "string", QVariant(QString(""))});
+            comp.props.push_back({"data", "string", QVariant(QString("A|B|C\\nD|E|F"))});
         } else if (type == "LChart") {
             comp.props.push_back({"type", "int", QVariant(0)});
             comp.props.push_back({"point_count", "int", QVariant(10)});
@@ -300,6 +305,7 @@ struct ComponentSchema {
             divLines.append(QVariant(5));
             comp.props.push_back({"div_line_count", "int_pair", QVariant(divLines)});
             comp.props.push_back({"update_mode", "int", QVariant(0)});
+            comp.props.push_back({"series", "string", QVariant(QString("10,20,30,20,10"))});
         } else if (type == "LScale") {
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"range", "int_pair", QVariant(pair100)});
@@ -325,6 +331,7 @@ struct ComponentSchema {
             comp.props.push_back({"spacing", "int", QVariant(5)});
             comp.props.push_back({"padding", "int", QVariant(10)});
         } else if (type == "LList") {
+            comp.props.push_back({"items", "string", QVariant(QString("#Header\\nItem 1\\nItem 2"))});
             comp.props.push_back({"spacing", "int", QVariant(2)});
             comp.props.push_back({"padding", "int", QVariant(5)});
         } else if (type == "LTileView") {
@@ -373,6 +380,7 @@ struct ComponentSchema {
             comp.props.push_back({"duration", "int", QVariant(1000)});
             comp.props.push_back({"repeat_count", "int", QVariant(0)});
         } else if (type == "LTabView") {
+            comp.props.push_back({"tabs", "string", QVariant(QString("Tab 1\\nTab 2"))});
             comp.props.push_back({"tab_bar_position", "int", QVariant(0)});
             comp.props.push_back({"tab_bar_size", "int", QVariant(40)});
         } else if (type == "LMenu") {

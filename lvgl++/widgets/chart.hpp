@@ -14,6 +14,10 @@ public:
         return *this;
     }
 
+    LChart& set_type(int type) {
+        return set_type(static_cast<lv_chart_type_t>(type));
+    }
+
     LChart& set_point_count(uint16_t cnt) {
         lv_chart_set_point_count(m_obj, cnt);
         return *this;
@@ -32,6 +36,10 @@ public:
     LChart& set_update_mode(lv_chart_update_mode_t mode) {
         lv_chart_set_update_mode(m_obj, mode);
         return *this;
+    }
+
+    LChart& set_update_mode(int mode) {
+        return set_update_mode(static_cast<lv_chart_update_mode_t>(mode));
     }
 
     lv_chart_series_t* add_series(uint32_t color, lv_chart_axis_t axis) {

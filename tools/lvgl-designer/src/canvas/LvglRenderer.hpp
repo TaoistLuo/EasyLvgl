@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -60,7 +61,20 @@ class LvglRenderer {
     };
     std::map<std::string, StackedNav> m_stackedNavs;
 
+    std::deque<std::string> m_strStore;
+    std::deque<std::vector<const char*>> m_mapStore;
+
 public:
+    const char* intern(const std::string& s) {
+        m_strStore.push_back(s);
+        return m_strStore.back().c_str();
+    }
+
+    std::vector<const char*>& storeMap() {
+        m_mapStore.emplace_back();
+        return m_mapStore.back();
+    }
+
     void buildTree(const LuiDocument& doc);
     void clear();
     void pollEvents();

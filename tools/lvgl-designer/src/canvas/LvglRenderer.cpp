@@ -119,6 +119,33 @@ static void applyRadioButtonStyle(lv_obj_t* obj) {
     else lv_obj_add_flag(dot, LV_OBJ_FLAG_HIDDEN);
 }
 
+static std::string unescapeNewlines(std::string s) {
+    size_t pos = 0;
+    while ((pos = s.find("\\n", pos)) != std::string::npos) {
+        s.replace(pos, 2, "\n");
+        pos += 1;
+    }
+    return s;
+}
+
+static std::vector<std::string> splitStr(const std::string& s, char sep) {
+    std::vector<std::string> out;
+    std::string cur;
+    for (char c : s) {
+        if (c == sep) { out.push_back(cur); cur.clear(); }
+        else cur += c;
+    }
+    out.push_back(cur);
+    return out;
+}
+
+static std::string trimStr(const std::string& s) {
+    size_t a = s.find_first_not_of(" \t\r");
+    if (a == std::string::npos) return "";
+    size_t b = s.find_last_not_of(" \t\r");
+    return s.substr(a, b - a + 1);
+}
+
 static void applyCheckableAlignment(lv_obj_t* obj) {
     if (!obj) return;
     lv_obj_update_layout(obj);
@@ -681,6 +708,25 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             lv_table_set_row_count(obj, propInt("row_count"));
             lv_table_set_column_count(obj, propInt("column_count"));
         }
+        if (node.props.count("column_widths")) {
+            int idx = 0;
+            for (auto& tok : splitStr(propStr("column_widths"), ',')) {
+                std::string t = trimStr(tok);
+                if (!t.empty()) lv_table_set_column_width(obj, idx, atoi(t.c_str()));
+                idx++;
+            }
+        }
+        if (node.props.count("data")) {
+            int r = 0;
+            for (auto& row : splitStr(unescapeNewlines(propStr("data")), '\n')) {
+                int c = 0;
+                for (auto& cell : splitStr(row, '|')) {
+                    if (!cell.empty()) lv_table_set_cell_value(obj, r, c, cell.c_str());
+                    c++;
+                }
+                r++;
+            }
+        }
     } else if (node.type == "LChart") {
         if (node.props.count("type")) lv_chart_set_type(obj, (lv_chart_type_t)propInt("type"));
         if (node.props.count("point_count")) lv_chart_set_point_count(obj, propInt("point_count"));
@@ -689,6 +735,16 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             if (list.size() == 2) lv_chart_set_div_line_count(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("update_mode")) lv_chart_set_update_mode(obj, (lv_chart_update_mode_t)propInt("update_mode"));
+        if (node.props.count("series")) {
+            for (auto& ser : splitStr(unescapeNewlines(propStr("series")), ';')) {
+                if (ser.empty()) continue;
+                lv_chart_series_t* sp = lv_chart_add_series(obj, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
+                for (auto& v : splitStr(ser, ',')) {
+                    std::string t = trimStr(v);
+                    if (!t.empty()) lv_chart_set_next_value(obj, sp, atoi(t.c_str()));
+                }
+            }
+        }
     } else if (node.type == "LScale") {
         if (node.props.count("mode")) lv_scale_set_mode(obj, (lv_scale_mode_t)propInt("mode"));
         if (node.props.count("range")) {
@@ -763,12 +819,25 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     } else if (node.type == "LStackedLayout") {
         if (node.props.count("padding")) lv_obj_set_style_pad_all(obj, node.propInt("padding", 0), 0);
     } else if (node.type == "LTabView") {
+        if (node.props.count("tabs")) {
+            for (auto& name : splitStr(unescapeNewlines(propStr("tabs")), '\n')) {
+                if (!name.empty()) lv_tabview_add_tab(obj, name.c_str());
+            }
+        }
         if (node.props.count("tab_bar_position")) {
             lv_dir_t dir = (lv_dir_t)propInt("tab_bar_position");
             lv_tabview_set_tab_bar_position(obj, dir);
         }
         if (node.props.count("tab_bar_size")) {
             lv_tabview_set_tab_bar_size(obj, propInt("tab_bar_size"));
+        }
+    } else if (node.type == "LList") {
+        if (node.props.count("items")) {
+            for (auto& line : splitStr(unescapeNewlines(propStr("items")), '\n')) {
+                if (line.empty()) continue;
+                if (line[0] == '#') lv_list_add_text(obj, line.substr(1).c_str());
+                else lv_list_add_button(obj, NULL, line.c_str());
+            }
         }
     } else if (node.type == "LMenu") {
         if (node.props.count("mode_header")) {
@@ -794,6 +863,20 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("cursor_pos")) lv_spinbox_set_cursor_pos(obj, propInt("cursor_pos"));
         if (node.props.count("digit_step_direction")) lv_spinbox_set_digit_step_direction(obj, (lv_dir_t)propInt("digit_step_direction"));
     } else if (node.type == "LButtonMatrix") {
+        if (node.props.count("map")) {
+            std::vector<const char*>& arr = storeMap();
+            for (auto& row : splitStr(unescapeNewlines(propStr("map")), '\n')) {
+                if (!arr.empty()) arr.push_back(intern("\n"));
+                for (auto& btn : splitStr(row, ' ')) {
+                    if (!btn.empty()) arr.push_back(intern(btn));
+                }
+            }
+            arr.push_back(nullptr);
+            lv_buttonmatrix_set_map(obj, arr.data());
+        }
+        if (node.props.count("selected")) {
+            lv_buttonmatrix_set_selected_button(obj, propInt("selected"));
+        }
         if (node.props.count("one_checked") && propBool("one_checked")) {
             lv_buttonmatrix_set_one_checked(obj, true);
         }
@@ -820,6 +903,14 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("state")) {
             lv_imagebutton_set_state(obj, (lv_imagebutton_state_t)propInt("state"));
         }
+        auto setSrc = [&](const char* key, lv_imagebutton_state_t st) {
+            if (!node.props.count(key)) return;
+            std::string s = propStr(key);
+            if (!s.empty()) lv_imagebutton_set_src(obj, st, nullptr, intern(s), nullptr);
+        };
+        setSrc("src_released", LV_IMAGEBUTTON_STATE_RELEASED);
+        setSrc("src_pressed",  LV_IMAGEBUTTON_STATE_PRESSED);
+        setSrc("src_disabled", LV_IMAGEBUTTON_STATE_DISABLED);
     } else if (node.type == "LWin") {
         if (node.props.count("title")) {
             lv_win_add_title(obj, propStr("title").c_str());
@@ -1127,6 +1218,20 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
     for (const auto& child : doc.children()) {
         createWidget(child, nullptr);
     }
+
+    std::function<void(const std::vector<WidgetNode>&)> resolveRefs =
+        [&](const std::vector<WidgetNode>& nodes) {
+            for (const auto& n : nodes) {
+                if (n.type == "LKeyboard" && n.props.count("textarea")) {
+                    auto kb = m_objects.find(n.id);
+                    auto ta = m_objects.find(n.propString("textarea"));
+                    if (kb != m_objects.end() && ta != m_objects.end() && kb->second && ta->second)
+                        lv_keyboard_set_textarea(kb->second, ta->second);
+                }
+                resolveRefs(n.children);
+            }
+        };
+    resolveRefs(doc.children());
 }
 
 void LvglRenderer::clear() {
@@ -1139,6 +1244,8 @@ void LvglRenderer::clear() {
     m_types.clear();
     m_gridDescArrays.clear();
     m_stackedNavs.clear();
+    m_strStore.clear();
+    m_mapStore.clear();
 
     lv_obj_clean(lv_scr_act());
 }
