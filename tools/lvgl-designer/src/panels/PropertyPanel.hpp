@@ -28,6 +28,8 @@ class PropertyPanel : public QScrollArea {
     QUndoStack* m_undoStack = nullptr;
     RebuildCallback m_rebuild;
     std::function<void(int, int)> m_onRootSize;
+    /** 查询对象当前实际生效的样式值；返回无效 QVariant 表示不是样式属性 */
+    std::function<QVariant(const std::string&, const std::string&)> m_styleValue;
 
 public:
     explicit PropertyPanel(QWidget* parent = nullptr) : QScrollArea(parent) {
@@ -95,7 +97,12 @@ public:
 
                 QString qkey = QString::fromStdString(prop.name);
                 std::string key = prop.name;
-                QVariant val = readProp(node, key, prop.defaultVal);
+                // 未显式设置的样式属性：显示 LVGL 里实际生效的值，
+                // 否则会显示 schema 里写死的默认值（例如按钮显示黑色，实际是主题蓝）
+                QVariant val;
+                if (node->props.find(key) == node->props.end() && m_styleValue)
+                    val = m_styleValue(node->id, key);
+                if (!val.isValid()) val = readProp(node, key, prop.defaultVal);
 
                 if (prop.type == "bool") {
                     auto* cb = new QCheckBox();
@@ -200,6 +207,9 @@ public:
     }
 
     void setRootResizeCallback(std::function<void(int, int)> cb) { m_onRootSize = std::move(cb); }
+    void setStyleValueProvider(std::function<QVariant(const std::string&, const std::string&)> cb) {
+        m_styleValue = std::move(cb);
+    }
 
     void showRoot(const std::string& rootId, int w, int h) {
         clearLayout();

@@ -258,6 +258,10 @@ void MainWindow::setupConnections() {
         scheduleRebuild();
     });
 
+    m_propPanel->setStyleValueProvider([this](const std::string& id, const std::string& prop) {
+        return m_renderer.styleValue(id, prop);
+    });
+
     m_propPanel->setRootResizeCallback([this](int w, int h) {
         if (w < 1 || h < 1) return;
         m_doc.setScreenSize(w, h);

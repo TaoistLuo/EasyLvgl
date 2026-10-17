@@ -88,6 +88,8 @@ public:
     void pollEvents();
 
     lv_obj_t* findObject(const std::string& id) const;
+    /** 读取对象当前实际生效的样式值（用于属性面板显示真值） */
+    QVariant styleValue(const std::string& id, const std::string& prop) const;
     std::string findId(lv_obj_t* obj) const;
     std::string findContainerAt(int x, int y) const;
     std::string objectType(const std::string& id) const;

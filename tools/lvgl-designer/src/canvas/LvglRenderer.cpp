@@ -1,6 +1,7 @@
 #include "canvas/LvglRenderer.hpp"
 #include "lvgl++/core/style.hpp"
 #include <set>
+#include <cstdio>
 #include <algorithm>
 #include <algorithm>
 #include <lvgl/src/widgets/label/lv_label.h>
@@ -1275,6 +1276,120 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
             }
         };
     resolveRefs(doc.children());
+}
+
+
+namespace {
+/* 属性名 -> LVGL 样式属性枚举；用于读取对象当前实际生效的样式值 */
+lv_style_prop_t stylePropId(const std::string& name) {
+    static const std::map<std::string, lv_style_prop_t> m = {
+        {"arc_color", LV_STYLE_ARC_COLOR},
+        {"arc_opa", LV_STYLE_ARC_OPA},
+        {"arc_rounded", LV_STYLE_ARC_ROUNDED},
+        {"arc_width", LV_STYLE_ARC_WIDTH},
+        {"base_dir", LV_STYLE_BASE_DIR},
+        {"bg_color", LV_STYLE_BG_COLOR},
+        {"bg_grad_color", LV_STYLE_BG_GRAD_COLOR},
+        {"bg_grad_dir", LV_STYLE_BG_GRAD_DIR},
+        {"bg_grad_stop", LV_STYLE_BG_GRAD_STOP},
+        {"bg_image_opa", LV_STYLE_BG_IMAGE_OPA},
+        {"bg_image_recolor", LV_STYLE_BG_IMAGE_RECOLOR},
+        {"bg_image_recolor_opa", LV_STYLE_BG_IMAGE_RECOLOR_OPA},
+        {"bg_image_src", LV_STYLE_BG_IMAGE_SRC},
+        {"bg_image_tiled", LV_STYLE_BG_IMAGE_TILED},
+        {"bg_main_stop", LV_STYLE_BG_MAIN_STOP},
+        {"bg_opa", LV_STYLE_BG_OPA},
+        {"blend_mode", LV_STYLE_BLEND_MODE},
+        {"border_color", LV_STYLE_BORDER_COLOR},
+        {"border_opa", LV_STYLE_BORDER_OPA},
+        {"border_post", LV_STYLE_BORDER_POST},
+        {"border_side", LV_STYLE_BORDER_SIDE},
+        {"border_width", LV_STYLE_BORDER_WIDTH},
+        {"clip_corner", LV_STYLE_CLIP_CORNER},
+        {"image_opa", LV_STYLE_IMAGE_OPA},
+        {"image_recolor", LV_STYLE_IMAGE_RECOLOR},
+        {"image_recolor_opa", LV_STYLE_IMAGE_RECOLOR_OPA},
+        {"line_color", LV_STYLE_LINE_COLOR},
+        {"line_dash_gap", LV_STYLE_LINE_DASH_GAP},
+        {"line_dash_width", LV_STYLE_LINE_DASH_WIDTH},
+        {"line_opa", LV_STYLE_LINE_OPA},
+        {"line_rounded", LV_STYLE_LINE_ROUNDED},
+        {"line_width", LV_STYLE_LINE_WIDTH},
+        {"margin_bottom", LV_STYLE_MARGIN_BOTTOM},
+        {"margin_left", LV_STYLE_MARGIN_LEFT},
+        {"margin_right", LV_STYLE_MARGIN_RIGHT},
+        {"margin_top", LV_STYLE_MARGIN_TOP},
+        {"max_height", LV_STYLE_MAX_HEIGHT},
+        {"max_width", LV_STYLE_MAX_WIDTH},
+        {"min_height", LV_STYLE_MIN_HEIGHT},
+        {"min_width", LV_STYLE_MIN_WIDTH},
+        {"opa", LV_STYLE_OPA},
+        {"outline_color", LV_STYLE_OUTLINE_COLOR},
+        {"outline_opa", LV_STYLE_OUTLINE_OPA},
+        {"outline_pad", LV_STYLE_OUTLINE_PAD},
+        {"outline_width", LV_STYLE_OUTLINE_WIDTH},
+        {"pad_bottom", LV_STYLE_PAD_BOTTOM},
+        {"pad_column", LV_STYLE_PAD_COLUMN},
+        {"pad_left", LV_STYLE_PAD_LEFT},
+        {"pad_right", LV_STYLE_PAD_RIGHT},
+        {"pad_row", LV_STYLE_PAD_ROW},
+        {"pad_top", LV_STYLE_PAD_TOP},
+        {"radius", LV_STYLE_RADIUS},
+        {"shadow_color", LV_STYLE_SHADOW_COLOR},
+        {"shadow_opa", LV_STYLE_SHADOW_OPA},
+        {"shadow_spread", LV_STYLE_SHADOW_SPREAD},
+        {"shadow_width", LV_STYLE_SHADOW_WIDTH},
+        {"text_align", LV_STYLE_TEXT_ALIGN},
+        {"text_color", LV_STYLE_TEXT_COLOR},
+        {"text_decor", LV_STYLE_TEXT_DECOR},
+        {"text_letter_space", LV_STYLE_TEXT_LETTER_SPACE},
+        {"text_line_space", LV_STYLE_TEXT_LINE_SPACE},
+        {"text_opa", LV_STYLE_TEXT_OPA},
+        {"transform_pivot_x", LV_STYLE_TRANSFORM_PIVOT_X},
+        {"transform_pivot_y", LV_STYLE_TRANSFORM_PIVOT_Y},
+        {"transform_rotation", LV_STYLE_TRANSFORM_ROTATION},
+        {"transform_scale_x", LV_STYLE_TRANSFORM_SCALE_X},
+        {"transform_scale_y", LV_STYLE_TRANSFORM_SCALE_Y},
+        {"transform_skew_x", LV_STYLE_TRANSFORM_SKEW_X},
+        {"transform_skew_y", LV_STYLE_TRANSFORM_SKEW_Y},
+        {"translate_x", LV_STYLE_TRANSLATE_X},
+        {"translate_y", LV_STYLE_TRANSLATE_Y},
+        {"width", LV_STYLE_WIDTH},
+    };
+    auto it = m.find(name);
+    return it == m.end() ? LV_STYLE_PROP_INV : it->second;
+}
+
+bool isColorStyleProp(const std::string& name) {
+    static const std::set<std::string> s = {
+        "arc_color",
+        "bg_color",
+        "bg_grad_color",
+        "bg_image_recolor",
+        "border_color",
+        "image_recolor",
+        "line_color",
+        "outline_color",
+        "shadow_color",
+        "text_color",
+    };
+    return s.count(name) > 0;
+}
+} // namespace
+
+QVariant LvglRenderer::styleValue(const std::string& id, const std::string& prop) const {
+    auto it = m_objects.find(id);
+    if (it == m_objects.end() || !it->second || !lv_obj_is_valid(it->second)) return QVariant();
+    lv_style_prop_t sp = stylePropId(prop);
+    if (sp == LV_STYLE_PROP_INV) return QVariant();
+
+    lv_style_value_t v = lv_obj_get_style_prop(it->second, 0, sp);
+    if (isColorStyleProp(prop)) {
+        char buf[16];
+        std::snprintf(buf, sizeof(buf), "0x%02X%02X%02X", v.color.red, v.color.green, v.color.blue);
+        return QVariant(QString::fromUtf8(buf));
+    }
+    return QVariant((int)v.num);
 }
 
 void LvglRenderer::clear() {
