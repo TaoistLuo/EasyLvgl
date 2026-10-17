@@ -26,7 +26,7 @@ static constexpr int PAN_MARGIN = 60;
 static constexpr double ZOOM_MIN = 0.25;
 static constexpr double ZOOM_MAX = 4.0;
 static constexpr double ZOOM_STEP = 1.1;
-static constexpr int ROOT_HANDLE_SIZE = 8;
+static constexpr int ROOT_HANDLE_SIZE = 12;
 static constexpr int ROOT_HANDLE_HIT = 7;
 static constexpr int ROOT_MIN_SIZE = 20;
 

@@ -27,7 +27,7 @@ class LvglRenderer {
     lv_obj_t* m_selectedObj = nullptr;
     std::vector<lv_obj_t*> m_multiSelectedObjs;
 
-    static constexpr int HANDLE_SIZE = 8;
+    static constexpr int HANDLE_SIZE = 12;
     static constexpr int MIN_WIDGET_SIZE = 20;
 
     lv_obj_t* m_handles[8] = {};

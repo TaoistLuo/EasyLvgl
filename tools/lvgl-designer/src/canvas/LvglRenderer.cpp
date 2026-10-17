@@ -1342,6 +1342,7 @@ void LvglRenderer::createHandles(lv_obj_t* widget) {
         lv_obj_add_flag(h, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_clear_flag(h, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_clear_flag(h, LV_OBJ_FLAG_CLICK_FOCUSABLE);
+        lv_obj_set_ext_click_area(h, 8);
         lv_obj_move_foreground(h);
 
         int* idx = new int(i);
