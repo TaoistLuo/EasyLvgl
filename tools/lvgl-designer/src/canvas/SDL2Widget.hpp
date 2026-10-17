@@ -24,9 +24,11 @@ public:
 
     lv_display_t* display() const { return m_display; }
     void setLvglSize(int w, int h);
+    void setRootSelected(bool on);
 
 signals:
     void lvglReady();
+    void rootResized(int w, int h);
     void widgetDropped(const QString& widgetType, int x, int y);
     void wheelScrolled(int delta, int x, int y);
     void widgetClicked(int x, int y, Qt::KeyboardModifiers modifiers);
@@ -51,6 +53,10 @@ private:
     void initLvgl();
     void recreateTexture();
     void cleanup();
+    QPointF toLvgl(const QPoint& widgetPos) const;
+    void clampPan();
+    QRect canvasRect() const;
+    int rootHandleAt(const QPoint& widgetPos) const;
 
     static void flushCb(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map);
     static void mouseReadCb(lv_indev_t* indev, lv_indev_data_t* data);
@@ -74,6 +80,20 @@ private:
     bool m_mousePressed = false;
     uint32_t m_lastKey = 0;
     bool m_keyPressed = false;
+
+    double m_zoom = 1.0;
+    int m_panX = 0;
+    int m_panY = 0;
+    bool m_panning = false;
+    QPoint m_panStart;
+    int m_panStartX = 0;
+    int m_panStartY = 0;
+
+    bool m_rootSelected = false;
+    int m_rootDragEdge = -1;
+    QPoint m_rootDragStart;
+    int m_rootStartW = 0;
+    int m_rootStartH = 0;
 
     QTimer* m_tickTimer = nullptr;
     QElapsedTimer m_elapsed;

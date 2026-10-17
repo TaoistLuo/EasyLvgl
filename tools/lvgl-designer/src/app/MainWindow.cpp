@@ -186,11 +186,27 @@ void MainWindow::setupConnections() {
         m_renderer.setOnClick([this](const std::string& id) {
             m_selectedId = id;
             m_renderer.selectObject(id);
-            m_propPanel->showWidget(m_doc.findById(id));
+            m_lvglWidget->setRootSelected(id == LvglRenderer::kRootId);
+            if (id == LvglRenderer::kRootId) {
+                m_propPanel->showRoot(id, m_doc.width(), m_doc.height());
+            } else {
+                m_propPanel->showWidget(m_doc.findById(id));
+            }
             updateStatusBar();
         });
 
         m_renderer.setOnMoved([this](const std::string& id, int x, int y, int w, int h) {
+            if (id == LvglRenderer::kRootId) {
+                if (w < 1 || h < 1) return;
+                m_doc.setScreenSize(w, h);
+                m_lvglWidget->setLvglSize(w, h);
+                m_doc.markModified();
+                m_propPanel->showRoot(id, w, h);
+                updateTitle();
+                updateStatusBar();
+                return;
+            }
+
             auto* node = m_doc.findById(id);
             if (!node) return;
 
@@ -242,6 +258,27 @@ void MainWindow::setupConnections() {
         scheduleRebuild();
     });
 
+    m_propPanel->setRootResizeCallback([this](int w, int h) {
+        if (w < 1 || h < 1) return;
+        m_doc.setScreenSize(w, h);
+        m_lvglWidget->setLvglSize(w, h);
+        m_doc.markModified();
+        updateTitle();
+        rebuildFromDocument();
+        updateStatusBar();
+    });
+
+    connect(m_lvglWidget, &SDL2Widget::rootResized, this, [this](int w, int h) {
+        if (w < 1 || h < 1) return;
+        m_doc.setScreenSize(w, h);
+        m_lvglWidget->setLvglSize(w, h);
+        m_doc.markModified();
+        m_propPanel->showRoot(LvglRenderer::kRootId, w, h);
+        updateTitle();
+        rebuildFromDocument();
+        updateStatusBar();
+    });
+
     connect(m_lvglWidget, &SDL2Widget::widgetDropped, this, [this](const QString& widgetType, int x, int y) {
         WidgetNode node;
         node.type = widgetType.toStdString();
@@ -280,6 +317,11 @@ void MainWindow::updateTitle() {
 void MainWindow::updateStatusBar() {
     if (m_selectedId.empty()) {
         m_statusInfo->setText(QString("Ready | Canvas: %1x%2").arg(m_doc.width()).arg(m_doc.height()));
+        return;
+    }
+    if (m_selectedId == LvglRenderer::kRootId) {
+        m_statusInfo->setText(QString("Selected: root (LScreen) | Canvas: %1x%2")
+            .arg(m_doc.width()).arg(m_doc.height()));
         return;
     }
     auto* node = m_doc.findById(m_selectedId);

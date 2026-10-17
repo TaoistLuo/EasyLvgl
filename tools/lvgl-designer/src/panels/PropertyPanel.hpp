@@ -12,6 +12,7 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QUndoStack>
+#include <functional>
 #include "model/LuiDocument.hpp"
 #include "model/ComponentSchema.hpp"
 #include "commands/UndoCommands.hpp"
@@ -26,6 +27,7 @@ class PropertyPanel : public QScrollArea {
     LuiDocument* m_doc = nullptr;
     QUndoStack* m_undoStack = nullptr;
     RebuildCallback m_rebuild;
+    std::function<void(int, int)> m_onRootSize;
 
 public:
     explicit PropertyPanel(QWidget* parent = nullptr) : QScrollArea(parent) {
@@ -193,6 +195,35 @@ public:
         m_currentId.clear();
         clearLayout();
         m_topLayout->addWidget(new QLabel("Select a widget"));
+    }
+
+    void setRootResizeCallback(std::function<void(int, int)> cb) { m_onRootSize = std::move(cb); }
+
+    void showRoot(const std::string& rootId, int w, int h) {
+        clearLayout();
+        m_currentId = rootId;
+
+        auto* group = new QGroupBox("Root");
+        auto* layout = new QFormLayout(group);
+        layout->setContentsMargins(6, 6, 6, 6);
+
+        auto* typeField = new QLineEdit("LScreen");
+        typeField->setReadOnly(true);
+        layout->addRow("Type", typeField);
+
+        auto* wField = new QLineEdit(QString::number(w));
+        auto* hField = new QLineEdit(QString::number(h));
+        auto apply = [this, wField, hField]() {
+            if (!m_onRootSize) return;
+            m_onRootSize(wField->text().toInt(), hField->text().toInt());
+        };
+        connect(wField, &QLineEdit::editingFinished, apply);
+        connect(hField, &QLineEdit::editingFinished, apply);
+        layout->addRow("Width", wField);
+        layout->addRow("Height", hField);
+
+        m_topLayout->addWidget(group);
+        m_topLayout->addStretch();
     }
 
 signals:

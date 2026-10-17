@@ -1230,6 +1230,24 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
 
     lv_obj_t* screen = lv_scr_act();
 
+    m_objects[kRootId] = screen;
+    m_idMap[screen] = kRootId;
+    m_types[kRootId] = "LScreen";
+    lv_obj_add_flag(screen, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(screen, [](lv_event_t* e) {
+        auto* self = static_cast<LvglRenderer*>(lv_event_get_user_data(e));
+        if (!self) return;
+        if (lv_event_get_target(e) != lv_event_get_current_target(e)) return;
+        if (self->m_selectedObj == lv_scr_act()) return;
+
+        PendingEvent evt;
+        evt.type = PendingEvent::Click;
+        evt.id = kRootId;
+        self->m_pendingMutex.lock();
+        self->m_pendingEvents.push_back(std::move(evt));
+        self->m_pendingMutex.unlock();
+    }, LV_EVENT_PRESSED, this);
+
     for (const auto& child : doc.children()) {
         createWidget(child, nullptr);
     }
@@ -1293,7 +1311,7 @@ void LvglRenderer::selectObject(const std::string& id) {
             lv_obj_set_style_outline_color(obj, lv_color_hex(0x2196F3), 0);
             lv_obj_set_style_outline_opa(obj, LV_OPA_COVER, 0);
             lv_obj_set_style_outline_pad(obj, 2, 0);
-            if (!isLayoutChild(obj)) {
+            if (!isLayoutChild(obj) && obj != lv_scr_act()) {
                 createHandles(obj);
             }
         }

@@ -22,6 +22,16 @@ static void* aligned_alloc_wrapper(size_t alignment, size_t size) {
 
 namespace designer {
 
+static constexpr int PAN_MARGIN = 60;
+static constexpr double ZOOM_MIN = 0.25;
+static constexpr double ZOOM_MAX = 4.0;
+static constexpr double ZOOM_STEP = 1.1;
+static constexpr int ROOT_HANDLE_SIZE = 8;
+static constexpr int ROOT_HANDLE_HIT = 7;
+static constexpr int ROOT_MIN_SIZE = 20;
+
+static void rootHandlePoints(const QRect& r, QPoint out[8]);
+
 SDL2Widget::SDL2Widget(QWidget* parent)
     : QWidget(parent) {
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -49,8 +59,9 @@ void SDL2Widget::setLvglSize(int w, int h) {
                               lv_palette_main(LV_PALETTE_RED),
                               LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
         recreateTexture();
-        update();
     }
+    clampPan();
+    update();
 }
 
 void SDL2Widget::showEvent(QShowEvent* event) {
@@ -70,6 +81,10 @@ void SDL2Widget::resizeEvent(QResizeEvent* event) {
     const int newW = event->size().width();
     const int newH = event->size().height();
     if (newW < 1 || newH < 1) return;
+
+    clampPan();
+    update();
+
     if (m_docSizeLocked) return;
 
     if (newW != m_width || newH != m_height) {
@@ -83,41 +98,177 @@ void SDL2Widget::resizeEvent(QResizeEvent* event) {
 }
 
 void SDL2Widget::paintEvent(QPaintEvent*) {
+    QPainter painter(this);
+    painter.fillRect(rect(), QColor(0xb8, 0xb8, 0xb8));
     if (!m_fb) return;
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);
     QImage image(m_fb, m_width, m_height, stride, QImage::Format_ARGB32_Premultiplied);
-    QPainter painter(this);
-    painter.fillRect(rect(), QColor(0xb8, 0xb8, 0xb8));
+    painter.translate(m_panX, m_panY);
+    painter.scale(m_zoom, m_zoom);
     painter.drawImage(0, 0, image);
+
+    if (!m_rootSelected) return;
+
+    painter.resetTransform();
+    const QRect r = canvasRect();
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(0x21, 0x96, 0xF3), 2));
+    painter.drawRect(r);
+
+    painter.setBrush(QColor(0xFF, 0xFF, 0xFF));
+    QPoint pts[8];
+    rootHandlePoints(r, pts);
+    for (int i = 0; i < 8; i++) {
+        painter.drawRect(QRect(pts[i].x() - ROOT_HANDLE_SIZE / 2,
+                               pts[i].y() - ROOT_HANDLE_SIZE / 2,
+                               ROOT_HANDLE_SIZE, ROOT_HANDLE_SIZE));
+    }
+}
+
+QPointF SDL2Widget::toLvgl(const QPoint& widgetPos) const {
+    return QPointF((widgetPos.x() - m_panX) / m_zoom,
+                   (widgetPos.y() - m_panY) / m_zoom);
+}
+
+void SDL2Widget::clampPan() {
+    const int cw = qRound(m_width * m_zoom);
+    const int ch = qRound(m_height * m_zoom);
+
+    if (cw <= width()) m_panX = (width() - cw) / 2;
+    else m_panX = qBound(width() - cw - PAN_MARGIN, m_panX, PAN_MARGIN);
+
+    if (ch <= height()) m_panY = (height() - ch) / 2;
+    else m_panY = qBound(height() - ch - PAN_MARGIN, m_panY, PAN_MARGIN);
+}
+
+QRect SDL2Widget::canvasRect() const {
+    return QRect(m_panX, m_panY, qRound(m_width * m_zoom), qRound(m_height * m_zoom));
+}
+
+static void rootHandlePoints(const QRect& r, QPoint out[8]) {
+    out[0] = {r.left(), r.top()};
+    out[1] = {r.center().x(), r.top()};
+    out[2] = {r.right(), r.top()};
+    out[3] = {r.left(), r.center().y()};
+    out[4] = {r.right(), r.center().y()};
+    out[5] = {r.left(), r.bottom()};
+    out[6] = {r.center().x(), r.bottom()};
+    out[7] = {r.right(), r.bottom()};
+}
+
+int SDL2Widget::rootHandleAt(const QPoint& widgetPos) const {
+    QPoint pts[8];
+    rootHandlePoints(canvasRect(), pts);
+    const int tol = ROOT_HANDLE_SIZE / 2 + ROOT_HANDLE_HIT;
+    for (int i = 0; i < 8; i++) {
+        if (qAbs(widgetPos.x() - pts[i].x()) <= tol && qAbs(widgetPos.y() - pts[i].y()) <= tol) return i;
+    }
+    return -1;
+}
+
+void SDL2Widget::setRootSelected(bool on) {
+    if (m_rootSelected == on) return;
+    m_rootSelected = on;
+    update();
 }
 
 void SDL2Widget::mousePressEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton) {
-        m_mouseX = event->x();
-        m_mouseY = event->y();
+    if (event->button() == Qt::LeftButton && m_rootSelected) {
+        const int edge = rootHandleAt(event->pos());
+        if (edge >= 0) {
+            m_rootDragEdge = edge;
+            m_rootDragStart = event->pos();
+            m_rootStartW = m_width;
+            m_rootStartH = m_height;
+            m_mousePressed = false;
+            QWidget::mousePressEvent(event);
+            return;
+        }
+    }
+
+    if (event->button() == Qt::MiddleButton) {
+        m_panning = true;
+        m_panStart = event->pos();
+        m_panStartX = m_panX;
+        m_panStartY = m_panY;
+        setCursor(Qt::ClosedHandCursor);
+    } else if (event->button() == Qt::LeftButton) {
+        const QPointF p = toLvgl(event->pos());
+        m_mouseX = qRound(p.x());
+        m_mouseY = qRound(p.y());
         m_mousePressed = true;
         emit widgetClicked(m_mouseX, m_mouseY, event->modifiers());
     } else if (event->button() == Qt::RightButton) {
-        m_mouseX = event->x();
-        m_mouseY = event->y();
+        const QPointF p = toLvgl(event->pos());
+        m_mouseX = qRound(p.x());
+        m_mouseY = qRound(p.y());
         m_mousePressed = false;
     }
     QWidget::mousePressEvent(event);
 }
 
 void SDL2Widget::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton) {
-        m_mouseX = event->x();
-        m_mouseY = event->y();
+    if (m_rootDragEdge >= 0 && event->button() == Qt::LeftButton) {
+        m_rootDragEdge = -1;
+        emit rootResized(m_width, m_height);
+        QWidget::mouseReleaseEvent(event);
+        return;
+    }
+
+    if (event->button() == Qt::MiddleButton) {
+        m_panning = false;
+        unsetCursor();
+    } else if (event->button() == Qt::LeftButton) {
+        const QPointF p = toLvgl(event->pos());
+        m_mouseX = qRound(p.x());
+        m_mouseY = qRound(p.y());
         m_mousePressed = false;
     }
     QWidget::mouseReleaseEvent(event);
 }
 
 void SDL2Widget::mouseMoveEvent(QMouseEvent* event) {
-    m_mouseX = event->x();
-    m_mouseY = event->y();
+    if (m_rootDragEdge >= 0) {
+        const int dx = qRound((event->x() - m_rootDragStart.x()) / m_zoom);
+        const int dy = qRound((event->y() - m_rootDragStart.y()) / m_zoom);
+        const int e = m_rootDragEdge;
+
+        int nw = m_rootStartW;
+        int nh = m_rootStartH;
+        if (e == 0 || e == 3 || e == 5) nw = m_rootStartW - dx;
+        else if (e == 2 || e == 4 || e == 7) nw = m_rootStartW + dx;
+        if (e == 0 || e == 1 || e == 2) nh = m_rootStartH - dy;
+        else if (e == 5 || e == 6 || e == 7) nh = m_rootStartH + dy;
+        nw = qMax(ROOT_MIN_SIZE, nw);
+        nh = qMax(ROOT_MIN_SIZE, nh);
+
+        if (nw != m_width || nh != m_height) {
+            m_width = nw;
+            m_height = nh;
+            if (m_display) {
+                lv_display_set_resolution(m_display, nw, nh);
+                recreateTexture();
+            }
+            clampPan();
+            update();
+        }
+        QWidget::mouseMoveEvent(event);
+        return;
+    }
+
+    if (m_panning) {
+        m_panX = m_panStartX + (event->x() - m_panStart.x());
+        m_panY = m_panStartY + (event->y() - m_panStart.y());
+        clampPan();
+        update();
+        QWidget::mouseMoveEvent(event);
+        return;
+    }
+
+    const QPointF p = toLvgl(event->pos());
+    m_mouseX = qRound(p.x());
+    m_mouseY = qRound(p.y());
     QWidget::mouseMoveEvent(event);
 }
 
@@ -153,14 +304,31 @@ void SDL2Widget::dragMoveEvent(QDragMoveEvent* event) {
 void SDL2Widget::dropEvent(QDropEvent* event) {
     if (event->mimeData()->hasFormat("application/x-lvgl-widget")) {
         const QByteArray data = event->mimeData()->data("application/x-lvgl-widget");
-        emit widgetDropped(QString::fromUtf8(data), event->pos().x(), event->pos().y());
+        const QPointF p = toLvgl(event->pos());
+        emit widgetDropped(QString::fromUtf8(data), qRound(p.x()), qRound(p.y()));
         event->acceptProposedAction();
     }
 }
 
 void SDL2Widget::wheelEvent(QWheelEvent* event) {
+    if (event->modifiers() & Qt::ControlModifier) {
+        const double factor = event->angleDelta().y() > 0 ? ZOOM_STEP : 1.0 / ZOOM_STEP;
+        const double newZoom = qBound(ZOOM_MIN, m_zoom * factor, ZOOM_MAX);
+        if (newZoom != m_zoom) {
+            const QPointF anchor = toLvgl(event->pos());
+            m_zoom = newZoom;
+            m_panX = event->x() - qRound(anchor.x() * m_zoom);
+            m_panY = event->y() - qRound(anchor.y() * m_zoom);
+            clampPan();
+            update();
+        }
+        event->accept();
+        return;
+    }
+
     if (m_mousePressed) return;
-    emit wheelScrolled(event->angleDelta().y(), event->x(), event->y());
+    const QPointF p = toLvgl(event->pos());
+    emit wheelScrolled(event->angleDelta().y(), qRound(p.x()), qRound(p.y()));
     QWidget::wheelEvent(event);
 }
 

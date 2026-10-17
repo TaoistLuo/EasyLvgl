@@ -66,6 +66,8 @@ class LvglRenderer {
     std::deque<std::vector<lv_point_precise_t>> m_ptsStore;
 
 public:
+    static constexpr const char* kRootId = "@root";
+
     const char* intern(const std::string& s) {
         m_strStore.push_back(s);
         return m_strStore.back().c_str();
