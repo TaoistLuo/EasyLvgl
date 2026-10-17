@@ -166,7 +166,7 @@ public:
                 } else if (prop.type == "string" &&
                            (key == "options" || key == "map" || key == "data" ||
                             key == "items" || key == "tabs" || key == "series" ||
-                            key == "spans" || key == "column_widths")) {
+                            key == "spans" || key == "points" || key == "column_widths")) {
                     auto* field = new QPlainTextEdit(val.toString());
                     field->setTabChangesFocus(true);
                     field->setMinimumHeight(72);

@@ -63,6 +63,7 @@ class LvglRenderer {
 
     std::deque<std::string> m_strStore;
     std::deque<std::vector<const char*>> m_mapStore;
+    std::deque<std::vector<lv_point_precise_t>> m_ptsStore;
 
 public:
     const char* intern(const std::string& s) {
@@ -73,6 +74,11 @@ public:
     std::vector<const char*>& storeMap() {
         m_mapStore.emplace_back();
         return m_mapStore.back();
+    }
+
+    std::vector<lv_point_precise_t>& storePoints() {
+        m_ptsStore.emplace_back();
+        return m_ptsStore.back();
     }
 
     void buildTree(const LuiDocument& doc);

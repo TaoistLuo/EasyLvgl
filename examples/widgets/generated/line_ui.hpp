@@ -14,9 +14,12 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LLine(root);
-        m_w->set_color(0xFF9800)
-              .set_pos(20, 20)
-              .set_size(240, 80)
+        m_w->set_color(0xFF9800);
+
+        static const lv_point_precise_t _pts_w[] = {{0, 40}, {80, 0}, {160, 40}, {240, 0}, };
+        m_w->set_points(_pts_w, 4);
+        m_w->set_pos(20, 20)
+              .set_size(260, 80)
               .set_width(3);
 
     }

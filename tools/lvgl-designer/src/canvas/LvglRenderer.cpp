@@ -680,7 +680,6 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("knob_offset")) lv_arc_set_knob_offset(obj, propInt("knob_offset"));
     } else if (node.type == "LSpinner") {
         if (node.props.count("color")) lv_obj_set_style_arc_color(obj, lv_color_hex(propHex("color")), LV_PART_INDICATOR);
-        if (node.props.count("size")) lv_obj_set_size(obj, propInt("size"), propInt("size"));
         if (node.props.count("anim_speed") || node.props.count("anim_period")) {
             uint32_t period = propInt("anim_period", 1000);
             if (node.props.count("anim_speed")) {
@@ -695,6 +694,20 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("on") && propBool("on")) lv_led_on(obj);
         else lv_led_off(obj);
     } else if (node.type == "LLine") {
+        if (node.props.count("points")) {
+            std::vector<lv_point_precise_t>& pts = storePoints();
+            for (auto& p : splitStr(unescapeNewlines(propStr("points")), ';')) {
+                std::string t = trimStr(p);
+                if (t.empty()) continue;
+                auto xy = splitStr(t, ',');
+                if (xy.size() < 2) continue;
+                lv_point_precise_t pt;
+                pt.x = atoi(trimStr(xy[0]).c_str());
+                pt.y = atoi(trimStr(xy[1]).c_str());
+                pts.push_back(pt);
+            }
+            if (!pts.empty()) lv_line_set_points(obj, pts.data(), pts.size());
+        }
         if (node.props.count("width")) lv_obj_set_style_line_width(obj, propInt("width"), 0);
         if (node.props.count("color")) lv_obj_set_style_line_color(obj, lv_color_hex(propHex("color")), 0);
         if (node.props.count("y_invert")) lv_line_set_y_invert(obj, propBool("y_invert"));
@@ -1251,6 +1264,7 @@ void LvglRenderer::clear() {
     m_stackedNavs.clear();
     m_strStore.clear();
     m_mapStore.clear();
+    m_ptsStore.clear();
 
     lv_obj_clean(lv_scr_act());
 }

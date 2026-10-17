@@ -263,6 +263,7 @@ struct ComponentSchema {
             comp.props.push_back({"brightness", "int", QVariant(255)});
             comp.props.push_back({"on", "bool", QVariant(true)});
         } else if (type == "LLine") {
+            comp.props.push_back({"points", "string", QVariant(QString("0,0;80,40;160,0"))});
             comp.props.push_back({"width", "int", QVariant(2)});
             comp.props.push_back({"color", "hex", QVariant(QString("0xFFFFFF"))});
             comp.props.push_back({"y_invert", "bool", QVariant(false)});

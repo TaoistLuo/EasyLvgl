@@ -202,6 +202,7 @@ public:
         reg("LLine", {
             .is_container = false,
             .props = {
+                {"points",   "string",   "set_points", false, false, "", "points"},
                 {"width",    "int",      "set_width"},
                 {"color",    "hex",      "set_color"},
                 {"y_invert", "bool",     "set_y_invert"},

@@ -131,6 +131,25 @@ class CodeGenerator {
                 out << pad << "{ lv_span_t* _sp = m_" << id << "->new_span();\n";
                 out << pad << "  lv_span_set_text(_sp, \"" << escape_string(line) << "\"); }\n";
             }
+        } else if (def.expand == "points") {
+            auto pts = split(prop.str_val, ';');
+            size_t n = 0;
+            out << pad << "static const lv_point_precise_t _pts_" << id << "[] = {";
+            for (auto& p : pts) {
+                std::string t = p;
+                while (!t.empty() && (t.front() == ' ' || t.front() == '\n')) t.erase(t.begin());
+                while (!t.empty() && (t.back() == ' ' || t.back() == '\r')) t.pop_back();
+                if (t.empty()) continue;
+                auto xy = split(t, ',');
+                if (xy.size() < 2) continue;
+                std::string xs = xy[0], ys = xy[1];
+                while (!xs.empty() && xs.front() == ' ') xs.erase(xs.begin());
+                while (!ys.empty() && ys.front() == ' ') ys.erase(ys.begin());
+                out << "{" << xs << ", " << ys << "}, ";
+                n++;
+            }
+            out << "};\n";
+            out << pad << "m_" << id << "->set_points(_pts_" << id << ", " << n << ");\n";
         }
     }
 
