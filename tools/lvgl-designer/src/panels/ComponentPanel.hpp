@@ -26,7 +26,9 @@ public:
             group->setFont(0, f);
             for (auto& c : items) {
                 auto* item = new QTreeWidgetItem(group);
-                item->setText(0, c.label);
+                item->setText(0, QString("%1(%2)")
+                                     .arg(QString::fromUtf8(c.label),
+                                          QString::fromUtf8(c.type)));
                 item->setData(0, Qt::UserRole, c.type);
                 item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
             }
