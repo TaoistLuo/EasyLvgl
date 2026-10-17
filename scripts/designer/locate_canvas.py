@@ -16,6 +16,7 @@ import subprocess
 import sys
 
 MINCOUNT = 50
+HANDLE_BOX = 12
 TOL = 2
 
 
@@ -140,12 +141,14 @@ def main():
     # 拖手柄必须用这里检出的坐标：手柄判定区只有 8x8，靠估算会打偏变成拖动
     reg = (canvas[0] - 12, canvas[1] - 12, canvas[2] + 24, canvas[3] + 24) if canvas else (0, 0, w, h)
     hc = handle_centers(w, h, data, reg)
+    # 输出方框左上角而非中心：点击左上角那个像素必然落在方框内
+    half = HANDLE_BOX // 2
     if hc:
         hc.sort(key=lambda p: (p[1], p[0]))
         for i, (hx, hy) in enumerate(hc[:8]):
-            print("handle%d=%d,%d" % (i, hx, hy))
+            print("handle%d=%d,%d" % (i, hx - half, hy - half))
         br = max(hc, key=lambda p: p[0] + p[1])
-        print("handle_br=%d,%d" % br)
+        print("handle_br=%d,%d" % (br[0] - half, br[1] - half))
     else:
         print("handle_br=0,0")
 

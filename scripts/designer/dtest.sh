@@ -32,8 +32,11 @@ mkdir -p "$GALLERY"
 die() { echo "dtest: $*" >&2; exit 1; }
 
 find_wid() {
+  # 标题会匹配到多个窗口：真正的主窗口 + Qt 的 1x1 辅助窗口，
+  # 后者没有像素内容，选中它会让 import 失败，故按尺寸过滤
   DISPLAY="$DISPLAY" xwininfo -root -tree 2>/dev/null \
-    | grep -F "$TITLE_MATCH" | head -1 | awk '{print $1}'
+    | grep -F "$TITLE_MATCH" | grep -E '[0-9]{3,}x[0-9]{3,}' \
+    | head -1 | awk '{print $1}'
 }
 
 # 把 ps1 放到 Windows 可访问的位置，回显 Windows 路径
@@ -82,6 +85,9 @@ CW=$cw
 CH=$ch
 SX=$sx
 SY=$sy
+# WSLg 图层叠加带来的系统性偏移（X 窗口坐标像素），实测校准得到
+OFFX=${DTEST_OFFX:-4}
+OFFY=${DTEST_OFFY:-4}
 EOF
   cat "$ENVFILE"
 }
@@ -97,7 +103,8 @@ load_env() {
 # X 窗口坐标 -> Windows 屏幕坐标
 xw_to_win() {
   awk -v x="$1" -v y="$2" -v cx="$COX" -v cy="$COY" -v sx="$SX" -v sy="$SY" \
-      'BEGIN{printf "%d %d", cx + x*sx, cy + y*sy}'
+      -v ox="$OFFX" -v oy="$OFFY" \
+      'BEGIN{printf "%d %d", cx + (x+ox)*sx, cy + (y+oy)*sy}'
 }
 
 shot() {
