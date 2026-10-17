@@ -44,7 +44,8 @@ public:
     }
 
     LComboBox& set_direction(lv_dir_t dir) {
-        lv_dropdown_set_dir(m_obj, dir);
+        /* 0 = LV_DIR_NONE：会让下拉列表不再对齐（停留在原点），视为默认方向（下方） */
+        lv_dropdown_set_dir(m_obj, static_cast<lv_dir_t>(dir) == LV_DIR_NONE ? LV_DIR_BOTTOM : static_cast<lv_dir_t>(dir));
         return *this;
     }
 

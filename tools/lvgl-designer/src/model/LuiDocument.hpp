@@ -167,7 +167,7 @@ struct WidgetNode {
         } else if (type == "LComboBox") {
             props.emplace("options", QVariant(QString("Option 1\\nOption 2\\nOption 3")));
             props.emplace("selected", QVariant(0));
-            props.emplace("direction", QVariant(0));
+            props.emplace("direction", QVariant(8));   // LV_DIR_BOTTOM，下拉列表在下方
             props.emplace("symbol", QVariant(QString("")));
             props.emplace("text", QVariant(QString("")));
             props.emplace("selected_highlight", QVariant(true));

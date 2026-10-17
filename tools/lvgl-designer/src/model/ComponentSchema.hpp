@@ -216,7 +216,7 @@ struct ComponentSchema {
         } else if (type == "LComboBox") {
             comp.props.push_back({"options", "string", QVariant(QString("Option 1\\nOption 2\\nOption 3"))});
             comp.props.push_back({"selected", "int", QVariant(0)});
-            comp.props.push_back({"direction", "int", QVariant(0)});
+            comp.props.push_back({"direction", "int", QVariant(8)});
             comp.props.push_back({"symbol", "string", QVariant(QString(""))});
             comp.props.push_back({"text", "string", QVariant(QString(""))});
             comp.props.push_back({"selected_highlight", "bool", QVariant(true)});

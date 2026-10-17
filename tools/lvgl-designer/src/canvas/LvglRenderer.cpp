@@ -214,7 +214,18 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         obj = lv_menu_create(targetParent);
     } else if (node.type == "LMenuPage") {
         std::string title = node.props.count("title") ? node.propString("title") : "";
-        obj = lv_menu_page_create(targetParent, title.c_str());
+        /* lv_menu_page_create 要求父对象必须是菜单：拖到别处（父级是屏幕或普通容器）
+         * 会直接核心转储。父级不是菜单时退化为普通容器占位，保证不崩且可见可选。 */
+        bool underMenu = false;
+        if (targetParent) {
+            auto it = m_idMap.find(targetParent);
+            if (it != m_idMap.end()) {
+                auto ti = m_types.find(it->second);
+                underMenu = ti != m_types.end() && ti->second == "LMenu";
+            }
+        }
+        obj = underMenu ? lv_menu_page_create(targetParent, title.c_str())
+                        : lv_obj_create(targetParent);
     } else if (node.type == "LMenuCont") {
         obj = lv_menu_cont_create(targetParent);
     } else if (node.type == "LMenuSection") {
@@ -362,6 +373,10 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     // === Position & Size ===
     if (node.props.count("pos")) {
         auto pos = node.pos();
+        /* 有些控件创建时自带对齐（lv_keyboard 默认 LV_ALIGN_BOTTOM_MID），
+         * 而 LVGL 里对齐优先于坐标 —— 不清掉的话 set_pos 会被忽略，
+         * 控件会被顶到父对象底部、甚至跑出画布，看起来像"拖进去就消失"。 */
+        lv_obj_set_align(obj, LV_ALIGN_DEFAULT);
         lv_obj_set_pos(obj, (int)pos.x(), (int)pos.y());
     }
 
@@ -423,7 +438,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (!src.empty()) {
             lv_image_header_t hdr;
             if (lv_image_decoder_get_info(src.c_str(), &hdr) == LV_RES_OK) {
-                lv_obj_set_style_bg_image_src(obj, src.c_str(), 0);
+                lv_obj_set_style_bg_image_src(obj, intern(src), 0);   // 样式值只存指针
             }
         }
     }
@@ -603,9 +618,22 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             lv_dropdown_set_options(obj, opts.c_str());
         }
         if (node.props.count("selected")) lv_dropdown_set_selected(obj, propInt("selected"));
-        if (node.props.count("direction")) lv_dropdown_set_dir(obj, (lv_dir_t)propInt("direction"));
-        if (node.props.count("symbol")) lv_dropdown_set_symbol(obj, propStr("symbol").c_str());
-        if (node.props.count("text")) lv_dropdown_set_text(obj, propStr("text").c_str());
+        if (node.props.count("direction")) {
+            int dir = propInt("direction");
+            /* 0 是 LV_DIR_NONE：设成它会让 lv_dropdown_open 里四个对齐分支全不匹配，
+             * 下拉列表跑到画布左上角。0 视为"用默认方向"（下方）。 */
+            if (dir != 0) lv_dropdown_set_dir(obj, (lv_dir_t)dir);
+        }
+        if (node.props.count("symbol")) {
+            std::string sym = propStr("symbol");
+            if (!sym.empty()) lv_dropdown_set_symbol(obj, intern(sym));   // LVGL 只存指针，必须用池化字符串
+        }
+        if (node.props.count("text")) {
+            std::string t = propStr("text");
+            /* text 非空才覆盖：一旦设置过 text，LVGL 就不再显示"已选项"的文本，
+             * 空串会导致下拉框永远显示为空。 */
+            if (!t.empty()) lv_dropdown_set_text(obj, t.c_str());
+        }
         if (node.props.count("selected_highlight")) lv_dropdown_set_selected_highlight(obj, propBool("selected_highlight"));
         if (node.props.count("enabled") && !propBool("enabled")) lv_obj_add_state(obj, LV_STATE_DISABLED);
     } else if (node.type == "LLineEdit") {
@@ -649,7 +677,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     } else if (node.type == "LImage") {
         if (node.props.count("src")) {
             std::string src = propStr("src");
-            if (!src.empty()) lv_image_set_src(obj, src.c_str());
+            if (!src.empty()) lv_image_set_src(obj, intern(src));
         }
         if (node.props.count("rotation")) lv_image_set_rotation(obj, propInt("rotation"));
         if (node.props.count("scale")) lv_image_set_scale(obj, propInt("scale"));
