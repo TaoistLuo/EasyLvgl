@@ -382,6 +382,10 @@ struct ComponentSchema {
         } else if (type == "LMenu") {
             comp.props.push_back({"mode_header", "int", QVariant(0)});
             comp.props.push_back({"mode_root_back_button", "int", QVariant(0)});
+            comp.props.push_back({"active_page", "string", QVariant(QString(""))});
+        } else if (type == "LMenuPage") {
+            comp.props.push_back({"title", "string", QVariant(QString("Page"))});
+        } else if (type == "LMenuCont" || type == "LMenuSection") {
         } else if (type == "LImageButton") {
             comp.props.push_back({"state", "int", QVariant(0)});
             comp.props.push_back({"src_released", "string", QVariant(QString(""))});

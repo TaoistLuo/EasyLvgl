@@ -108,6 +108,9 @@ struct WidgetNode {
         if (type == "LHBoxLayout") return QSizeF(400, 100);
         if (type == "LGridLayout") return QSizeF(300, 300);
         if (type == "LStackedLayout") return QSizeF(300, 300);
+        if (type == "LMenuPage") return QSizeF(200, 180);
+        if (type == "LMenuCont") return QSizeF(180, 40);
+        if (type == "LMenuSection") return QSizeF(200, 100);
         return QSizeF(100, 40);
     }
 
@@ -340,6 +343,8 @@ struct WidgetNode {
             props.emplace("padding", QVariant(10));
         } else if (type == "LStackedLayout") {
             props.emplace("current_index", QVariant(0));
+        } else if (type == "LMenuPage") {
+            props.emplace("title", QVariant(QString("Page")));
             props.emplace("padding", QVariant(6));
         }
 

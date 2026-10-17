@@ -133,11 +133,25 @@ class CodeGenerator {
         if (!comp) return;
 
         out << pad << "m_" << node.id << " = new " << node.type
-            << "(" << parent_expr << ");\n";
+            << "(" << parent_expr;
+
+        bool has_ctor_arg = false;
+        if (!comp->ctor_prop.empty()) {
+            for (auto& p : node.props) {
+                if (p.name == comp->ctor_prop) {
+                    out << ", \"" << escape_string(p.str_val) << "\"";
+                    has_ctor_arg = true;
+                    break;
+                }
+            }
+        }
+        (void)has_ctor_arg;
+        out << ");\n";
 
         std::vector<const property_t*> deferred;
         bool has_chain = false;
         for (auto& prop : node.props) {
+            if (!comp->ctor_prop.empty() && prop.name == comp->ctor_prop) continue;
             auto* pdef = comp->find_prop(prop.name);
             if (!pdef) continue;
 

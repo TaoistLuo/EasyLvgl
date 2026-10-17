@@ -210,6 +210,13 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         obj = lv_list_create(targetParent);
     } else if (node.type == "LMenu") {
         obj = lv_menu_create(targetParent);
+    } else if (node.type == "LMenuPage") {
+        std::string title = node.props.count("title") ? node.propString("title") : "";
+        obj = lv_menu_page_create(targetParent, title.c_str());
+    } else if (node.type == "LMenuCont") {
+        obj = lv_menu_cont_create(targetParent);
+    } else if (node.type == "LMenuSection") {
+        obj = lv_menu_section_create(targetParent);
     } else if (node.type == "LMsgBox") {
         obj = lv_msgbox_create(targetParent);
     } else if (node.type == "LTabView") {
@@ -1222,6 +1229,12 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
                     if (kb != m_objects.end() && ta != m_objects.end() && kb->second && ta->second)
                         lv_keyboard_set_textarea(kb->second, ta->second);
                 }
+                if (n.type == "LMenu" && n.props.count("active_page")) {
+                    auto mn = m_objects.find(n.id);
+                    auto pg = m_objects.find(n.propString("active_page"));
+                    if (mn != m_objects.end() && pg != m_objects.end() && mn->second && pg->second)
+                        lv_menu_set_page(mn->second, pg->second);
+                }
                 resolveRefs(n.children);
             }
         };
@@ -1442,7 +1455,8 @@ std::string LvglRenderer::findContainerAt(int x, int y) const {
     static const std::set<std::string> containerTypes = {
         "LVBoxLayout", "LHBoxLayout",
         "LGridLayout", "LStackedLayout",
-        "LTabView", "LMenu", "LTileView", "LList", "LWin", "LCanvas",
+        "LTabView", "LMenu", "LMenuPage", "LMenuCont", "LMenuSection",
+        "LTileView", "LList", "LWin", "LCanvas",
         "LGroupBox"
     };
 

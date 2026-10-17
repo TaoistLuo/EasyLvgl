@@ -25,6 +25,7 @@ struct component_def_t {
     bool is_container = false;
     std::vector<prop_def_t> props;
     std::vector<event_def_t> events;
+    std::string ctor_prop;   // prop passed as extra constructor arg: new Type(parent, <prop>)
 
     const prop_def_t* find_prop(const std::string& name) const {
         for (auto& p : props) {
@@ -375,10 +376,40 @@ public:
         reg("LMenu", {
             .is_container = true,
             .props = {
-                {"mode_header",           "int",  "set_mode_header"},
-                {"mode_root_back_button", "int",  "set_mode_root_back_button"},
+                {"mode_header",           "int",    "set_mode_header"},
+                {"mode_root_back_button", "int",    "set_mode_root_back_button"},
+                {"active_page",           "string", "set_page", false, false, "", "ref"},
                 {"size",                  "int_pair", "set_size"},
                 {"pos",                   "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        reg("LMenuPage", {
+            .is_container = true,
+            .props = {
+                {"title", "string",   "set_title"},
+                {"size",  "int_pair", "set_size"},
+                {"pos",   "int_pair", "set_pos"},
+            },
+            .events = {},
+            .ctor_prop = "title"
+        });
+
+        reg("LMenuCont", {
+            .is_container = true,
+            .props = {
+                {"size", "int_pair", "set_size"},
+                {"pos",  "int_pair", "set_pos"},
+            },
+            .events = {}
+        });
+
+        reg("LMenuSection", {
+            .is_container = true,
+            .props = {
+                {"size", "int_pair", "set_size"},
+                {"pos",  "int_pair", "set_pos"},
             },
             .events = {}
         });
