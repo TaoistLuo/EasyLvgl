@@ -1,4 +1,5 @@
 #include "canvas/LvglRenderer.hpp"
+#include "lvgl++/core/style.hpp"
 #include <set>
 #include <algorithm>
 #include <algorithm>
@@ -408,6 +409,8 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     if (node.props.count("bg_grad_dir")) lv_obj_set_style_bg_grad_dir(obj, (lv_grad_dir_t)propInt("bg_grad_dir"), 0);
     if (node.props.count("bg_main_stop")) lv_obj_set_style_bg_main_stop(obj, propInt("bg_main_stop"), 0);
     if (node.props.count("bg_grad_stop")) lv_obj_set_style_bg_grad_stop(obj, propInt("bg_grad_stop"), 0);
+    if (node.props.count("bg_image_src")) { std::string s = propStr("bg_image_src"); if (!s.empty()) lv_obj_set_style_bg_image_src(obj, intern(s), 0); }
+    if (node.props.count("bg_image_tiled")) lv_obj_set_style_bg_image_tiled(obj, propBool("bg_image_tiled"), 0);
     if (node.props.count("bg_image_opa")) lv_obj_set_style_bg_image_opa(obj, propInt("bg_image_opa"), 0);
     if (node.props.count("bg_image_recolor")) lv_obj_set_style_bg_image_recolor(obj, lv_color_hex(propHex("bg_image_recolor")), 0);
     if (node.props.count("bg_image_recolor_opa")) lv_obj_set_style_bg_image_recolor_opa(obj, propInt("bg_image_recolor_opa"), 0);
@@ -475,6 +478,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     // === Section J: Text Style (generic, applied to all) ===
     if (node.props.count("text_color")) lv_obj_set_style_text_color(obj, lv_color_hex(propHex("text_color")), 0);
     if (node.props.count("text_opa")) lv_obj_set_style_text_opa(obj, propInt("text_opa"), 0);
+    if (node.props.count("text_font_size")) lv_obj_set_style_text_font(obj, ::lvgl::font_by_size(propInt("text_font_size")), 0);
     if (node.props.count("text_font_size")) {
         int fs = propInt("text_font_size");
         if (fs <= 12) lv_obj_set_style_text_font(obj, &lv_font_montserrat_12, 0);

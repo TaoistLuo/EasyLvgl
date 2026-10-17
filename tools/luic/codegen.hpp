@@ -228,6 +228,33 @@ class CodeGenerator {
         }
         if (has_chain) out << ";\n";
 
+        // === 通用样式属性：生成 LStyle 设置块（对所有组件类型都生效）===
+        {
+            std::string style_block;
+            for (auto& prop : node.props) {
+                std::string k = style_kind(prop.name);
+                if (k.empty()) continue;
+                std::string val;
+                if (k == "color") {
+                    val = prop.str_val.empty() ? prop.raw : prop.str_val;
+                } else if (k == "bool") {
+                    val = prop.bool_val ? "true" : "false";
+                } else if (k == "src") {
+                    val = "\"" + prop.str_val + "\"";
+                } else {
+                    val = std::to_string(prop.int_val);
+                }
+                style_block += pad + "    st.set_" + prop.name + "(" + val + ");\n";
+            }
+            if (!style_block.empty()) {
+                out << pad << "{\n"
+                    << pad << "    LStyle st;\n"
+                    << style_block
+                    << pad << "    st.apply_to(m_" << node.id << "->native());\n"
+                    << pad << "}\n";
+            }
+        }
+
         for (auto& child : node.children) {
             out << "\n";
             gen_node(out, child, "m_" + node.id + "->native()", indent);

@@ -5,6 +5,108 @@
 
 namespace luic {
 
+
+/** 通用样式属性表：对所有组件类型都可用，由 codegen 生成 LStyle 设置块。
+ *  判定标准：设计器渲染器用 lv_obj_set_style_* 应用的属性。
+ *  （hidden/clickable/scrollable 等是对象 flag，不属于样式属性）
+ *  kind: color(hex) / int / bool / src(资源路径) */
+inline const std::map<std::string, std::string>& style_props() {
+    static const std::map<std::string, std::string> m = {
+        {"arc_color", "color"},
+        {"arc_opa", "int"},
+        {"arc_rounded", "bool"},
+        {"arc_width", "int"},
+        {"base_dir", "int"},
+        {"bg_color", "color"},
+        {"bg_grad_color", "color"},
+        {"bg_grad_dir", "int"},
+        {"bg_grad_stop", "int"},
+        {"bg_image_opa", "int"},
+        {"bg_image_recolor", "color"},
+        {"bg_image_recolor_opa", "int"},
+        {"bg_image_src", "src"},
+        {"bg_image_tiled", "bool"},
+        {"bg_main_stop", "int"},
+        {"bg_opa", "int"},
+        {"blend_mode", "int"},
+        {"border_color", "color"},
+        {"border_opa", "int"},
+        {"border_post", "bool"},
+        {"border_side", "int"},
+        {"border_width", "int"},
+        {"clip_corner", "bool"},
+        {"col_spacing", "int"},
+        {"color", "color"},
+        {"dash_gap", "int"},
+        {"dash_width", "int"},
+        {"image_opa", "int"},
+        {"image_recolor", "color"},
+        {"image_recolor_opa", "int"},
+        {"line_color", "color"},
+        {"line_dash_gap", "int"},
+        {"line_dash_width", "int"},
+        {"line_opa", "int"},
+        {"line_rounded", "bool"},
+        {"line_width", "int"},
+        {"margin_bottom", "int"},
+        {"margin_left", "int"},
+        {"margin_right", "int"},
+        {"margin_top", "int"},
+        {"max_height", "int"},
+        {"max_width", "int"},
+        {"min_height", "int"},
+        {"min_width", "int"},
+        {"opa", "int"},
+        {"opacity", "int"},
+        {"outline_color", "color"},
+        {"outline_opa", "int"},
+        {"outline_pad", "int"},
+        {"outline_width", "int"},
+        {"pad_bottom", "int"},
+        {"pad_column", "int"},
+        {"pad_left", "int"},
+        {"pad_right", "int"},
+        {"pad_row", "int"},
+        {"pad_top", "int"},
+        {"padding", "int"},
+        {"radius", "int"},
+        {"rounded", "bool"},
+        {"row_spacing", "int"},
+        {"shadow_color", "color"},
+        {"shadow_ofs_x", "int"},
+        {"shadow_ofs_y", "int"},
+        {"shadow_opa", "int"},
+        {"shadow_spread", "int"},
+        {"shadow_width", "int"},
+        {"text_align", "int"},
+        {"text_color", "color"},
+        {"text_decor", "int"},
+        {"text_font_size", "int"},
+        {"text_letter_space", "int"},
+        {"text_line_space", "int"},
+        {"text_opa", "int"},
+        {"transform_pivot_x", "int"},
+        {"transform_pivot_y", "int"},
+        {"transform_rotation", "int"},
+        {"transform_scale_x", "int"},
+        {"transform_scale_y", "int"},
+        {"transform_skew_x", "int"},
+        {"transform_skew_y", "int"},
+        {"translate_x", "int"},
+        {"translate_y", "int"},
+        {"width", "int"},
+    };
+    return m;
+}
+
+/** 返回样式属性类型，空串表示不是样式属性 */
+inline std::string style_kind(const std::string& name) {
+    const auto& m = style_props();
+    auto it = m.find(name);
+    return it == m.end() ? std::string() : it->second;
+}
+
+
 struct prop_def_t {
     std::string name;
     std::string type;     // "string", "int", "hex", "int_pair", "bool"
