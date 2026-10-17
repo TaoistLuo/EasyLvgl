@@ -37,7 +37,7 @@ public:
         m_topLayout->setSpacing(4);
         setWidget(m_content);
         setWidgetResizable(true);
-        m_topLayout->addWidget(new QLabel("Select a widget"));
+        m_topLayout->addWidget(new QLabel("请选择组件"));
         setContextMenuPolicy(Qt::NoContextMenu);
     }
 
@@ -51,7 +51,7 @@ public:
 
         if (!node || !m_doc) {
             m_currentId.clear();
-            m_topLayout->addWidget(new QLabel("Select a widget"));
+            m_topLayout->addWidget(new QLabel("请选择组件"));
             return;
         }
 
@@ -59,13 +59,13 @@ public:
         WidgetNode* parent = m_doc->findParentOf(node->id);
         const bool is_stacked_child = parent && parent->type == "LStackedLayout";
 
-        auto* idGroup = new QGroupBox("Identity");
+        auto* idGroup = new QGroupBox("标识");
         auto* idLayout = new QFormLayout(idGroup);
         idLayout->setContentsMargins(6, 6, 6, 6);
 
         auto* typeField = new QLineEdit(QString::fromStdString(node->type));
         typeField->setReadOnly(true);
-        idLayout->addRow("Type", typeField);
+        idLayout->addRow("类型", typeField);
 
         auto* idField = new QLineEdit(QString::fromStdString(node->id));
         connect(idField, &QLineEdit::editingFinished, [this, idField]() {
@@ -194,7 +194,7 @@ public:
     void clearSelection() {
         m_currentId.clear();
         clearLayout();
-        m_topLayout->addWidget(new QLabel("Select a widget"));
+        m_topLayout->addWidget(new QLabel("请选择组件"));
     }
 
     void setRootResizeCallback(std::function<void(int, int)> cb) { m_onRootSize = std::move(cb); }
@@ -203,13 +203,13 @@ public:
         clearLayout();
         m_currentId = rootId;
 
-        auto* group = new QGroupBox("Root");
+        auto* group = new QGroupBox("根");
         auto* layout = new QFormLayout(group);
         layout->setContentsMargins(6, 6, 6, 6);
 
         auto* typeField = new QLineEdit("LScreen");
         typeField->setReadOnly(true);
-        layout->addRow("Type", typeField);
+        layout->addRow("类型", typeField);
 
         auto* wField = new QLineEdit(QString::number(w));
         auto* hField = new QLineEdit(QString::number(h));
@@ -219,8 +219,8 @@ public:
         };
         connect(wField, &QLineEdit::editingFinished, apply);
         connect(hField, &QLineEdit::editingFinished, apply);
-        layout->addRow("Width", wField);
-        layout->addRow("Height", hField);
+        layout->addRow("宽度", wField);
+        layout->addRow("高度", hField);
 
         m_topLayout->addWidget(group);
         m_topLayout->addStretch();

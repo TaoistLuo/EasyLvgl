@@ -29,7 +29,7 @@ struct ComponentSchema {
         pair100.append(QVariant(100));
 
         PropGroup obj;
-        obj.groupName = "Object";
+        obj.groupName = "对象";
         obj.props.push_back({"x", "int", QVariant(0)});
         obj.props.push_back({"y", "int", QVariant(0)});
         obj.props.push_back({"width", "int", QVariant(0)});
@@ -45,7 +45,7 @@ struct ComponentSchema {
         groups.push_back(std::move(obj));
 
         PropGroup bg;
-        bg.groupName = "Background";
+        bg.groupName = "背景";
         bg.props.push_back({"bg_color", "hex", QVariant(QString("0x000000"))});
         bg.props.push_back({"bg_opa", "int", QVariant(0)});
         bg.props.push_back({"bg_grad_color", "hex", QVariant(QString("0x000000"))});
@@ -60,7 +60,7 @@ struct ComponentSchema {
         groups.push_back(std::move(bg));
 
         PropGroup border;
-        border.groupName = "Border";
+        border.groupName = "边框";
         border.props.push_back({"border_color", "hex", QVariant(QString("0x000000"))});
         border.props.push_back({"border_width", "int", QVariant(0)});
         border.props.push_back({"border_opa", "int", QVariant(255)});
@@ -69,7 +69,7 @@ struct ComponentSchema {
         groups.push_back(std::move(border));
 
         PropGroup outline;
-        outline.groupName = "Outline";
+        outline.groupName = "轮廓";
         outline.props.push_back({"outline_color", "hex", QVariant(QString("0x000000"))});
         outline.props.push_back({"outline_width", "int", QVariant(0)});
         outline.props.push_back({"outline_opa", "int", QVariant(255)});
@@ -77,7 +77,7 @@ struct ComponentSchema {
         groups.push_back(std::move(outline));
 
         PropGroup shadow;
-        shadow.groupName = "Shadow";
+        shadow.groupName = "阴影";
         shadow.props.push_back({"shadow_color", "hex", QVariant(QString("0x000000"))});
         shadow.props.push_back({"shadow_width", "int", QVariant(0)});
         shadow.props.push_back({"shadow_ofs_x", "int", QVariant(0)});
@@ -87,7 +87,7 @@ struct ComponentSchema {
         groups.push_back(std::move(shadow));
 
         PropGroup padding;
-        padding.groupName = "Padding";
+        padding.groupName = "内边距";
         padding.props.push_back({"pad_top", "int", QVariant(0)});
         padding.props.push_back({"pad_bottom", "int", QVariant(0)});
         padding.props.push_back({"pad_left", "int", QVariant(0)});
@@ -97,7 +97,7 @@ struct ComponentSchema {
         groups.push_back(std::move(padding));
 
         PropGroup margin;
-        margin.groupName = "Margin";
+        margin.groupName = "外边距";
         margin.props.push_back({"margin_top", "int", QVariant(0)});
         margin.props.push_back({"margin_bottom", "int", QVariant(0)});
         margin.props.push_back({"margin_left", "int", QVariant(0)});
@@ -105,7 +105,7 @@ struct ComponentSchema {
         groups.push_back(std::move(margin));
 
         PropGroup sizeConstraints;
-        sizeConstraints.groupName = "Size Constraints";
+        sizeConstraints.groupName = "尺寸约束";
         sizeConstraints.props.push_back({"min_width", "int", QVariant(0)});
         sizeConstraints.props.push_back({"max_width", "int", QVariant(0)});
         sizeConstraints.props.push_back({"min_height", "int", QVariant(0)});
@@ -113,7 +113,7 @@ struct ComponentSchema {
         groups.push_back(std::move(sizeConstraints));
 
         PropGroup misc;
-        misc.groupName = "Appearance";
+        misc.groupName = "外观";
         misc.props.push_back({"radius", "int", QVariant(0)});
         misc.props.push_back({"clip_corner", "bool", QVariant(false)});
         misc.props.push_back({"opa", "int", QVariant(255)});
@@ -122,7 +122,7 @@ struct ComponentSchema {
         groups.push_back(std::move(misc));
 
         PropGroup text;
-        text.groupName = "Text Style";
+        text.groupName = "文本样式";
         text.props.push_back({"text_color", "hex", QVariant(QString("0xFFFFFF"))});
         text.props.push_back({"text_opa", "int", QVariant(255)});
         text.props.push_back({"text_font_size", "int", QVariant(14)});
@@ -133,7 +133,7 @@ struct ComponentSchema {
         groups.push_back(std::move(text));
 
         PropGroup transform;
-        transform.groupName = "Transform";
+        transform.groupName = "变换";
         transform.props.push_back({"transform_rotation", "int", QVariant(0)});
         transform.props.push_back({"transform_scale_x", "int", QVariant(256)});
         transform.props.push_back({"transform_scale_y", "int", QVariant(256)});
@@ -146,7 +146,7 @@ struct ComponentSchema {
         groups.push_back(std::move(transform));
 
         PropGroup lineStyle;
-        lineStyle.groupName = "Line Style";
+        lineStyle.groupName = "线条样式";
         lineStyle.props.push_back({"line_color", "hex", QVariant(QString("0xFFFFFF"))});
         lineStyle.props.push_back({"line_width", "int", QVariant(1)});
         lineStyle.props.push_back({"line_opa", "int", QVariant(255)});
@@ -156,7 +156,7 @@ struct ComponentSchema {
         groups.push_back(std::move(lineStyle));
 
         PropGroup arcStyle;
-        arcStyle.groupName = "Arc Style";
+        arcStyle.groupName = "圆弧样式";
         arcStyle.props.push_back({"arc_color", "hex", QVariant(QString("0xFFFFFF"))});
         arcStyle.props.push_back({"arc_width", "int", QVariant(2)});
         arcStyle.props.push_back({"arc_opa", "int", QVariant(255)});
@@ -164,7 +164,7 @@ struct ComponentSchema {
         groups.push_back(std::move(arcStyle));
 
         PropGroup imgStyle;
-        imgStyle.groupName = "Image Style";
+        imgStyle.groupName = "图片样式";
         imgStyle.props.push_back({"image_opa", "int", QVariant(255)});
         imgStyle.props.push_back({"image_recolor", "hex", QVariant(QString("0x000000"))});
         imgStyle.props.push_back({"image_recolor_opa", "int", QVariant(0)});

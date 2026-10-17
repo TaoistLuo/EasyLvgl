@@ -36,13 +36,13 @@ MainWindow::MainWindow(QWidget* parent)
     m_treePanel->setDocument(&m_doc);
     m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
 
-    m_statusInfo = new QLabel("Ready");
+    m_statusInfo = new QLabel("就绪");
     statusBar()->addWidget(m_statusInfo, 1);
 }
 
 bool MainWindow::openFile(const QString& path) {
     if (!m_doc.load(path)) {
-        QMessageBox::critical(this, "Error", "Failed to open: " + path);
+        QMessageBox::critical(this, "错误", "打开失败：" + path);
         return false;
     }
 
@@ -86,87 +86,87 @@ void MainWindow::scheduleRebuild() {
 }
 
 void MainWindow::setupMenus() {
-    auto* fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("&New", this, &MainWindow::onNew, QKeySequence("Ctrl+N"));
-    fileMenu->addAction("&Open...", this, &MainWindow::onOpen, QKeySequence::Open);
-    fileMenu->addAction("&Save", this, &MainWindow::onSave, QKeySequence::Save);
-    fileMenu->addAction("Save &As...", this, &MainWindow::onSaveAs, QKeySequence("Ctrl+Shift+S"));
+    auto* fileMenu = menuBar()->addMenu("文件(&F)");
+    fileMenu->addAction("新建(&N)", this, &MainWindow::onNew, QKeySequence("Ctrl+N"));
+    fileMenu->addAction("打开(&O)...", this, &MainWindow::onOpen, QKeySequence::Open);
+    fileMenu->addAction("保存(&S)", this, &MainWindow::onSave, QKeySequence::Save);
+    fileMenu->addAction("另存为(&A)...", this, &MainWindow::onSaveAs, QKeySequence("Ctrl+Shift+S"));
     fileMenu->addSeparator();
-    fileMenu->addAction("&Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
+    fileMenu->addAction("关闭(&C)", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
     fileMenu->addSeparator();
-    fileMenu->addAction("E&xit", this, &MainWindow::onExit, QKeySequence::Quit);
+    fileMenu->addAction("退出(&X)", this, &MainWindow::onExit, QKeySequence::Quit);
 
-    auto* editMenu = menuBar()->addMenu("&Edit");
-    auto* undoAct = m_undoStack->createUndoAction(this, "&Undo");
+    auto* editMenu = menuBar()->addMenu("编辑(&E)");
+    auto* undoAct = m_undoStack->createUndoAction(this, "撤销(&U)");
     undoAct->setShortcut(QKeySequence::Undo);
     editMenu->addAction(undoAct);
-    auto* redoAct = m_undoStack->createRedoAction(this, "&Redo");
+    auto* redoAct = m_undoStack->createRedoAction(this, "重做(&R)");
     redoAct->setShortcut(QKeySequence::Redo);
     editMenu->addAction(redoAct);
     editMenu->addSeparator();
-    editMenu->addAction("Cu&t", this, &MainWindow::onCut, QKeySequence::Cut);
-    editMenu->addAction("&Copy", this, &MainWindow::onCopy, QKeySequence::Copy);
-    editMenu->addAction("&Paste", this, &MainWindow::onPaste, QKeySequence::Paste);
+    editMenu->addAction("剪切(&T)", this, &MainWindow::onCut, QKeySequence::Cut);
+    editMenu->addAction("复制(&C)", this, &MainWindow::onCopy, QKeySequence::Copy);
+    editMenu->addAction("粘贴(&P)", this, &MainWindow::onPaste, QKeySequence::Paste);
     editMenu->addSeparator();
-    editMenu->addAction("&Delete", this, &MainWindow::onDelete, QKeySequence::Delete);
+    editMenu->addAction("删除(&D)", this, &MainWindow::onDelete, QKeySequence::Delete);
     editMenu->addSeparator();
-    editMenu->addAction("Select &All", this, &MainWindow::onSelectAll, QKeySequence::SelectAll);
+    editMenu->addAction("全选(&A)", this, &MainWindow::onSelectAll, QKeySequence::SelectAll);
 
-    auto* viewMenu = menuBar()->addMenu("&View");
-    m_compDock->toggleViewAction()->setText("&Components");
+    auto* viewMenu = menuBar()->addMenu("视图(&V)");
+    m_compDock->toggleViewAction()->setText("组件(&C)");
     viewMenu->addAction(m_compDock->toggleViewAction());
-    m_treeDock->toggleViewAction()->setText("Widget &Tree");
+    m_treeDock->toggleViewAction()->setText("组件树(&T)");
     viewMenu->addAction(m_treeDock->toggleViewAction());
-    m_propDock->toggleViewAction()->setText("&Properties");
+    m_propDock->toggleViewAction()->setText("属性(&P)");
     viewMenu->addAction(m_propDock->toggleViewAction());
     viewMenu->addSeparator();
-    auto* statusToggle = viewMenu->addAction("&Status Bar");
+    auto* statusToggle = viewMenu->addAction("状态栏(&S)");
     statusToggle->setCheckable(true);
     statusToggle->setChecked(true);
     connect(statusToggle, &QAction::toggled, statusBar(), &QWidget::setVisible);
     viewMenu->addSeparator();
-    viewMenu->addAction("Canvas &Size...", this, &MainWindow::onCanvasSize);
+    viewMenu->addAction("画布尺寸(&S)...", this, &MainWindow::onCanvasSize);
 
-    auto* buildMenu = menuBar()->addMenu("&Build");
-    buildMenu->addAction("&Compile .lui", this, &MainWindow::onCompile, QKeySequence("F5"));
+    auto* buildMenu = menuBar()->addMenu("构建(&B)");
+    buildMenu->addAction("编译 .lui(&C)", this, &MainWindow::onCompile, QKeySequence("F5"));
 
-    auto* helpMenu = menuBar()->addMenu("&Help");
-    helpMenu->addAction("&About", this, &MainWindow::onAbout);
-    helpMenu->addAction("About &Qt", this, &QApplication::aboutQt);
+    auto* helpMenu = menuBar()->addMenu("帮助(&H)");
+    helpMenu->addAction("关于(&A)", this, &MainWindow::onAbout);
+    helpMenu->addAction("关于 Qt(&Q)", this, &QApplication::aboutQt);
 }
 
 void MainWindow::setupToolbar() {
-    auto* toolbar = addToolBar("Main");
+    auto* toolbar = addToolBar("主工具栏");
     toolbar->setMovable(false);
-    toolbar->addAction("New", this, &MainWindow::onNew);
-    toolbar->addAction("Open", this, &MainWindow::onOpen);
-    toolbar->addAction("Save", this, &MainWindow::onSave);
+    toolbar->addAction("新建", this, &MainWindow::onNew);
+    toolbar->addAction("打开", this, &MainWindow::onOpen);
+    toolbar->addAction("保存", this, &MainWindow::onSave);
     toolbar->addSeparator();
-    toolbar->addAction("Compile", this, &MainWindow::onCompile);
+    toolbar->addAction("编译", this, &MainWindow::onCompile);
     toolbar->addSeparator();
-    toolbar->addAction("Cut", this, &MainWindow::onCut);
-    toolbar->addAction("Copy", this, &MainWindow::onCopy);
-    toolbar->addAction("Paste", this, &MainWindow::onPaste);
-    toolbar->addAction("Delete", this, &MainWindow::onDelete);
+    toolbar->addAction("剪切", this, &MainWindow::onCut);
+    toolbar->addAction("复制", this, &MainWindow::onCopy);
+    toolbar->addAction("粘贴", this, &MainWindow::onPaste);
+    toolbar->addAction("删除", this, &MainWindow::onDelete);
     toolbar->addSeparator();
-    toolbar->addAction(m_undoStack->createUndoAction(this, "Undo"));
-    toolbar->addAction(m_undoStack->createRedoAction(this, "Redo"));
+    toolbar->addAction(m_undoStack->createUndoAction(this, "撤销"));
+    toolbar->addAction(m_undoStack->createRedoAction(this, "重做"));
     toolbar->addSeparator();
-    toolbar->addAction("VBox", this, &MainWindow::onApplyLayoutVBox);
-    toolbar->addAction("HBox", this, &MainWindow::onApplyLayoutHBox);
-    toolbar->addAction("Grid", this, &MainWindow::onApplyLayoutGrid);
-    toolbar->addAction("Stacked", this, &MainWindow::onApplyLayoutStacked);
+    toolbar->addAction("垂直布局", this, &MainWindow::onApplyLayoutVBox);
+    toolbar->addAction("水平布局", this, &MainWindow::onApplyLayoutHBox);
+    toolbar->addAction("网格布局", this, &MainWindow::onApplyLayoutGrid);
+    toolbar->addAction("堆叠布局", this, &MainWindow::onApplyLayoutStacked);
     toolbar->addSeparator();
-    toolbar->addAction("Break Layout", this, &MainWindow::onBreakLayout);
+    toolbar->addAction("解除布局", this, &MainWindow::onBreakLayout);
 }
 
 void MainWindow::setupDocks() {
-    m_compDock = new QDockWidget("Components", this);
+    m_compDock = new QDockWidget("组件", this);
     m_compDock->setWidget(m_compPanel);
     m_compDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, m_compDock);
 
-    m_treeDock = new QDockWidget("Widget Tree", this);
+    m_treeDock = new QDockWidget("组件树", this);
     m_treeDock->setWidget(m_treePanel);
     m_treeDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, m_treeDock);
@@ -174,7 +174,7 @@ void MainWindow::setupDocks() {
     tabifyDockWidget(m_compDock, m_treeDock);
     m_compDock->raise();
 
-    m_propDock = new QDockWidget("Properties", this);
+    m_propDock = new QDockWidget("属性", this);
     m_propDock->setWidget(m_propPanel);
     m_propDock->setFeatures(QDockWidget::DockWidgetMovable);
     m_propDock->setMinimumWidth(300);
@@ -316,22 +316,22 @@ void MainWindow::updateTitle() {
 
 void MainWindow::updateStatusBar() {
     if (m_selectedId.empty()) {
-        m_statusInfo->setText(QString("Ready | Canvas: %1x%2").arg(m_doc.width()).arg(m_doc.height()));
+        m_statusInfo->setText(QString("就绪 | 画布：%1x%2").arg(m_doc.width()).arg(m_doc.height()));
         return;
     }
     if (m_selectedId == LvglRenderer::kRootId) {
-        m_statusInfo->setText(QString("Selected: root (LScreen) | Canvas: %1x%2")
+        m_statusInfo->setText(QString("已选中：根 (LScreen) | 画布：%1x%2")
             .arg(m_doc.width()).arg(m_doc.height()));
         return;
     }
     auto* node = m_doc.findById(m_selectedId);
     if (!node) {
-        m_statusInfo->setText(QString("Ready | Canvas: %1x%2").arg(m_doc.width()).arg(m_doc.height()));
+        m_statusInfo->setText(QString("就绪 | 画布：%1x%2").arg(m_doc.width()).arg(m_doc.height()));
         return;
     }
     auto p = node->pos();
     auto s = node->size();
-    m_statusInfo->setText(QString("Selected: %1 (%2) | Pos: %3,%4 | Size: %5x%6 | Canvas: %7x%8")
+    m_statusInfo->setText(QString("已选中：%1 (%2) | 位置：%3,%4 | 尺寸：%5x%6 | 画布：%7x%8")
         .arg(QString::fromStdString(node->id))
         .arg(QString::fromStdString(node->type))
         .arg((int)p.x()).arg((int)p.y())
@@ -367,9 +367,9 @@ void MainWindow::onSave() {
     }
     if (m_doc.save()) {
         updateTitle();
-        statusBar()->showMessage("Saved", 3000);
+        statusBar()->showMessage("已保存", 3000);
     } else {
-        QMessageBox::critical(this, "Error", "Failed to save file");
+        QMessageBox::critical(this, "错误", "保存文件失败");
     }
 }
 
@@ -378,9 +378,9 @@ void MainWindow::onSaveAs() {
     if (path.isEmpty()) return;
     if (m_doc.saveTo(path)) {
         updateTitle();
-        statusBar()->showMessage("Saved: " + path, 3000);
+        statusBar()->showMessage("已保存：" + path, 3000);
     } else {
-        QMessageBox::critical(this, "Error", "Failed to save file");
+        QMessageBox::critical(this, "错误", "保存文件失败");
     }
 }
 
@@ -456,9 +456,9 @@ void MainWindow::onDelete() {
 
 void MainWindow::onCanvasSize() {
     bool ok = false;
-    int w = QInputDialog::getInt(this, "Canvas Size", "Width:", m_doc.width(), 100, 4096, 10, &ok);
+    int w = QInputDialog::getInt(this, "画布尺寸", "宽度：", m_doc.width(), 100, 4096, 10, &ok);
     if (!ok) return;
-    int h = QInputDialog::getInt(this, "Canvas Size", "Height:", m_doc.height(), 100, 4096, 10, &ok);
+    int h = QInputDialog::getInt(this, "画布尺寸", "高度：", m_doc.height(), 100, 4096, 10, &ok);
     if (!ok) return;
 
     m_doc.setScreenSize(w, h);
@@ -472,7 +472,7 @@ void MainWindow::onCanvasSize() {
 void MainWindow::onCompile() {
     onSave();
     if (m_doc.filePath().isEmpty()) {
-        QMessageBox::warning(this, "Compile", "Please save the file first.");
+        QMessageBox::warning(this, "编译", "请先保存文件。");
         return;
     }
 
@@ -483,7 +483,7 @@ void MainWindow::onCompile() {
         luicPath = QApplication::applicationDirPath() + "/../bin/luic";
         luicFi.setFile(luicPath);
         if (!luicFi.exists()) {
-            QMessageBox::critical(this, "Compile Error", "luic not found at:\n" + luicPath + "\n\nPlease build luic first.");
+            QMessageBox::critical(this, "编译错误", "未找到 luic：\n" + luicPath + "\n\n请先构建 luic。");
             return;
         }
     }
@@ -494,32 +494,32 @@ void MainWindow::onCompile() {
     QString outputPath = outputDir + "/" + fi.baseName() + "_ui.hpp";
 
     proc.start(luicPath, {m_doc.filePath(), "-o", outputPath, "--verbose"});
-    statusBar()->showMessage("Compiling...");
+    statusBar()->showMessage("正在编译...");
 
     if (!proc.waitForFinished(10000)) {
-        QMessageBox::critical(this, "Compile Error", "luic timed out after 10 seconds.");
-        statusBar()->showMessage("Compile failed: timeout", 5000);
+        QMessageBox::critical(this, "编译错误", "luic 执行超时（10 秒）。");
+        statusBar()->showMessage("编译失败：超时", 5000);
         return;
     }
 
     QString stdoutStr = proc.readAllStandardOutput();
     QString stderrStr = proc.readAllStandardError();
     if (proc.exitCode() == 0) {
-        statusBar()->showMessage("Compile OK: " + outputPath, 5000);
-        QMessageBox::information(this, "Compile Success", "Generated:\n" + outputPath + (stdoutStr.isEmpty() ? "" : "\n\n" + stdoutStr));
+        statusBar()->showMessage("编译成功：" + outputPath, 5000);
+        QMessageBox::information(this, "编译成功", "已生成：\n" + outputPath + (stdoutStr.isEmpty() ? "" : "\n\n" + stdoutStr));
     } else {
-        statusBar()->showMessage("Compile FAILED", 5000);
+        statusBar()->showMessage("编译失败", 5000);
         QString msg = "luic exited with code " + QString::number(proc.exitCode());
         if (!stderrStr.isEmpty()) msg += "\n\n" + stderrStr;
         if (!stdoutStr.isEmpty()) msg += "\n\n" + stdoutStr;
-        QMessageBox::critical(this, "Compile Error", msg);
+        QMessageBox::critical(this, "编译错误", msg);
     }
 }
 
 void MainWindow::onAbout() {
-    QMessageBox::about(this, "About LVGL++ Designer",
+    QMessageBox::about(this, "关于 LVGL++ Designer",
         "<h3>LVGL++ Designer</h3>"
-        "<p>Visual UI designer for LVGL++ projects.</p>"
+        "<p>LVGL++ 项目的可视化 UI 设计器。</p>"
         "<p>Version 1.0</p>");
 }
 
@@ -557,23 +557,23 @@ void MainWindow::onSendToBack() {
 
 void MainWindow::onContextMenu(const QPoint& pos) {
     QMenu menu(this);
-    menu.addAction("Delete", this, &MainWindow::onDelete);
-    menu.addAction("Copy", this, &MainWindow::onCopy);
-    if (m_clipboard.has_value()) menu.addAction("Paste", this, &MainWindow::onPaste);
+    menu.addAction("删除", this, &MainWindow::onDelete);
+    menu.addAction("复制", this, &MainWindow::onCopy);
+    if (m_clipboard.has_value()) menu.addAction("粘贴", this, &MainWindow::onPaste);
     else {
-        auto* pasteAct = menu.addAction("Paste");
+        auto* pasteAct = menu.addAction("粘贴");
         pasteAct->setEnabled(false);
     }
     menu.addSeparator();
-    menu.addAction("Bring to Front", this, &MainWindow::onBringToFront);
-    menu.addAction("Send to Back", this, &MainWindow::onSendToBack);
+    menu.addAction("置于顶层", this, &MainWindow::onBringToFront);
+    menu.addAction("置于底层", this, &MainWindow::onSendToBack);
     menu.exec(m_lvglWidget->mapToGlobal(pos));
 }
 
 bool MainWindow::confirmDiscard() {
     if (!m_doc.isModified()) return true;
-    auto result = QMessageBox::question(this, "Unsaved Changes",
-        "The document has been modified.\nDo you want to save your changes?",
+    auto result = QMessageBox::question(this, "未保存的更改",
+        "文档已修改。\n是否保存更改？",
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     if (result == QMessageBox::Save) {
         onSave();

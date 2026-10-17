@@ -11,7 +11,7 @@ class TreePanel : public QTreeWidget {
 
 public:
     explicit TreePanel(QWidget* parent = nullptr) : QTreeWidget(parent) {
-        setHeaderLabels({"ID", "Type"});
+        setHeaderLabels({"ID", "类型"});
         setColumnWidth(0, 120);
         connect(this, &QTreeWidget::itemClicked, this, &TreePanel::onItemClicked);
     }
