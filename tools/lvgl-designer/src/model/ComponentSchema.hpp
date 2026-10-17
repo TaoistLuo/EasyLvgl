@@ -279,7 +279,7 @@ struct ComponentSchema {
         } else if (type == "LLine") {
             comp.props.push_back({"points", "string", QVariant(QString("0,0;80,40;160,0"))});
             comp.props.push_back({"width", "int", QVariant(2)});
-            comp.props.push_back({"color", "hex", QVariant(QString("0xFFFFFF"))});
+            comp.props.push_back({"color", "hex", QVariant(QString("0x000000"))});
             comp.props.push_back({"y_invert", "bool", QVariant(false)});
                                 } else if (type == "LRoller") {
             comp.props.push_back({"options", "string", QVariant(QString("Item 1\\nItem 2\\nItem 3"))});

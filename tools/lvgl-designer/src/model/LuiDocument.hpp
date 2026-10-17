@@ -82,7 +82,7 @@ struct WidgetNode {
         if (type == "LArc") return QSizeF(100, 100);
         if (type == "LSpinner") return QSizeF(50, 50);
         if (type == "LLed") return QSizeF(30, 30);
-        if (type == "LLine") return QSizeF(200, 2);
+        if (type == "LLine") return QSizeF(200, 60);   // points 默认 0,0;80,40;160,0，需足够高度才可点选
         if (type == "LTable") return QSizeF(300, 200);
         if (type == "LChart") return QSizeF(300, 200);
         if (type == "LScale") return QSizeF(200, 80);
@@ -232,7 +232,7 @@ struct WidgetNode {
         } else if (type == "LLine") {
             props.emplace("points", QVariant(QString("0,0;80,40;160,0")));
             props.emplace("width", QVariant(2));
-            props.emplace("color", QVariant(QString("0xFFFFFF")));
+            props.emplace("color", QVariant(QString("0x000000")));   // 白色在 #F5F5F5 画布上不可见
             props.emplace("y_invert", QVariant(false));
             props.emplace("dash_width", QVariant(0));
             props.emplace("dash_gap", QVariant(0));
