@@ -127,8 +127,14 @@ void SDL2Widget::paintEvent(QPaintEvent*) {
 }
 
 QPointF SDL2Widget::toLvgl(const QPoint& widgetPos) const {
-    return QPointF((widgetPos.x() - m_panX) / m_zoom,
-                   (widgetPos.y() - m_panY) / m_zoom);
+    QPointF p((widgetPos.x() - m_panX) / m_zoom,
+              (widgetPos.y() - m_panY) / m_zoom);
+
+    const qreal maxX = m_width - 1;
+    const qreal maxY = m_height - 1;
+    if (p.x() < 0) p.setX(0); else if (p.x() > maxX) p.setX(maxX);
+    if (p.y() < 0) p.setY(0); else if (p.y() > maxY) p.setY(maxY);
+    return p;
 }
 
 void SDL2Widget::clampPan() {
@@ -194,6 +200,11 @@ void SDL2Widget::mousePressEvent(QMouseEvent* event) {
         m_panStartY = m_panY;
         setCursor(Qt::ClosedHandCursor);
     } else if (event->button() == Qt::LeftButton) {
+        if (!canvasRect().contains(event->pos())) {
+            m_mousePressed = false;
+            QWidget::mousePressEvent(event);
+            return;
+        }
         const QPointF p = toLvgl(event->pos());
         m_mouseX = qRound(p.x());
         m_mouseY = qRound(p.y());
