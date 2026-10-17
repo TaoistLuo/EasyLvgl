@@ -223,6 +223,11 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         obj = lv_tabview_create(targetParent);
     } else if (node.type == "LTileView") {
         obj = lv_tileview_create(targetParent);
+    } else if (node.type == "LTile") {
+        int col = node.props.count("col") ? node.propInt("col") : 0;
+        int row = node.props.count("row") ? node.propInt("row") : 0;
+        int dir = node.props.count("dir") ? node.propInt("dir") : LV_DIR_RIGHT;
+        obj = lv_tileview_add_tile(targetParent, (uint8_t)col, (uint8_t)row, (lv_dir_t)dir);
     } else if (node.type == "LCanvas") {
         obj = lv_canvas_create(targetParent);
     } else if (node.type == "LAnimImage") {
@@ -1468,7 +1473,7 @@ std::string LvglRenderer::findContainerAt(int x, int y) const {
         "LVBoxLayout", "LHBoxLayout",
         "LGridLayout", "LStackedLayout",
         "LTabView", "LMenu", "LMenuPage", "LMenuCont", "LMenuSection",
-        "LTileView", "LList", "LWin", "LCanvas",
+        "LTileView", "LTile", "LList", "LWin", "LCanvas",
         "LGroupBox"
     };
 

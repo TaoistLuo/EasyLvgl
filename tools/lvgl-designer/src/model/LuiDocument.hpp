@@ -98,6 +98,7 @@ struct WidgetNode {
         if (type == "LTabView") return QSizeF(300, 250);
         if (type == "LMenu") return QSizeF(250, 300);
         if (type == "LTileView") return QSizeF(300, 250);
+        if (type == "LTile") return QSizeF(200, 180);
         if (type == "LCanvas") return QSizeF(200, 200);
         if (type == "LMsgBox") return QSizeF(300, 180);
         if (type == "LImageButton") return QSizeF(100, 40);
@@ -313,6 +314,10 @@ struct WidgetNode {
         } else if (type == "LList") {
             props.emplace("items", QVariant(QString("#Header\nItem 1\nItem 2")));
         } else if (type == "LTileView") {
+        } else if (type == "LTile") {
+            props.emplace("col", QVariant(0));
+            props.emplace("row", QVariant(0));
+            props.emplace("dir", QVariant(2));
         } else if (type == "LImageButton") {
             props.emplace("state", QVariant(0));
             props.emplace("src_released", QVariant(QString("")));

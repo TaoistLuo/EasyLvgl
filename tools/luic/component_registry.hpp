@@ -25,7 +25,8 @@ struct component_def_t {
     bool is_container = false;
     std::vector<prop_def_t> props;
     std::vector<event_def_t> events;
-    std::string ctor_prop;   // prop passed as extra constructor arg: new Type(parent, <prop>)
+    std::string ctor_prop;   // single prop passed as extra constructor arg (legacy)
+    std::vector<std::string> ctor_props;  // props passed as extra constructor args, in order
 
     const prop_def_t* find_prop(const std::string& name) const {
         for (auto& p : props) {
@@ -395,6 +396,19 @@ public:
             },
             .events = {},
             .ctor_prop = "title"
+        });
+
+        reg("LTile", {
+            .is_container = true,
+            .props = {
+                {"col",  "int",      ""},
+                {"row",  "int",      ""},
+                {"dir",  "int",      ""},
+                {"size", "int_pair", "set_size"},
+                {"pos",  "int_pair", "set_pos"},
+            },
+            .events = {},
+            .ctor_props = {"col", "row", "dir"}
         });
 
         reg("LMenuCont", {

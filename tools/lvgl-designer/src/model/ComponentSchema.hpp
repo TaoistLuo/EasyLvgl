@@ -333,6 +333,10 @@ struct ComponentSchema {
         } else if (type == "LList") {
             comp.props.push_back({"items", "string", QVariant(QString("#Header\\nItem 1\\nItem 2"))});
         } else if (type == "LTileView") {
+        } else if (type == "LTile") {
+            comp.props.push_back({"col", "int", QVariant(0)});
+            comp.props.push_back({"row", "int", QVariant(0)});
+            comp.props.push_back({"dir", "int", QVariant(2)});
         } else if (type == "LCanvas") {
         } else if (type == "LWin") {
             comp.props.push_back({"title", "string", QVariant(QString("Window"))});

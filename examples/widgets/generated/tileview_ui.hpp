@@ -7,15 +7,33 @@ namespace lvgl {
 
 class TileView_UI {
 protected:
-    LTileView* m_w = nullptr;
+    LTileView* m_tv = nullptr;
+    LTile* m_t0 = nullptr;
+    LButton* m_b0 = nullptr;
+    LTile* m_t1 = nullptr;
+    LButton* m_b1 = nullptr;
 
 public:
     void setup(lv_obj_t* parent = nullptr) {
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
-        m_w = new LTileView(root);
-        m_w->set_pos(20, 20)
-              .set_size(240, 200);
+        m_tv = new LTileView(root);
+        m_tv->set_pos(20, 20)
+              .set_size(300, 240);
+
+        m_t0 = new LTile(m_tv->native(), 0, 0, 2);
+
+        m_b0 = new LButton(m_t0->native());
+        m_b0->set_pos(80, 80)
+              .set_size(140, 50)
+              .set_text("Tile 1");
+
+        m_t1 = new LTile(m_tv->native(), 1, 0, 1);
+
+        m_b1 = new LButton(m_t1->native());
+        m_b1->set_pos(80, 80)
+              .set_size(140, 50)
+              .set_text("Tile 2");
 
     }
 
@@ -24,7 +42,11 @@ public:
 
 
     virtual ~TileView_UI() {
-        delete m_w;
+        delete m_b1;
+        delete m_t1;
+        delete m_b0;
+        delete m_t0;
+        delete m_tv;
     }
 };
 

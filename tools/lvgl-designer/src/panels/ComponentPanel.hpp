@@ -58,6 +58,7 @@ public:
             {"LMenuCont",      "Menu Container"},
             {"LMenuSection",   "Menu Section"},
             {"LTileView",      "Tile View"},
+            {"LTile",          "Tile"},
             {"LWin",           "Window"},
             {"LCanvas",        "Canvas"},
         });

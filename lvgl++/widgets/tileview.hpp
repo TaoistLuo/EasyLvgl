@@ -29,4 +29,14 @@ public:
     }
 };
 
+class LTile : public LWidgetCRTP<LTile> {
+public:
+    explicit LTile(lv_obj_t* tileview, int col, int row, int dir)
+        : LWidgetCRTP(lv_tileview_add_tile(tileview ? tileview : lv_scr_act(),
+                                          (uint8_t)col, (uint8_t)row, (lv_dir_t)dir)) {}
+
+    LTile& set_size(int w, int h) { lv_obj_set_size(m_obj, w, h); return *this; }
+    LTile& set_pos(int x, int y) { lv_obj_set_pos(m_obj, x, y); return *this; }
+};
+
 } // namespace lvgl
