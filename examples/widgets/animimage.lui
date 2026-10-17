@@ -1,1 +1,26 @@
-{"name":"AnimImage","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LAnimImage","props":{"duration":1000,"repeat_count":0,"pos":[20,20],"size":[120,80]}}]}
+{
+    "name": "AnimImage",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LAnimImage",
+            "props": {
+                "duration": 1000,
+                "repeat_count": 0,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    120,
+                    80
+                ]
+            }
+        }
+    ]
+}

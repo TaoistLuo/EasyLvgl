@@ -1,1 +1,27 @@
-{"name":"Image","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LImage","props":{"src":"A:lvgl/examples/assets/caret_down.png","rotation":0,"scale":256,"pos":[20,20],"size":[100,100]}}]}
+{
+    "name": "Image",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LImage",
+            "props": {
+                "src": "A:lvgl/examples/assets/caret_down.png",
+                "rotation": 0,
+                "scale": 256,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    100,
+                    100
+                ]
+            }
+        }
+    ]
+}

@@ -1,1 +1,73 @@
-{"name":"VBox","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LVBoxLayout","props":{"spacing":8,"padding":8,"size":[200,200],"pos":[20,20]},"children":[{"id":"c1","type":"LButton","props":{"text":"A","size":[160,44],"pos":[0,0]}},{"id":"c2","type":"LButton","props":{"text":"B","size":[160,44],"pos":[0,0]}},{"id":"c3","type":"LButton","props":{"text":"C","size":[160,44],"pos":[0,0]}}]}]}
+{
+    "name": "VBox",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LVBoxLayout",
+            "props": {
+                "spacing": 8,
+                "padding": 8,
+                "size": [
+                    200,
+                    200
+                ],
+                "pos": [
+                    20,
+                    20
+                ]
+            },
+            "children": [
+                {
+                    "id": "c1",
+                    "type": "LButton",
+                    "props": {
+                        "text": "A",
+                        "size": [
+                            160,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c2",
+                    "type": "LButton",
+                    "props": {
+                        "text": "B",
+                        "size": [
+                            160,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c3",
+                    "type": "LButton",
+                    "props": {
+                        "text": "C",
+                        "size": [
+                            160,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

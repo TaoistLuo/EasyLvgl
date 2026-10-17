@@ -1,1 +1,29 @@
-{"name":"Spinbox","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LSpinbox","props":{"range":[0,999],"value":42,"pos":[20,20],"size":[170,44]}}]}
+{
+    "name": "Spinbox",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LSpinbox",
+            "props": {
+                "range": [
+                    0,
+                    999
+                ],
+                "value": 42,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    170,
+                    44
+                ]
+            }
+        }
+    ]
+}

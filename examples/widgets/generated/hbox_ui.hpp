@@ -13,6 +13,8 @@ protected:
     LButton* m_c3 = nullptr;
 
 public:
+    static constexpr int kScreenWidth = 400;
+    static constexpr int kScreenHeight = 300;
     void setup(lv_obj_t* parent = nullptr) {
         lv_obj_t* root = parent ? parent : lv_scr_act();
 

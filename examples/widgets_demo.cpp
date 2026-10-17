@@ -48,6 +48,9 @@ using namespace lvgl;
 
 template <typename UI>
 static void run_ui() {
+    lv_display_t* disp = lv_sdl_window_create(UI::kScreenWidth, UI::kScreenHeight);
+    (void)disp;
+    lv_sdl_mouse_create();
     UI ui;
     ui.setup(nullptr);
     while (true) { lv_timer_handler(); usleep(5000); }
@@ -55,8 +58,6 @@ static void run_ui() {
 
 int main(int argc, char** argv) {
     lv_init();
-    lv_display_t* disp = lv_sdl_window_create(520, 400); (void)disp;
-    lv_sdl_mouse_create();
     SignalHandler signal_handler;
 
     const char* name = (argc > 1) ? argv[1] : "label";

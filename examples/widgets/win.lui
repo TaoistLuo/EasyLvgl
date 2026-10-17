@@ -1,1 +1,25 @@
-{"name":"Win","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LWin","props":{"title":"My Window","pos":[20,20],"size":[280,180]}}]}
+{
+    "name": "Win",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LWin",
+            "props": {
+                "title": "My Window",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    280,
+                    180
+                ]
+            }
+        }
+    ]
+}

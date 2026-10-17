@@ -1,1 +1,29 @@
-{"name":"Slider","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LSlider","props":{"range":[0,100],"value":40,"pos":[20,20],"size":[320,20]}}]}
+{
+    "name": "Slider",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LSlider",
+            "props": {
+                "range": [
+                    0,
+                    100
+                ],
+                "value": 40,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    320,
+                    20
+                ]
+            }
+        }
+    ]
+}

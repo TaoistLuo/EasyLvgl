@@ -1,1 +1,59 @@
-{"name":"Stacked","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LStackedLayout","props":{"current_index":1,"padding":6,"size":[300,200],"pos":[20,20]},"children":[{"id":"c1","type":"LLabel","props":{"text":"Page 1","pos":[0,0],"size":[260,40]}},{"id":"c2","type":"LLabel","props":{"text":"Page 2","color":"0x00AA00","pos":[0,0],"size":[260,40]}}]}]}
+{
+    "name": "Stacked",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LStackedLayout",
+            "props": {
+                "current_index": 1,
+                "padding": 6,
+                "size": [
+                    300,
+                    200
+                ],
+                "pos": [
+                    20,
+                    20
+                ]
+            },
+            "children": [
+                {
+                    "id": "c1",
+                    "type": "LLabel",
+                    "props": {
+                        "text": "Page 1",
+                        "pos": [
+                            0,
+                            0
+                        ],
+                        "size": [
+                            260,
+                            40
+                        ]
+                    }
+                },
+                {
+                    "id": "c2",
+                    "type": "LLabel",
+                    "props": {
+                        "text": "Page 2",
+                        "color": "0x00AA00",
+                        "pos": [
+                            0,
+                            0
+                        ],
+                        "size": [
+                            260,
+                            40
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

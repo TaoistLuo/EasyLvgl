@@ -1,1 +1,78 @@
-{"name":"TileView","size":[420,340],"version":"1.0","children":[{"id":"tv","type":"LTileView","props":{"pos":[20,20],"size":[300,240]},"children":[{"id":"t0","type":"LTile","props":{"col":0,"row":0,"dir":2},"children":[{"id":"b0","type":"LButton","props":{"text":"Tile 1","pos":[80,80],"size":[140,50]}}]},{"id":"t1","type":"LTile","props":{"col":1,"row":0,"dir":1},"children":[{"id":"b1","type":"LButton","props":{"text":"Tile 2","pos":[80,80],"size":[140,50]}}]}]}]}
+{
+    "name": "TileView",
+    "size": [
+        420,
+        340
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "tv",
+            "type": "LTileView",
+            "props": {
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    300,
+                    240
+                ]
+            },
+            "children": [
+                {
+                    "id": "t0",
+                    "type": "LTile",
+                    "props": {
+                        "col": 0,
+                        "row": 0,
+                        "dir": 2
+                    },
+                    "children": [
+                        {
+                            "id": "b0",
+                            "type": "LButton",
+                            "props": {
+                                "text": "Tile 1",
+                                "pos": [
+                                    80,
+                                    80
+                                ],
+                                "size": [
+                                    140,
+                                    50
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "t1",
+                    "type": "LTile",
+                    "props": {
+                        "col": 1,
+                        "row": 0,
+                        "dir": 1
+                    },
+                    "children": [
+                        {
+                            "id": "b1",
+                            "type": "LButton",
+                            "props": {
+                                "text": "Tile 2",
+                                "pos": [
+                                    80,
+                                    80
+                                ],
+                                "size": [
+                                    140,
+                                    50
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

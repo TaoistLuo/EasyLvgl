@@ -1,1 +1,26 @@
-{"name":"Keyboard","size":[460,300],"version":"1.0","children":[{"id":"w","type":"LKeyboard","props":{"mode":0,"popovers":false,"pos":[20,20],"size":[420,200]}}]}
+{
+    "name": "Keyboard",
+    "size": [
+        460,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LKeyboard",
+            "props": {
+                "mode": 0,
+                "popovers": false,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    420,
+                    200
+                ]
+            }
+        }
+    ]
+}

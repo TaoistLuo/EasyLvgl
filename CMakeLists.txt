@@ -108,6 +108,11 @@ target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/wid
 target_link_libraries(widgets_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
 add_custom_target(run_widgets COMMAND ${EXECUTABLE_OUTPUT_PATH}/widgets_demo DEPENDS widgets_demo)
 
+# --- C++ wrapper unit tests ---
+add_executable(cpp_tests tests/cpp/test_wrappers.cpp)
+target_link_libraries(cpp_tests lvgl lvgl::thorvg ${SDL2_LIBRARIES} m pthread)
+add_custom_target(run_cpp_tests COMMAND ${EXECUTABLE_OUTPUT_PATH}/cpp_tests DEPENDS cpp_tests)
+
 # ── 合并为单一库 liblvglcpp.a ───────────────────────────────────────
 set(LVGLCPP_LIB "${CMAKE_BINARY_DIR}/lib/liblvglcpp.a")
 

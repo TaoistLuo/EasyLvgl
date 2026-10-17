@@ -1,1 +1,25 @@
-{"name":"TabView","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LTabView","props":{"tabs":"Tab1\nTab2\nTab3","pos":[20,20],"size":[340,200]}}]}
+{
+    "name": "TabView",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LTabView",
+            "props": {
+                "tabs": "Tab1\nTab2\nTab3",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    340,
+                    200
+                ]
+            }
+        }
+    ]
+}

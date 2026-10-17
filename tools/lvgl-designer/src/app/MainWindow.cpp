@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_propPanel->setDocument(&m_doc);
     m_propPanel->setUndoStack(m_undoStack);
     m_treePanel->setDocument(&m_doc);
+    m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
 
     m_statusInfo = new QLabel("Ready");
     statusBar()->addWidget(m_statusInfo, 1);
@@ -51,6 +52,7 @@ bool MainWindow::openFile(const QString& path) {
     m_clipboard.reset();
     m_propPanel->setDocument(&m_doc);
     m_treePanel->setDocument(&m_doc);
+    m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
     updateTitle();
     rebuildFromDocument();
     updateStatusBar();
@@ -304,6 +306,7 @@ void MainWindow::onNew() {
     m_clipboard.reset();
     m_propPanel->setDocument(&m_doc);
     m_treePanel->setDocument(&m_doc);
+    m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
     updateTitle();
     rebuildFromDocument();
     updateStatusBar();
@@ -348,6 +351,7 @@ void MainWindow::onClose() {
     m_clipboard.reset();
     m_propPanel->setDocument(&m_doc);
     m_treePanel->setDocument(&m_doc);
+    m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
     updateTitle();
     rebuildFromDocument();
     updateStatusBar();

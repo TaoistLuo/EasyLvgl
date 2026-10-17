@@ -1,1 +1,25 @@
-{"name":"List","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LList","props":{"items":"#Header\nItem 1\nItem 2","pos":[20,20],"size":[170,160]}}]}
+{
+    "name": "List",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LList",
+            "props": {
+                "items": "#Header\nItem 1\nItem 2",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    170,
+                    160
+                ]
+            }
+        }
+    ]
+}

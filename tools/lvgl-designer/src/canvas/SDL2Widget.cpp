@@ -39,8 +39,15 @@ SDL2Widget::~SDL2Widget() {
 void SDL2Widget::setLvglSize(int w, int h) {
     m_width = w;
     m_height = h;
+    m_docSizeLocked = true;
     if (m_display) {
         lv_display_set_resolution(m_display, w, h);
+        /* disp_size 由首个显示创建时按 hor_res 分档并全局复用，
+         * set_resolution 不会重算，需重启主题让设计尺寸生效（否则与运行时不符）。 */
+        lv_theme_default_init(m_display,
+                              lv_palette_main(LV_PALETTE_BLUE),
+                              lv_palette_main(LV_PALETTE_RED),
+                              LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
         recreateTexture();
         update();
     }
@@ -63,6 +70,7 @@ void SDL2Widget::resizeEvent(QResizeEvent* event) {
     const int newW = event->size().width();
     const int newH = event->size().height();
     if (newW < 1 || newH < 1) return;
+    if (m_docSizeLocked) return;
 
     if (newW != m_width || newH != m_height) {
         m_width = newW;

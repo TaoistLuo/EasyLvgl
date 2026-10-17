@@ -96,72 +96,78 @@ luic <input.lui> [-o output.hpp] [--verbose]
 
 > **总计 43 个组件** 已在 ComponentRegistry 中注册。
 
+> **通用属性：** 所有组件均支持 `size`（[w,h]）和 `pos`（[x,y]）；下表仅列组件特有属性。
+
 #### 核心组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LButton | text, size, pos, theme, disabled | clicked, pressed, released |
-| LLabel | text, color, font_size, long_mode, pos | - |
-| LSlider | range, value, left_value, mode, pos | value_changed |
-| LCheckbox | text, checked, pos | value_changed |
-| LSwitch | checked, enabled, pos | value_changed |
-| LComboBox | options, selected, direction, text, pos | value_changed |
-| LLineEdit | text, placeholder, password_mode, max_length, pos | value_changed, ready |
-| LTextEdit | text, placeholder, password_mode, max_length, pos | value_changed, ready |
-| LImage | src, rotation, scale, pivot, offset, opacity, pos | clicked |
+| LButton | text, theme, disabled | clicked, pressed, released |
+| LLabel | text, color, font_size, long_mode | - |
+| LSlider | range, value, left_value, mode | value_changed |
+| LCheckbox | text, checked | value_changed |
+| LSwitch | checked, enabled | value_changed |
+| LComboBox | options, selected, direction, symbol, text, selected_highlight, enabled | value_changed |
+| LLineEdit | text, placeholder, password_mode, password_show_time, max_length, accepted_chars, cursor_click_pos, text_selection, enabled | value_changed, ready |
+| LTextEdit | text, placeholder, password_mode, password_show_time, max_length, accepted_chars, cursor_click_pos, text_selection, enabled | value_changed, ready |
+| LImage | src, rotation, scale, pivot, offset, opacity, antialias | clicked |
 
 #### 高频组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LArc | range, value, rotation, mode, bg_angles, angles, pos | value_changed |
-| LBar | range, value, start_value, mode, orientation, pos | - |
-| LSpinner | color, size, pos | - |
-| LLed | color, brightness, on, size, pos | - |
-| LLine | width, color, y_invert, size, pos | - |
+| LArc | range, value, rotation, mode, bg_angles, angles, change_rate, knob_enabled | value_changed |
+| LBar | range, value, start_value, mode, orientation | - |
+| LSpinner | color | - |
+| LLed | color, brightness, on | - |
+| LLine | points, width, color, y_invert | - |
 
 #### 输入组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LRoller | options, selected, visible_row_count, pos | value_changed |
-| LSpinbox | range, value, step, digit_format, rollover, pos | value_changed |
-| LButtonMatrix | one_checked, pos | value_changed |
-| LKeyboard | mode, popovers, pos | - |
-| LRadioButton | text, checked, pos | value_changed |
+| LRoller | options, selected, visible_row_count | value_changed |
+| LSpinbox | range, value, step, digit_format, rollover | value_changed |
+| LButtonMatrix | map, selected, one_checked | value_changed |
+| LKeyboard | textarea（关联输入框的组件 id）, mode, popovers | - |
+| LRadioButton | text, checked | value_changed |
 
 #### 数据展示组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LTable | row_count, column_count, pos | - |
-| LChart | type, point_count, div_line_count, update_mode, pos | - |
-| LScale | mode, range, total_tick_count, major_tick_every, rotation, pos | - |
-| LCalendar | today_date, showed_date, pos | - |
-| LCanvas | size, pos | - |
+| LTable | row_count, column_count, column_widths, data | - |
+| LChart | type, point_count, div_line_count, update_mode, series | - |
+| LScale | mode, range, total_tick_count, major_tick_every, rotation, angle_range, label_show | - |
+| LCalendar | today_date, showed_date | - |
+| LCanvas | （仅尺寸/位置；绘制需代码） | - |
 
 #### 布局容器
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LVBoxLayout | spacing, padding, align_main, align_cross, pos | - |
-| LHBoxLayout | spacing, padding, align_main, align_cross, pos | - |
-| LGridLayout | columns, rows, col_spacing, row_spacing, pos | - |
-| LStackedLayout | current_index, pos | - |
+| LVBoxLayout | spacing, padding, align_main, align_cross | - |
+| LHBoxLayout | spacing, padding, align_main, align_cross | - |
+| LGridLayout | columns, rows, col_spacing, row_spacing, padding | - |
+| LStackedLayout | current_index, padding | - |
 
 #### 其他容器
 | 类型 | 属性 | 事件 |
 |------|------|------|
-| LList | size, pos | - |
-| LTabView | tab_bar_position, tab_bar_size, pos | - |
-| LMenu | mode_header, mode_root_back_button, pos | - |
-| LTileView | size, pos | - |
-| LWin | size, pos | - |
-| LGroupBox | title, padding, size, pos | - |
+| LList | items | - |
+| LTabView | tabs, tab_bar_position, tab_bar_size | - |
+| LMenu | mode_header, mode_root_back_button, active_page（页面 id） | - |
+| LMenuPage | title | - |
+| LMenuCont | - | - |
+| LMenuSection | - | - |
+| LTileView | - | - |
+| LTile | col, row, dir | - |
+| LWin | title | - |
+| LGroupBox | title, padding | - |
 
 #### 特殊组件
 | 类型 | 属性 | 事件 |
 |------|------|------|
 | LMsgBox | title, text | - |
-| LSpan | mode, overflow, indent, pos | - |
-| LAnimImage | duration, repeat_count, pos | - |
-| LImageButton | size, pos | clicked |
-| LLottie | src, loop, speed, pos | 需 LV_USE_LOTTIE=1（默认未启用） |
+| LSpan | spans, mode, overflow, indent | - |
+| LAnimImage | duration, repeat_count | - |
+| LImageButton | state, src_released, src_pressed, src_disabled | clicked |
+| LLottie | src, loop, speed | 需 LV_USE_LOTTIE=1（默认未启用） |
 
 ### 属性类型
 

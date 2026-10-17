@@ -1,1 +1,26 @@
-{"name":"ButtonMatrix","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LButtonMatrix","props":{"map":"7 8 9\n4 5 6\n1 2 3","one_checked":true,"pos":[20,20],"size":[220,160]}}]}
+{
+    "name": "ButtonMatrix",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LButtonMatrix",
+            "props": {
+                "map": "7 8 9\n4 5 6\n1 2 3",
+                "one_checked": true,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    220,
+                    160
+                ]
+            }
+        }
+    ]
+}

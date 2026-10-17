@@ -1,1 +1,91 @@
-{"name":"Grid","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LGridLayout","props":{"columns":2,"rows":2,"col_spacing":6,"row_spacing":6,"padding":6,"size":[300,200],"pos":[20,20]},"children":[{"id":"c1","type":"LButton","props":{"text":"1","size":[80,60],"pos":[0,0]}},{"id":"c2","type":"LButton","props":{"text":"2","size":[80,60],"pos":[0,0]}},{"id":"c3","type":"LButton","props":{"text":"3","size":[80,60],"pos":[0,0]}},{"id":"c4","type":"LButton","props":{"text":"4","size":[80,60],"pos":[0,0]}}]}]}
+{
+    "name": "Grid",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LGridLayout",
+            "props": {
+                "columns": 2,
+                "rows": 2,
+                "col_spacing": 6,
+                "row_spacing": 6,
+                "padding": 6,
+                "size": [
+                    300,
+                    200
+                ],
+                "pos": [
+                    20,
+                    20
+                ]
+            },
+            "children": [
+                {
+                    "id": "c1",
+                    "type": "LButton",
+                    "props": {
+                        "text": "1",
+                        "size": [
+                            80,
+                            60
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c2",
+                    "type": "LButton",
+                    "props": {
+                        "text": "2",
+                        "size": [
+                            80,
+                            60
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c3",
+                    "type": "LButton",
+                    "props": {
+                        "text": "3",
+                        "size": [
+                            80,
+                            60
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c4",
+                    "type": "LButton",
+                    "props": {
+                        "text": "4",
+                        "size": [
+                            80,
+                            60
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,26 @@
-{"name":"LineEdit","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LLineEdit","props":{"text":"","placeholder":"Enter text...","pos":[20,20],"size":[240,44]}}]}
+{
+    "name": "LineEdit",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LLineEdit",
+            "props": {
+                "text": "",
+                "placeholder": "Enter text...",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    240,
+                    44
+                ]
+            }
+        }
+    ]
+}

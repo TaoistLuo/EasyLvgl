@@ -10,6 +10,8 @@ protected:
     LTable* m_w = nullptr;
 
 public:
+    static constexpr int kScreenWidth = 400;
+    static constexpr int kScreenHeight = 320;
     void setup(lv_obj_t* parent = nullptr) {
         lv_obj_t* root = parent ? parent : lv_scr_act();
 

@@ -283,6 +283,8 @@ public:
 
         // setup()
         out << "\npublic:\n";
+        out << "    static constexpr int kScreenWidth = " << doc.width << ";\n";
+        out << "    static constexpr int kScreenHeight = " << doc.height << ";\n";
         out << "    void setup(lv_obj_t* parent = nullptr) {\n";
         out << "        lv_obj_t* root = parent ? parent : lv_scr_act();\n\n";
         for (auto& child : doc.children) {

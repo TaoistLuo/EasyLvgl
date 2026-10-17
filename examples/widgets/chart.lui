@@ -1,1 +1,31 @@
-{"name":"Chart","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LChart","props":{"type":1,"point_count":6,"div_line_count":[3,5],"series":"10,30,20,40,25,35","pos":[20,20],"size":[260,150]}}]}
+{
+    "name": "Chart",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LChart",
+            "props": {
+                "type": 1,
+                "point_count": 6,
+                "div_line_count": [
+                    3,
+                    5
+                ],
+                "series": "10,30,20,40,25,35",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    260,
+                    150
+                ]
+            }
+        }
+    ]
+}

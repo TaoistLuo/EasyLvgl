@@ -1,1 +1,73 @@
-{"name":"HBox","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LHBoxLayout","props":{"spacing":8,"padding":8,"size":[340,80],"pos":[20,20]},"children":[{"id":"c1","type":"LButton","props":{"text":"A","size":[90,44],"pos":[0,0]}},{"id":"c2","type":"LButton","props":{"text":"B","size":[90,44],"pos":[0,0]}},{"id":"c3","type":"LButton","props":{"text":"C","size":[90,44],"pos":[0,0]}}]}]}
+{
+    "name": "HBox",
+    "size": [
+        400,
+        300
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LHBoxLayout",
+            "props": {
+                "spacing": 8,
+                "padding": 8,
+                "size": [
+                    340,
+                    80
+                ],
+                "pos": [
+                    20,
+                    20
+                ]
+            },
+            "children": [
+                {
+                    "id": "c1",
+                    "type": "LButton",
+                    "props": {
+                        "text": "A",
+                        "size": [
+                            90,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c2",
+                    "type": "LButton",
+                    "props": {
+                        "text": "B",
+                        "size": [
+                            90,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                },
+                {
+                    "id": "c3",
+                    "type": "LButton",
+                    "props": {
+                        "text": "C",
+                        "size": [
+                            90,
+                            44
+                        ],
+                        "pos": [
+                            0,
+                            0
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,1 +1,27 @@
-{"name":"Label","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LLabel","props":{"text":"Hello LVGL++","color":"0x2196F3","font_size":20,"pos":[20,20],"size":[300,40]}}]}
+{
+    "name": "Label",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LLabel",
+            "props": {
+                "text": "Hello LVGL++",
+                "color": "0x2196F3",
+                "font_size": 20,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    300,
+                    40
+                ]
+            }
+        }
+    ]
+}

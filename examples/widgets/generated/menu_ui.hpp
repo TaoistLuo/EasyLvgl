@@ -14,6 +14,8 @@ protected:
     LMenuPage* m_pg2 = nullptr;
 
 public:
+    static constexpr int kScreenWidth = 460;
+    static constexpr int kScreenHeight = 320;
     void setup(lv_obj_t* parent = nullptr) {
         lv_obj_t* root = parent ? parent : lv_scr_act();
 

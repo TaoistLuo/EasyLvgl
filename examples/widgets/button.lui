@@ -1,1 +1,26 @@
-{"name":"Button","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LButton","props":{"text":"Click Me","theme":"primary","pos":[20,20],"size":[160,50]}}]}
+{
+    "name": "Button",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LButton",
+            "props": {
+                "text": "Click Me",
+                "theme": "primary",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    160,
+                    50
+                ]
+            }
+        }
+    ]
+}

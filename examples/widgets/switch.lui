@@ -1,1 +1,25 @@
-{"name":"Switch","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LSwitch","props":{"checked":true,"pos":[20,20],"size":[80,44]}}]}
+{
+    "name": "Switch",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LSwitch",
+            "props": {
+                "checked": true,
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    80,
+                    44
+                ]
+            }
+        }
+    ]
+}

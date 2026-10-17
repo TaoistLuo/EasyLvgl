@@ -1,1 +1,27 @@
-{"name":"ImageButton","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LImageButton","props":{"state":0,"src_released":"A:lvgl/examples/assets/caret_down.png","src_pressed":"A:lvgl/examples/assets/caret_down.png","pos":[20,20],"size":[80,80]}}]}
+{
+    "name": "ImageButton",
+    "size": [
+        400,
+        200
+    ],
+    "version": "1.0",
+    "children": [
+        {
+            "id": "w",
+            "type": "LImageButton",
+            "props": {
+                "state": 0,
+                "src_released": "A:lvgl/examples/assets/caret_down.png",
+                "src_pressed": "A:lvgl/examples/assets/caret_down.png",
+                "pos": [
+                    20,
+                    20
+                ],
+                "size": [
+                    80,
+                    80
+                ]
+            }
+        }
+    ]
+}

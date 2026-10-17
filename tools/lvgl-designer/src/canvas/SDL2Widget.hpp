@@ -67,6 +67,7 @@ private:
     uint8_t* m_fb = nullptr;
     int m_width = 800;
     int m_height = 480;
+    bool m_docSizeLocked = false;
 
     int32_t m_mouseX = 0;
     int32_t m_mouseY = 0;
