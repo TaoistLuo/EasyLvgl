@@ -93,7 +93,9 @@ EOF
 }
 
 load_env() {
-  [ -f "$ENVFILE" ] || write_env >/dev/null
+  # 每次都重新标定：WSLg/WM 会移动窗口，缓存的原点会过期，
+  # 过期后所有点击都会落到窗口外而静默失败。
+  write_env >/dev/null
   # shellcheck disable=SC1090
   . "$ENVFILE"
   WID=$(find_wid)
