@@ -1,1 +1,1 @@
-{"name":"Table","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LTable","props":{"row_count":3,"column_count":3,"column_widths":"60,70,70","data":"H1|H2|H3\nA|B|C\nD|E|F","pos":[20,20],"size":[240,130]}}]}
+{"name":"Table","size":[400,320],"version":"1.0","children":[{"id":"w","type":"LTable","props":{"row_count":3,"column_count":3,"column_widths":"60,70,70","data":"H1|H2|H3\nA|B|C\nD|E|F","pos":[20,20],"size":[240,200]}}]}

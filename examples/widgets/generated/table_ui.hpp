@@ -31,7 +31,7 @@ public:
         m_w->set_cell_value(2, 2, "F");
         m_w->set_pos(20, 20)
               .set_row_count(3)
-              .set_size(240, 130);
+              .set_size(240, 200);
 
     }
 
