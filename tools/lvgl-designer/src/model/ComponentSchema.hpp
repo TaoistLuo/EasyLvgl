@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <set>
 #include <QVariant>
 #include <QString>
 
@@ -121,8 +122,13 @@ struct ComponentSchema {
         misc.props.push_back({"base_dir", "int", QVariant(0)});
         groups.push_back(std::move(misc));
 
-        const bool hasText = type != "LImage" && type != "LCanvas"
-                          && type != "LAnimImage" && type != "LLottie";
+        // text_* 是会被子控件继承的样式；对自身无文本、也无文本子控件的基础控件是空操作
+        static const std::set<std::string> noText = {
+            "LImage", "LCanvas", "LAnimImage", "LLottie",
+            "LLine", "LLed", "LBar", "LArc", "LSpinner", "LSlider", "LSwitch",
+            "LImageButton"
+        };
+        const bool hasText = noText.find(type) == noText.end();
         if (hasText) {
         PropGroup text;
         text.groupName = "文本样式";
