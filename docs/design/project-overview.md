@@ -151,7 +151,7 @@ lvgl++/
 │   └── dialog.hpp              # LDialog辅助类
 ├── containers/                 # （空目录，布局已迁移至layouts/）
 ├── lvgl_core.hpp               # Layer 1 统一入口
-└── lvgl_widgets.hpp            # Layer 2 统一入口（40个组件）
+└── lvgl_widgets.hpp            # Layer 2 统一入口（39个组件）
 ```
 
 ## 兼容性

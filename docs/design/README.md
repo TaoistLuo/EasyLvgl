@@ -24,7 +24,7 @@
 
 ### 4. [Layer 2 设计](./layer2-design.md)
 - 35 个 Widget 组件设计
-- 5 个 Layout 组件设计
+- 4 个布局器（VBox/HBox/Grid/Stacked）设计
 - 统一封装模式
 - 组件使用示例
 

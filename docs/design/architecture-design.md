@@ -183,7 +183,7 @@ LStyle().set_bg_color(0x2196F3).set_radius(8).set_pad_all(10).apply_to(btn);
 
 **目标：** 提供高层组件，消除重复代码模式。
 
-### 核心组件（35个widgets + 5个layouts = 40个组件）
+### 核心组件（35个widgets + 4个layouts = 39个组件）
 
 #### 1. LButton组件
 ```cpp

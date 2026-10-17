@@ -94,7 +94,7 @@ luic <input.lui> [-o output.hpp] [--verbose]
 
 ### 支持的组件
 
-> **总计 34 个组件** 已在 ComponentRegistry 中注册。
+> **总计 43 个组件** 已在 ComponentRegistry 中注册。
 
 #### 核心组件
 | 类型 | 属性 | 事件 |
@@ -161,7 +161,7 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | LSpan | mode, overflow, indent, pos | - |
 | LAnimImage | duration, repeat_count, pos | - |
 | LImageButton | size, pos | clicked |
-| LLottie | src, loop, speed, pos | ready |
+| LLottie | src, loop, speed, pos | 需 LV_USE_LOTTIE=1（默认未启用） |
 
 ### 属性类型
 
@@ -171,7 +171,10 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | int | 42 | 50 |
 | hex | "0xRRGGBB" | "0x2196F3" |
 | int_pair | [a, b] | [120, 50] |
+| int_triple | [a, b, c] | [2026, 1, 15] |
 | bool | true/false | true |
+
+> **列表类属性**（`map`/`data`/`series`/`tabs`/`items`/`spans`/`points` 等）以分隔符字符串表达：行用 `\n`、单元用 `|`、系列用 `;`、点对用 `x,y;x,y`。
 
 ### theme 属性
 

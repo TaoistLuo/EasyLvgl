@@ -2,7 +2,7 @@
 
 **版本:** 2.0.0  
 **日期:** 2026-04-01  
-**状态:** Production Ready
+**状态:** 可用（核心功能已完成；测试与文档持续完善中）
 
 ---
 
@@ -376,7 +376,7 @@ LVGL++ 的封装不是一坨代码，而是**分层的抽象**，每一层构建
 │                                                             │
 │ 用户只需写业务逻辑，不用写任何 UI 构建代码                      │
 ├─────────────────────────────────────────────────────────────┤
-│ Layer 2: 组件库 (35 Widgets + 5 Layouts = 40 组件)            │
+│ Layer 2: 组件库 (35 Widgets + 4 Layouts = 39 组件)            │
 │ LButton, LLabel, LSlider, LVBoxLayout, LGridLayout, ...     │
 │ 每个组件封装特定的 LVGL 对象类型 + 特有 API                    │
 │                                                             │
@@ -684,7 +684,7 @@ class LStackedLayout : public LWidgetCRTP<LStackedLayout> { ... };
 │  │  │基类   │ │样式   │ │事件   │ │处理器│ │ Config    │ │ │
 │  │  └──────┘ └──────┘ └──────┘ └──────┘ └───────────┘ │ │
 │  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │  40 组件 (35 Widgets + 5 Layouts)                │ │ │
+│  │  │  39 组件 (35 Widgets + 4 Layouts)                │ │ │
 │  │  └──────────────────────────────────────────────────┘ │ │
 │  └──────────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────┤
@@ -742,10 +742,11 @@ class LStackedLayout : public LWidgetCRTP<LStackedLayout> { ... };
 ```cpp
 struct property_t {
     std::string name;          // "text", "size", "range"
-    std::string type;          // "string", "int", "hex", "int_pair", "bool"
+    std::string type;          // "string", "int", "hex", "int_pair", "int_triple", "bool"
     std::string raw;           // 原始 JSON
     int int_val = 0;           // int 值
     int int_val2 = 0;          // int_pair 的第二个值
+    int int_val3 = 0;          // int_triple 的第三个值
     std::string str_val;       // string / hex 值
     bool bool_val = false;     // bool 值
 };
@@ -802,7 +803,7 @@ reg("LButton", {
 - CodeGen 需要知道生成 `set_text("Login")` 而不是 `text("Login")`
 - **集中的映射关系**避免了在三个地方重复维护
 
-**当前注册的组件数量：** ComponentRegistry 中注册了 34 种组件（29 Widget + 5 Layout），覆盖了所有常用的 LVGL 组件类型。
+**当前注册的组件数量：** ComponentRegistry 中注册了 43 种组件（35 Widget + 4 Layout + 菜单/瓦片等 4 个子组件），覆盖了 LVGL 全部 32 个原生组件。
 
 ### 4.4 Validator — 校验规则
 
@@ -1061,7 +1062,7 @@ lv_port_linux/
 │   │   ├── calendar.hpp, canvas.hpp, span.hpp, animimage.hpp, lottie.hpp
 │   │   ├── list.hpp, tabview.hpp, menu.hpp, tileview.hpp, win.hpp
 │   │   └── msgbox.hpp
-│   ├── layouts/                     # Layer 2: 5 个布局容器
+│   ├── layouts/                     # Layer 2: 4 个布局容器
 │   │   ├── layout.hpp               #   布局统一入口
 │   │   ├── vbox_layout.hpp          #   LVBoxLayout (垂直布局)
 │   │   ├── hbox_layout.hpp          #   LHBoxLayout (水平布局)
@@ -1080,7 +1081,7 @@ lv_port_linux/
 │   │   ├── ir.hpp                   #   中间表示 (widget_node_t 树)
 │   │   ├── validator.hpp            #   校验 (类型检查 + 约束检查)
 │   │   ├── codegen.hpp              #   IR → C++ 代码生成
-│   │   ├── component_registry.hpp   #   组件元数据 (34 种组件)
+│   │   ├── component_registry.hpp   #   组件元数据 (43 种组件)
 │   │   ├── CMakeLists.txt           #   构建配置
 │   │   └── third_party/             #   第三方依赖 (nlohmann/json)
 │   └── lvgl-designer/               # ✅ Qt 可视化设计器 (已实现)

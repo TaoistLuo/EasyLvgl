@@ -171,7 +171,10 @@
 | int | 42 | 50 |
 | hex | "0xRRGGBB" | "0x2196F3" |
 | int_pair | [a, b] | [120, 50] |
+| int_triple | [a, b, c] | [2026, 1, 15] |
 | bool | true/false | true |
+
+> **列表类属性**（如 LButtonMatrix 的 `map`、LTable 的 `data`、LChart 的 `series`、LTabView 的 `tabs`、LList 的 `items`、LSpan 的 `spans`、LLine 的 `points`）以**分隔符字符串**表达，由 luic 展开为多条调用/数组：行用 `\n`、单元用 `|`、项用空格/逗号、系列用 `;`。
 
 ### 5. 事件对象
 
@@ -250,9 +253,9 @@
 | `LSpan` | mode, overflow, indent, pos | - |
 | `LAnimImage` | duration, repeat_count, pos | - |
 | `LImageButton` | size, pos | clicked |
-| `LLottie` | src, loop, speed, pos | ready |
+| `LLottie` | src, loop, speed, pos | 需 LV_USE_LOTTIE=1，默认构建未启用 |
 
-> **总计：34 个组件** 已在 ComponentRegistry 中注册。
+> **总计：43 个组件** 已在 ComponentRegistry 中注册（下表为常用组件摘要，实际属性以 `component_registry.hpp` 为准）。
 
 ---
 

@@ -10,7 +10,7 @@
 
 LVGL++ 是对 LVGL 9.2 的 Header-Only C++ 封装库，提供 RAII 内存管理、链式 API、类型安全的事件系统。同时包含完整的工具链：luic 编译器、Qt 可视化设计器、VSCode 插件。
 
-- **40 个组件**：35 个 Widget + 5 个 Layout，覆盖 LVGL 全部常用组件
+- **39 个封装组件**：35 个 Widget + 4 个布局器（VBox/HBox/Grid/Stacked），覆盖 LVGL 全部 32 个原生组件
 - **零成本抽象**：编译后与手写 C 代码性能一致
 - **完整工具链**：luic 编译器、Qt 可视化设计器、VSCode 插件
 
