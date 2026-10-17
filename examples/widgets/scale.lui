@@ -1,0 +1,1 @@
+{"name":"Scale","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LScale","props":{"mode":0,"range":[0,100],"total_tick_count":11,"major_tick_every":2,"angle_range":270,"label_show":true,"pos":[20,20],"size":[280,160]}}]}

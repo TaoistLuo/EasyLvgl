@@ -1,0 +1,1 @@
+{"name":"Bar","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LBar","props":{"range":[0,100],"value":65,"pos":[20,20],"size":[320,20]}}]}

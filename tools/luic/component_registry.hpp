@@ -155,7 +155,7 @@ public:
                 {"angles",      "int_pair", "set_angles"},
                 {"change_rate", "int",      "set_change_rate"},
                 {"knob_enabled","bool",     "set_knob_enabled"},
-                {"size",        "int",      "set_size"},
+                {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
             .events = {
@@ -181,7 +181,7 @@ public:
             .is_container = false,
             .props = {
                 {"color", "hex",      "set_color"},
-                {"size",  "int",      "set_size"},
+                {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
             .events = {}
@@ -193,7 +193,7 @@ public:
                 {"color",      "hex",      "set_color"},
                 {"brightness", "int",      "set_brightness"},
                 {"on",         "bool",     "on"},
-                {"size",       "int",      "set_size"},
+                {"size",       "int_pair", "set_size"},
                 {"pos",        "int_pair", "set_pos"},
             },
             .events = {}
@@ -436,8 +436,10 @@ public:
         reg("LMsgBox", {
             .is_container = false,
             .props = {
-                {"title", "string", "set_title"},
-                {"text",  "string", "set_text"},
+                {"title", "string",   "set_title"},
+                {"text",  "string",   "set_text"},
+                {"size",  "int_pair", "set_size"},
+                {"pos",   "int_pair", "set_pos"},
             },
             .events = {}
         });
@@ -519,6 +521,7 @@ public:
                 {"rows",         "int",      "set_rows"},
                 {"col_spacing",  "int",      "set_column_spacing"},
                 {"row_spacing",  "int",      "set_row_spacing"},
+                {"padding",      "int",      "set_padding"},
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
             },

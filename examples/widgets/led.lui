@@ -1,0 +1,1 @@
+{"name":"Led","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LLed","props":{"color":"0x00FF00","brightness":255,"on":true,"pos":[20,20],"size":[50,50]}}]}

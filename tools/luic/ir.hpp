@@ -7,10 +7,11 @@ namespace luic {
 
 struct property_t {
     std::string name;
-    std::string type;   // "string", "int", "hex", "int_pair", "bool"
+    std::string type;   // "string", "int", "hex", "int_pair", "int_triple", "bool"
     std::string raw;    // raw JSON value as string
     int int_val = 0;
     int int_val2 = 0;   // for int_pair
+    int int_val3 = 0;   // for int_triple
     std::string str_val;
     bool bool_val = false;
 };

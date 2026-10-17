@@ -23,11 +23,23 @@ public:
         return *this;
     }
 
+    LGridLayout& set_columns(int count) {
+        std::vector<int32_t> cols;
+        for (int i = 0; i < count; i++) cols.push_back(LV_GRID_FR(1));
+        return set_columns(cols);
+    }
+
     LGridLayout& set_rows(const std::vector<int32_t>& rows) {
         m_row_dsc = rows;
         m_row_dsc.push_back(LV_GRID_TEMPLATE_LAST);
         apply_grid();
         return *this;
+    }
+
+    LGridLayout& set_rows(int count) {
+        std::vector<int32_t> rows;
+        for (int i = 0; i < count; i++) rows.push_back(LV_GRID_FR(1));
+        return set_rows(rows);
     }
 
     LGridLayout& set_grid(const std::vector<int32_t>& cols, const std::vector<int32_t>& rows) {

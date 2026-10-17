@@ -328,19 +328,11 @@ struct ComponentSchema {
             comp.props.push_back({"chinese_mode", "bool", QVariant(false)});
         } else if (type == "LGroupBox") {
             comp.props.push_back({"title", "string", QVariant(QString("Group"))});
-            comp.props.push_back({"spacing", "int", QVariant(5)});
             comp.props.push_back({"padding", "int", QVariant(10)});
         } else if (type == "LList") {
             comp.props.push_back({"items", "string", QVariant(QString("#Header\\nItem 1\\nItem 2"))});
-            comp.props.push_back({"spacing", "int", QVariant(2)});
-            comp.props.push_back({"padding", "int", QVariant(5)});
         } else if (type == "LTileView") {
-            comp.props.push_back({"columns", "int", QVariant(1)});
-            comp.props.push_back({"rows", "int", QVariant(1)});
-            comp.props.push_back({"anim_time", "int", QVariant(300)});
         } else if (type == "LCanvas") {
-            comp.props.push_back({"buffer_width", "int", QVariant(200)});
-            comp.props.push_back({"buffer_height", "int", QVariant(200)});
         } else if (type == "LWin") {
             comp.props.push_back({"title", "string", QVariant(QString("Window"))});
         } else if (type == "LVBoxLayout") {

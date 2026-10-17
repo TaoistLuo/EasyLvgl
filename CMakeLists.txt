@@ -39,6 +39,22 @@ foreach(LUI_FILE ${LUI_FILES})
 endforeach()
 add_custom_target(ui_compile ALL DEPENDS ${LUI_GENERATED})
 
+# --- Auto-compile widget gallery .lui (examples/widgets/*.lui) ---
+file(GLOB WIDGET_LUI_FILES "${CMAKE_SOURCE_DIR}/examples/widgets/*.lui")
+set(WIDGET_GENERATED "")
+foreach(LUI_FILE ${WIDGET_LUI_FILES})
+    get_filename_component(LUI_NAME ${LUI_FILE} NAME_WE)
+    set(LUI_OUTPUT "${CMAKE_SOURCE_DIR}/examples/widgets/generated/${LUI_NAME}_ui.hpp")
+    add_custom_command(
+        OUTPUT ${LUI_OUTPUT}
+        COMMAND ${PROJECT_SOURCE_DIR}/bin/luic ${LUI_FILE} -o ${LUI_OUTPUT}
+        DEPENDS ${LUI_FILE} luic
+        COMMENT "luic: widgets/${LUI_NAME}.lui -> ${LUI_NAME}_ui.hpp"
+    )
+    list(APPEND WIDGET_GENERATED ${LUI_OUTPUT})
+endforeach()
+add_custom_target(widgets_ui_compile ALL DEPENDS ${WIDGET_GENERATED})
+
 add_executable(main main.cpp mouse_cursor_icon.c)
 
 include(${CMAKE_CURRENT_LIST_DIR}/lvgl/tests/FindLibDRM.cmake)
@@ -84,6 +100,13 @@ add_executable(luic_demo examples/luic_demo.cpp)
 add_dependencies(luic_demo ui_compile)
 target_link_libraries(luic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
 add_custom_target(run_luic_demo COMMAND ${EXECUTABLE_OUTPUT_PATH}/luic_demo DEPENDS luic_demo)
+
+# --- Per-component widget gallery examples ---
+add_executable(widgets_demo examples/widgets_demo.cpp)
+add_dependencies(widgets_demo widgets_ui_compile)
+target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/widgets/generated)
+target_link_libraries(widgets_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
+add_custom_target(run_widgets COMMAND ${EXECUTABLE_OUTPUT_PATH}/widgets_demo DEPENDS widgets_demo)
 
 # ── 合并为单一库 liblvglcpp.a ───────────────────────────────────────
 set(LVGLCPP_LIB "${CMAKE_BINARY_DIR}/lib/liblvglcpp.a")

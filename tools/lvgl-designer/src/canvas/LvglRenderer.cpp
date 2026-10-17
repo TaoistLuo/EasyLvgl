@@ -283,8 +283,6 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
             applyRadioButtonStyle(obj);
         }
 
-        lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
-
         if (node.type == "LVBoxLayout" || node.type == "LHBoxLayout"
             || node.type == "LGridLayout"
             || node.type == "LStackedLayout" || node.type == "LGroupBox") {

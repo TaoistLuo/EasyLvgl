@@ -1,0 +1,1 @@
+{"name":"TileView","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LTileView","props":{"pos":[20,20],"size":[240,200]}}]}

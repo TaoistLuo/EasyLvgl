@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "LedBool",
   "children": [
-    { "type": "LLed", "id": "led_on",  "props": { "on": true,  "size": 20 } },
-    { "type": "LLed", "id": "led_off", "props": { "on": false, "size": 24 } }
+    { "type": "LLed", "id": "led_on",  "props": { "on": true,  "size": [20, 20] } },
+    { "type": "LLed", "id": "led_off", "props": { "on": false, "size": [24, 24] } }
   ]
 }

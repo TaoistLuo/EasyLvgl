@@ -1,0 +1,1 @@
+{"name":"Combobox","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LComboBox","props":{"options":"Option 1\nOption 2\nOption 3","selected":0,"pos":[20,20],"size":[220,44]}}]}

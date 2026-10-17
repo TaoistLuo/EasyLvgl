@@ -1,0 +1,1 @@
+{"name":"Arc","size":[400,300],"version":"1.0","children":[{"id":"w","type":"LArc","props":{"range":[0,100],"value":70,"pos":[20,20],"size":[150,150]}}]}

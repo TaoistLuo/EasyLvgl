@@ -311,15 +311,8 @@ struct WidgetNode {
             props.emplace("spacing", QVariant(5));
             props.emplace("padding", QVariant(10));
         } else if (type == "LList") {
-            props.emplace("spacing", QVariant(2));
-            props.emplace("padding", QVariant(5));
+            props.emplace("items", QVariant(QString("#Header\nItem 1\nItem 2")));
         } else if (type == "LTileView") {
-            props.emplace("columns", QVariant(1));
-            props.emplace("rows", QVariant(1));
-            props.emplace("anim_time", QVariant(300));
-        } else if (type == "LCanvas") {
-            props.emplace("buffer_width", QVariant(200));
-            props.emplace("buffer_height", QVariant(200));
         } else if (type == "LImageButton") {
             props.emplace("state", QVariant(0));
             props.emplace("src_released", QVariant(QString("")));

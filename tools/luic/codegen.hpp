@@ -31,12 +31,20 @@ class CodeGenerator {
         if (def.type == "int")      return std::to_string(prop.int_val);
         if (def.type == "hex")      return prop.str_val;
         if (def.type == "int_pair") return std::to_string(prop.int_val) + ", " + std::to_string(prop.int_val2);
+        if (def.type == "int_triple") return std::to_string(prop.int_val) + ", " + std::to_string(prop.int_val2) + ", " + std::to_string(prop.int_val3);
         if (def.type == "bool")     return prop.bool_val ? "true" : "false";
         return prop.raw;
     }
 
     bool is_bool_action_method(const prop_def_t& def) const {
         return def.type == "bool" && (def.method == "on" || def.method == "off");
+    }
+
+    static int node_prop_int(const widget_node_t& n, const std::string& name, int def) {
+        for (auto& p : n.props) {
+            if (p.name == name) return p.int_val;
+        }
+        return def;
     }
 
     static std::vector<std::string> split(const std::string& s, char sep) {
@@ -199,6 +207,21 @@ class CodeGenerator {
         for (auto& child : node.children) {
             out << "\n";
             gen_node(out, child, "m_" + node.id + "->native()", indent);
+        }
+
+        if (node.type == "LGridLayout") {
+            int cols = node_prop_int(node, "columns", 2);
+            if (cols < 1) cols = 1;
+            for (size_t i = 0; i < node.children.size(); i++) {
+                const auto& child = node.children[i];
+                int col = node_prop_int(child, "grid_col", (int)(i % cols));
+                int row = node_prop_int(child, "grid_row", (int)(i / cols));
+                int cspan = node_prop_int(child, "grid_col_span", 1);
+                int rspan = node_prop_int(child, "grid_row_span", 1);
+                out << pad << "lv_obj_set_grid_cell(m_" << child.id
+                    << "->native(), LV_GRID_ALIGN_STRETCH, " << col << ", " << cspan
+                    << ", LV_GRID_ALIGN_STRETCH, " << row << ", " << rspan << ");\n";
+            }
         }
 
         for (auto* prop : deferred) {

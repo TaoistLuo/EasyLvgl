@@ -88,6 +88,15 @@ private:
                     } else {
                         prop.type = "array";
                     }
+                } else if (val.is_array() && val.size() == 3) {
+                    if (val[0].is_number_integer() && val[1].is_number_integer() && val[2].is_number_integer()) {
+                        prop.type = "int_triple";
+                        prop.int_val = val[0].get<int>();
+                        prop.int_val2 = val[1].get<int>();
+                        prop.int_val3 = val[2].get<int>();
+                    } else {
+                        prop.type = "array";
+                    }
                 }
 
                 node.props.push_back(std::move(prop));

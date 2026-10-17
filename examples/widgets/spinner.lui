@@ -1,0 +1,1 @@
+{"name":"Spinner","size":[400,200],"version":"1.0","children":[{"id":"w","type":"LSpinner","props":{"color":"0x2196F3","pos":[20,20],"size":[70,70]}}]}
