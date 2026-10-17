@@ -97,6 +97,7 @@ private:
     lv_obj_t* m_label = nullptr;
 
     void refresh_layout() {
+        lv_obj_update_layout(m_obj);
         const int height = lv_obj_get_height(m_obj);
         const int width = lv_obj_get_width(m_obj);
         const int ring_size = (height - 8) > 18 ? 18 : (height - 8);
@@ -113,10 +114,15 @@ private:
         lv_obj_set_size(m_dot, dot_size, dot_size);
         lv_obj_center(m_dot);
 
-        lv_obj_set_pos(m_label, x + safe_ring_size + gap, 0);
-        int label_width = width - (x + safe_ring_size + gap);
+        const lv_font_t* font = lv_obj_get_style_text_font(m_label, LV_PART_MAIN);
+        const int font_h = font ? lv_font_get_line_height(font) : 16;
+        int label_x = x + safe_ring_size + gap;
+        int label_width = width - label_x;
         if (label_width < 0) label_width = 0;
-        lv_obj_set_size(m_label, label_width, height);
+        int label_y = (height - font_h) / 2;
+        if (label_y < 0) label_y = 0;
+        lv_obj_set_pos(m_label, label_x, label_y);
+        lv_obj_set_size(m_label, label_width, font_h);
         lv_obj_set_style_text_align(m_label, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);
         lv_obj_set_style_pad_all(m_label, 0, LV_PART_MAIN);
     }

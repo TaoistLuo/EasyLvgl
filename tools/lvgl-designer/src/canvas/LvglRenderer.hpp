@@ -49,6 +49,17 @@ class LvglRenderer {
     std::vector<PendingEvent> m_pendingEvents;
     std::mutex m_pendingMutex;
 
+    // StackedLayout navigation arrows
+    struct StackedNav {
+        lv_obj_t* navBar = nullptr;
+        lv_obj_t* leftBtn = nullptr;
+        lv_obj_t* rightBtn = nullptr;
+        lv_obj_t* indexLabel = nullptr;
+        int currentIndex = 0;
+        int childCount = 0;
+    };
+    std::map<std::string, StackedNav> m_stackedNavs;
+
 public:
     void buildTree(const LuiDocument& doc);
     void clear();
@@ -80,6 +91,8 @@ private:
     void updateHandlePositions();
     bool isLayoutChild(lv_obj_t* obj) const;
     void applyStackedVisibility(lv_obj_t* stackedObj, int currentIndex);
+    void createStackedNav(lv_obj_t* stackedObj, const std::string& id, int currentIndex);
+    void updateStackedNav(const std::string& id);
 
 };
 

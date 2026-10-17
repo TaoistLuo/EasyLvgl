@@ -47,10 +47,16 @@ class CodeGenerator {
         out << pad << "m_" << node.id << " = new " << node.type
             << "(" << parent_expr << ");\n";
 
+        std::vector<const property_t*> deferred;
         bool has_chain = false;
         for (auto& prop : node.props) {
             auto* pdef = comp->find_prop(prop.name);
             if (!pdef) continue;
+
+            if (pdef->after_children) {
+                deferred.push_back(&prop);
+                continue;
+            }
 
             if (pdef->is_theme) {
                 if (!has_chain) {
@@ -82,6 +88,13 @@ class CodeGenerator {
         for (auto& child : node.children) {
             out << "\n";
             gen_node(out, child, "m_" + node.id + "->native()", indent);
+        }
+
+        for (auto* prop : deferred) {
+            auto* pdef = comp->find_prop(prop->name);
+            if (!pdef) continue;
+            out << "\n" << pad << "m_" << node.id << "->" << pdef->method
+                << "(" << format_value(*pdef, *prop) << ");\n";
         }
     }
 

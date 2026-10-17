@@ -58,10 +58,11 @@ static void applyTheme(lv_obj_t* obj, const std::string& theme) {
 
 static void applyRadioButtonStyle(lv_obj_t* obj) {
     if (!obj) return;
-    lv_obj_remove_style_all(obj);
     lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(obj, 0, LV_PART_MAIN);
+    lv_obj_set_style_radius(obj, 0, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(obj, 0, LV_PART_MAIN);
 
     lv_obj_t* ring = lv_obj_get_child(obj, 0);
     lv_obj_t* dot = ring ? lv_obj_get_child(ring, 0) : nullptr;
@@ -85,6 +86,7 @@ static void applyRadioButtonStyle(lv_obj_t* obj) {
 
     lv_obj_clear_flag(label, LV_OBJ_FLAG_CLICKABLE);
 
+    lv_obj_update_layout(obj);
     const int height = lv_obj_get_height(obj);
     const int width = lv_obj_get_width(obj);
     int ring_size = height - 8;
@@ -102,10 +104,16 @@ static void applyRadioButtonStyle(lv_obj_t* obj) {
     lv_obj_set_size(dot, dot_size, dot_size);
     lv_obj_center(dot);
 
-    lv_obj_set_pos(label, x + ring_size + gap, 0);
-    int label_width = width - (x + ring_size + gap);
+    const lv_font_t* font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
+    const int font_h = font ? lv_font_get_line_height(font) : 16;
+    int label_x = x + ring_size + gap;
+    int label_width = width - label_x;
     if (label_width < 0) label_width = 0;
-    lv_obj_set_size(label, label_width, height);
+    int label_y = (height - font_h) / 2;
+    if (label_y < 0) label_y = 0;
+    lv_obj_set_pos(label, label_x, label_y);
+    lv_obj_set_size(label, label_width, font_h);
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);
 
     if (lv_obj_has_state(obj, LV_STATE_CHECKED)) lv_obj_clear_flag(dot, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(dot, LV_OBJ_FLAG_HIDDEN);
@@ -113,6 +121,7 @@ static void applyRadioButtonStyle(lv_obj_t* obj) {
 
 static void applyCheckableAlignment(lv_obj_t* obj) {
     if (!obj) return;
+    lv_obj_update_layout(obj);
     const lv_font_t* font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
     const int font_h = font ? lv_font_get_line_height(font) : 14;
     const int obj_h = lv_obj_get_height(obj);
@@ -287,6 +296,7 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         if (node.type == "LStackedLayout") {
             int idx = node.props.count("current_index")
                 ? node.propInt("current_index", 0) : 0;
+            createStackedNav(obj, node.id, idx);
             applyStackedVisibility(obj, idx);
         }
     }
@@ -833,30 +843,149 @@ bool LvglRenderer::isLayoutChild(lv_obj_t* obj) const {
 void LvglRenderer::applyStackedVisibility(lv_obj_t* stackedObj, int currentIndex) {
     if (!stackedObj) return;
     lv_obj_update_layout(stackedObj);
-    int childCount = lv_obj_get_child_count(stackedObj);
-    if (childCount <= 0) return;
-    if (currentIndex < 0 || currentIndex >= childCount) currentIndex = 0;
 
-    lv_area_t objectArea;
+    auto navIt = m_stackedNavs.find(m_idMap.count(stackedObj) ? m_idMap[stackedObj] : "");
+    bool hasNav = (navIt != m_stackedNavs.end());
+
+    int contentChildCount = 0;
+    int totalChildCount = lv_obj_get_child_count(stackedObj);
+    for (int i = 0; i < totalChildCount; i++) {
+        lv_obj_t* child = lv_obj_get_child(stackedObj, i);
+        if (!child) continue;
+        if (hasNav && child == navIt->second.navBar) continue;
+        contentChildCount++;
+    }
+
+    if (contentChildCount <= 0) return;
+    if (currentIndex < 0 || currentIndex >= contentChildCount) currentIndex = 0;
+
     lv_area_t contentArea;
-    lv_obj_get_coords(stackedObj, &objectArea);
     lv_obj_get_content_coords(stackedObj, &contentArea);
     int width = contentArea.x2 - contentArea.x1 + 1;
     int height = contentArea.y2 - contentArea.y1 + 1;
     if (width < 0) width = 0;
     if (height < 0) height = 0;
 
-    for (int i = 0; i < childCount; i++) {
+    int contentIdx = 0;
+    for (int i = 0; i < totalChildCount; i++) {
         lv_obj_t* child = lv_obj_get_child(stackedObj, i);
         if (!child) continue;
+        if (hasNav && child == navIt->second.navBar) continue;
         lv_obj_set_pos(child, 0, 0);
         lv_obj_set_size(child, width, height);
-        if (i == currentIndex) {
-            lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+        if (contentIdx == currentIndex) {
+            lv_obj_remove_flag(child, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
         }
+        contentIdx++;
     }
+
+    if (hasNav) {
+        navIt->second.currentIndex = currentIndex;
+        navIt->second.childCount = contentChildCount;
+        lv_obj_move_foreground(navIt->second.navBar);
+    }
+}
+
+void LvglRenderer::createStackedNav(lv_obj_t* stackedObj, const std::string& id, int currentIndex) {
+    if (!stackedObj) return;
+
+    StackedNav nav;
+    nav.currentIndex = currentIndex;
+    nav.childCount = lv_obj_get_child_count(stackedObj);
+
+    lv_obj_t* navBar = lv_obj_create(stackedObj);
+    lv_obj_set_size(navBar, LV_SIZE_CONTENT, 26);
+    lv_obj_align(navBar, LV_ALIGN_TOP_RIGHT, -4, 4);
+    lv_obj_set_flex_flow(navBar, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(navBar, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(navBar, 2, 0);
+    lv_obj_set_style_pad_column(navBar, 4, 0);
+    lv_obj_set_style_bg_color(navBar, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(navBar, LV_OPA_30, 0);
+    lv_obj_set_style_radius(navBar, 4, 0);
+    lv_obj_set_style_border_width(navBar, 0, 0);
+    nav.navBar = navBar;
+
+    lv_obj_t* leftBtn = lv_button_create(navBar);
+    lv_obj_set_size(leftBtn, 20, 20);
+    lv_obj_set_style_bg_color(leftBtn, lv_color_hex(0x666666), 0);
+    lv_obj_set_style_bg_opa(leftBtn, LV_OPA_20, 0);
+    lv_obj_set_style_radius(leftBtn, 3, 0);
+    lv_obj_set_style_border_width(leftBtn, 0, 0);
+    lv_obj_set_style_pad_all(leftBtn, 0, 0);
+    lv_obj_t* leftLabel = lv_label_create(leftBtn);
+    lv_label_set_text(leftLabel, LV_SYMBOL_LEFT);
+    lv_obj_center(leftLabel);
+    lv_obj_add_event_cb(leftBtn, [](lv_event_t* e) {
+        auto* self = static_cast<LvglRenderer*>(lv_event_get_user_data(e));
+        if (!self) return;
+        lv_obj_t* btn = static_cast<lv_obj_t*>(lv_event_get_target(e));
+        lv_obj_t* navBar = lv_obj_get_parent(btn);
+        if (!navBar) return;
+        lv_obj_t* stacked = lv_obj_get_parent(navBar);
+        if (!stacked) return;
+        auto it = self->m_idMap.find(stacked);
+        if (it == self->m_idMap.end()) return;
+        auto navIt = self->m_stackedNavs.find(it->second);
+        if (navIt == self->m_stackedNavs.end()) return;
+        navIt->second.currentIndex--;
+        if (navIt->second.currentIndex < 0)
+            navIt->second.currentIndex = navIt->second.childCount - 1;
+        self->applyStackedVisibility(stacked, navIt->second.currentIndex);
+        self->updateStackedNav(it->second);
+    }, LV_EVENT_CLICKED, this);
+    nav.leftBtn = leftBtn;
+
+    lv_obj_t* indexLabel = lv_label_create(navBar);
+    lv_obj_set_style_text_color(indexLabel, lv_color_hex(0xCCCCCC), 0);
+    lv_obj_set_style_text_font(indexLabel, &lv_font_montserrat_12, 0);
+    nav.indexLabel = indexLabel;
+
+    lv_obj_t* rightBtn = lv_button_create(navBar);
+    lv_obj_set_size(rightBtn, 20, 20);
+    lv_obj_set_style_bg_color(rightBtn, lv_color_hex(0x666666), 0);
+    lv_obj_set_style_bg_opa(rightBtn, LV_OPA_20, 0);
+    lv_obj_set_style_radius(rightBtn, 3, 0);
+    lv_obj_set_style_border_width(rightBtn, 0, 0);
+    lv_obj_set_style_pad_all(rightBtn, 0, 0);
+    lv_obj_t* rightLabel = lv_label_create(rightBtn);
+    lv_label_set_text(rightLabel, LV_SYMBOL_RIGHT);
+    lv_obj_center(rightLabel);
+    lv_obj_add_event_cb(rightBtn, [](lv_event_t* e) {
+        auto* self = static_cast<LvglRenderer*>(lv_event_get_user_data(e));
+        if (!self) return;
+        lv_obj_t* btn = static_cast<lv_obj_t*>(lv_event_get_target(e));
+        lv_obj_t* navBar = lv_obj_get_parent(btn);
+        if (!navBar) return;
+        lv_obj_t* stacked = lv_obj_get_parent(navBar);
+        if (!stacked) return;
+        auto it = self->m_idMap.find(stacked);
+        if (it == self->m_idMap.end()) return;
+        auto navIt = self->m_stackedNavs.find(it->second);
+        if (navIt == self->m_stackedNavs.end()) return;
+        navIt->second.currentIndex++;
+        if (navIt->second.currentIndex >= navIt->second.childCount)
+            navIt->second.currentIndex = 0;
+        self->applyStackedVisibility(stacked, navIt->second.currentIndex);
+        self->updateStackedNav(it->second);
+    }, LV_EVENT_CLICKED, this);
+    nav.rightBtn = rightBtn;
+
+    m_stackedNavs[id] = nav;
+    updateStackedNav(id);
+}
+
+void LvglRenderer::updateStackedNav(const std::string& id) {
+    auto it = m_stackedNavs.find(id);
+    if (it == m_stackedNavs.end()) return;
+    const auto& nav = it->second;
+    if (!nav.indexLabel) return;
+    int displayIndex = nav.currentIndex + 1;
+    if (displayIndex < 1) displayIndex = 1;
+    std::string text = std::to_string(displayIndex) + " / " + std::to_string(nav.childCount);
+    lv_label_set_text(nav.indexLabel, text.c_str());
 }
 
 void LvglRenderer::registerObject(const std::string& id, const std::string& type, lv_obj_t* obj) {
@@ -1009,6 +1138,7 @@ void LvglRenderer::clear() {
     m_idMap.clear();
     m_types.clear();
     m_gridDescArrays.clear();
+    m_stackedNavs.clear();
 
     lv_obj_clean(lv_scr_act());
 }

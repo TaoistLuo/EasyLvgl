@@ -85,8 +85,13 @@ public:
     using WidgetItem::WidgetItem;
     void paintWidget(QPainter* painter, const QRectF& body) override {
         bool checked = propBool("checked", false);
-        double boxSize = qMin(body.height() - 6, 18.0);
-        QRectF box(body.left() + 3, body.center().y() - boxSize / 2.0, boxSize, boxSize);
+
+        double boxSize = 16.0;
+        double centerX = body.left() + body.width() / 2.0;
+        double centerY = body.top() + body.height() / 2.0;
+        double x = body.left() + 4;
+        double y = centerY - boxSize / 2.0;
+        QRectF box(x, y, boxSize, boxSize);
 
         painter->setPen(QPen(QColor(0x88, 0x88, 0x88), 1.5));
         painter->setBrush(checked ? QColor(0x0e, 0x63, 0x9c) : QColor(0x3c, 0x3c, 0x3c));
@@ -94,15 +99,22 @@ public:
 
         if (checked) {
             painter->setPen(QPen(Qt::white, 2));
-            painter->drawLine(QPointF(box.left()+4, box.center().y()),
-                              QPointF(box.center().x(), box.bottom()-4));
-            painter->drawLine(QPointF(box.center().x(), box.bottom()-4),
-                              QPointF(box.right()-3, box.top()+4));
+            double cx = box.left() + boxSize * 0.25;
+            double cy = box.center().y();
+            double midX = box.center().x() - 1;
+            double botY = box.bottom() - boxSize * 0.25;
+            double rightX = box.right() - boxSize * 0.2;
+            double topY = box.top() + boxSize * 0.2;
+            painter->drawLine(QPointF(cx, cy), QPointF(midX, botY));
+            painter->drawLine(QPointF(midX, botY), QPointF(rightX, topY));
         }
 
         painter->setPen(QColor(0xcc, 0xcc, 0xcc));
         painter->setFont(QFont("Sans", 11));
-        QRectF textRect(box.right() + 8, body.top(), body.width() - boxSize - 11, body.height());
+        double textX = box.right() + 6;
+        double textW = body.right() - textX - 4;
+        if (textW < 0) textW = 0;
+        QRectF textRect(textX, centerY - 10, textW, 20);
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, displayName());
     }
 };
@@ -112,15 +124,19 @@ public:
     using WidgetItem::WidgetItem;
     void paintWidget(QPainter* painter, const QRectF& body) override {
         bool checked = propBool("checked", false);
-        double outerSize = qMin(body.height() - 6, 18.0);
-        QRectF outer(body.left() + 3, body.center().y() - outerSize / 2.0, outerSize, outerSize);
+        double outerSize = 16.0;
+        double centerX = body.left() + body.width() / 2.0;
+        double centerY = body.top() + body.height() / 2.0;
+        double x = body.left() + 4;
+        double y = centerY - outerSize / 2.0;
+        QRectF outer(x, y, outerSize, outerSize);
 
         painter->setPen(QPen(QColor(0x88, 0x88, 0x88), 1.8));
         painter->setBrush(QColor(0x3c, 0x3c, 0x3c));
         painter->drawEllipse(outer);
 
         if (checked) {
-            double innerSize = qMax(outerSize * 0.52, 7.0);
+            double innerSize = qMax(outerSize * 0.5, 6.0);
             QRectF inner(outer.center().x() - innerSize / 2.0,
                          outer.center().y() - innerSize / 2.0,
                          innerSize,
@@ -132,7 +148,10 @@ public:
 
         painter->setPen(QColor(0xcc, 0xcc, 0xcc));
         painter->setFont(QFont("Sans", 11));
-        QRectF textRect(outer.right() + 8, body.top(), body.width() - outerSize - 11, body.height());
+        double textX = outer.right() + 6;
+        double textW = body.right() - textX - 4;
+        if (textW < 0) textW = 0;
+        QRectF textRect(textX, centerY - 10, textW, 20);
         painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, displayName());
     }
 };

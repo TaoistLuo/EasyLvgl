@@ -10,6 +10,7 @@ struct prop_def_t {
     std::string type;     // "string", "int", "hex", "int_pair", "bool"
     std::string method;   // C++ method name, e.g. "text", "size", "range"
     bool is_theme = false;
+    bool after_children = false;  // emit after children are created (layout state depending on child count)
 };
 
 struct event_def_t {
@@ -492,7 +493,7 @@ public:
         reg("LStackedLayout", {
             .is_container = true,
             .props = {
-                {"current_index", "int",      "set_current_index"},
+                {"current_index", "int",      "set_current_index", false, true},
                 {"padding",       "int",      "set_padding"},
                 {"size",          "int_pair", "set_size"},
                 {"pos",           "int_pair", "set_pos"},

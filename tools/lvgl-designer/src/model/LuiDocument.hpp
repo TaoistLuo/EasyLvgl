@@ -580,9 +580,18 @@ private:
         obj["id"] = QString::fromStdString(node.id);
         if (!node.parentId.empty()) obj["parentId"] = QString::fromStdString(node.parentId);
 
+        bool isStackedChild = false;
+        if (!node.parentId.empty()) {
+            WidgetNode* parent = findById(node.parentId);
+            if (parent && parent->type == "LStackedLayout") {
+                isStackedChild = true;
+            }
+        }
+
         if (!node.props.empty()) {
             QJsonObject propsObj;
             for (auto& [key, val] : node.props) {
+                if (isStackedChild && (key == "pos" || key == "size")) continue;
                 propsObj[QString::fromStdString(key)] = variantToJson(val);
             }
             obj["props"] = propsObj;

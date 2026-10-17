@@ -57,6 +57,7 @@ public:
 
 private:
     void apply_checkbox_style() {
+        lv_obj_update_layout(m_obj);
         const lv_font_t* font = lv_obj_get_style_text_font(m_obj, LV_PART_MAIN);
         const int font_h = font ? lv_font_get_line_height(font) : 14;
         const int obj_h = lv_obj_get_height(m_obj);
