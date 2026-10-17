@@ -1257,6 +1257,15 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
         createWidget(child, nullptr);
     }
 
+    /* 有些控件默认没有 LV_OBJ_FLAG_CLICKABLE（如 lv_line / lv_arc / lv_bar / lv_led /
+     * lv_spinner / lv_image / lv_chart），LVGL 的命中判定会直接跳过它们，导致在设计器
+     * 里点不中、无法选中也就改不了属性。给"没有子对象"的叶节点补上该标志；
+     * 有子对象的（按钮等）不动，避免抢走本该由父控件接收的点击。 */
+    for (auto& [id, obj] : m_objects) {
+        if (obj && lv_obj_is_valid(obj) && lv_obj_get_child_count(obj) == 0)
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+    }
+
     std::function<void(const std::vector<WidgetNode>&)> resolveRefs =
         [&](const std::vector<WidgetNode>& nodes) {
             for (const auto& n : nodes) {
