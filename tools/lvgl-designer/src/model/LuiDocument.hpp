@@ -230,6 +230,7 @@ struct WidgetNode {
             props.emplace("brightness", QVariant(255));
             props.emplace("on", QVariant(true));
         } else if (type == "LLine") {
+            props.emplace("points", QVariant(QString("0,0;80,40;160,0")));
             props.emplace("width", QVariant(2));
             props.emplace("color", QVariant(QString("0xFFFFFF")));
             props.emplace("y_invert", QVariant(false));
@@ -252,6 +253,8 @@ struct WidgetNode {
             props.emplace("cursor_pos", QVariant(0));
             props.emplace("digit_step_direction", QVariant(0));
         } else if (type == "LButtonMatrix") {
+            props.emplace("map", QVariant(QString("A B C\nD E F")));
+            props.emplace("selected", QVariant(0));
             props.emplace("one_checked", QVariant(false));
         } else if (type == "LKeyboard") {
             props.emplace("mode", QVariant(0));
@@ -277,6 +280,7 @@ struct WidgetNode {
             props.emplace("label_show", QVariant(true));
             props.emplace("draw_ticks_on_top", QVariant(false));
         } else if (type == "LSpan") {
+            props.emplace("spans", QVariant(QString("Span one\nSpan two")));
             props.emplace("mode", QVariant(0));
             props.emplace("overflow", QVariant(0));
             props.emplace("indent", QVariant(0));

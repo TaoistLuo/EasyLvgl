@@ -48,7 +48,7 @@ struct ComponentSchema {
         PropGroup bg;
         bg.groupName = "背景";
         bg.props.push_back({"bg_color", "hex", QVariant(QString("0x000000"))});
-        bg.props.push_back({"bg_opa", "int", QVariant(0)});
+        bg.props.push_back({"bg_opa", "int", QVariant(255)});   // LVGL 主题对普通对象/按钮实际生效值为 255
         bg.props.push_back({"bg_grad_color", "hex", QVariant(QString("0x000000"))});
         bg.props.push_back({"bg_grad_dir", "int", QVariant(0)});
         bg.props.push_back({"bg_main_stop", "int", QVariant(0)});
