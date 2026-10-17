@@ -117,6 +117,12 @@ class CodeGenerator {
             }
         } else if (def.expand == "ref") {
             m_pendingRefs.push_back("m_" + id + "->" + def.method + "(m_" + prop.str_val + "->native());");
+        } else if (def.expand == "spans") {
+            for (auto& line : split(prop.str_val, '\n')) {
+                if (line.empty()) continue;
+                out << pad << "{ lv_span_t* _sp = m_" << id << "->new_span();\n";
+                out << pad << "  lv_span_set_text(_sp, \"" << escape_string(line) << "\"); }\n";
+            }
         }
     }
 

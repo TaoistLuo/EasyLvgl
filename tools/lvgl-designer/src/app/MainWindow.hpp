@@ -86,7 +86,6 @@ private:
     void onApplyLayoutVBox();
     void onApplyLayoutHBox();
     void onApplyLayoutGrid();
-    void onApplyLayoutForm();
     void onApplyLayoutStacked();
     void onBreakLayout();
     void applyLayoutToSelection(const std::string& layoutType);

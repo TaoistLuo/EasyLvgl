@@ -29,7 +29,7 @@
 ### 已裁剪的布局器
 | 布局器 | 原因 | 状态 |
 |--------|------|------|
-| Form Layout | LVGL 无原生 FormLayout，当前实现为 flex 模拟 | ❌ 已下线 |
+| Form Layout | LVGL 无原生 FormLayout；表单需求用 GridLayout（2 列）实现 | ❌ 已移除 |
 
 ### 保留的 Widget
 全部保留，均映射到 LVGL 原生 widget 创建 API。

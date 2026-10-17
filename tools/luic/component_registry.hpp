@@ -416,6 +416,7 @@ public:
         reg("LSpan", {
             .is_container = false,
             .props = {
+                {"spans",    "string",   "new_span", false, false, "", "spans"},
                 {"mode",     "int",      "set_mode"},
                 {"overflow", "int",      "set_overflow"},
                 {"indent",   "int",      "set_indent"},
@@ -489,18 +490,6 @@ public:
                 {"row_spacing",  "int",      "set_row_spacing"},
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
-            },
-            .events = {}
-        });
-
-        reg("LFormLayout", {
-            .is_container = true,
-            .props = {
-                {"label_width",    "int",      "set_label_width"},
-                {"row_spacing",     "int",      "set_row_spacing"},
-                {"col_spacing",     "int",      "set_column_spacing"},
-                {"size",        "int_pair", "set_size"},
-                {"pos",         "int_pair", "set_pos"},
             },
             .events = {}
         });

@@ -58,7 +58,6 @@ lvgl++/
 │   ├── vbox_layout.hpp         # LVBoxLayout
 │   ├── hbox_layout.hpp         # LHBoxLayout
 │   ├── grid_layout.hpp         # LGridLayout
-│   ├── form_layout.hpp         # LFormLayout
 │   └── stacked_layout.hpp      # LStackedLayout
 ├── dialogs/
 │   └── dialog.hpp              # LDialog辅助类
@@ -229,26 +228,6 @@ public:
     LGridLayout& set_column_spacing(int gap);
     LGridLayout& set_spacing(int row_gap, int col_gap);
     LGridLayout& set_padding(int pad);
-};
-```
-
-#### LFormLayout - 表单布局
-
-**文件：** `lvgl++/layouts/form_layout.hpp`
-
-```cpp
-class LFormLayout : public LWidgetCRTP<LFormLayout> {
-public:
-    explicit LFormLayout(lv_obj_t* parent = nullptr);
-    
-    LFormLayout& set_label_width(int32_t width);
-    LFormLayout& add_row(const char* label_text, lv_obj_t* input_widget);
-    LFormLayout& set_row_spacing(int gap);
-    LFormLayout& set_column_spacing(int gap);
-    LFormLayout& set_spacing(int row_gap, int col_gap);
-    LFormLayout& set_padding(int pad);
-    
-    int row_count() const;
 };
 ```
 
@@ -455,27 +434,6 @@ void create_grid() {
 }
 ```
 
-### 示例5：表单布局
-
-```cpp
-void create_form_layout() {
-    LFormLayout form;
-    form.set_padding(15)
-        .set_row_spacing(10)
-        .set_column_spacing(10);
-    
-    LLineEdit name(form.native());
-    form.add_row("Name:", name.native());
-    
-    LLineEdit email(form.native());
-    form.add_row("Email:", email.native());
-    
-    LComboBox role(form.native());
-    role.set_options("Admin\nUser\nGuest");
-    form.add_row("Role:", role.native());
-}
-```
-
 ## 全部组件列表（40个，全部已实现 ✅）
 
 ### 按钮类（6个）
@@ -529,7 +487,6 @@ void create_form_layout() {
 - [x] LVBoxLayout - 垂直布局
 - [x] LHBoxLayout - 水平布局
 - [x] LGridLayout - 网格布局
-- [x] LFormLayout - 表单布局
 - [x] LStackedLayout - 堆叠布局
 
 ## 性能考虑
@@ -541,7 +498,6 @@ void create_form_layout() {
 - LLabel: ~16字节（仅基类）
 - LVBoxLayout/LHBoxLayout: ~16字节（仅基类）
 - LGridLayout: ~48字节（基类 + vectors + align状态）
-- LFormLayout: ~40字节（基类 + vectors + row_count）
 - LStackedLayout: ~24字节（基类 + m_current + m_count）
 
 ### 优化策略

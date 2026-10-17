@@ -142,7 +142,6 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | LVBoxLayout | spacing, padding, align_main, align_cross, pos | - |
 | LHBoxLayout | spacing, padding, align_main, align_cross, pos | - |
 | LGridLayout | columns, rows, col_spacing, row_spacing, pos | - |
-| LFormLayout | label_width, row_spacing, col_spacing, pos | - |
 | LStackedLayout | current_index, pos | - |
 
 #### 其他容器

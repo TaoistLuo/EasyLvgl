@@ -114,7 +114,6 @@ btn_style.set_bg_color(0x2196F3)
 | LVBoxLayout | `layouts/vbox_layout.hpp` | 垂直 Flex 布局 |
 | LHBoxLayout | `layouts/hbox_layout.hpp` | 水平 Flex 布局 |
 | LGridLayout | `layouts/grid_layout.hpp` | 网格布局 |
-| LFormLayout | `layouts/form_layout.hpp` | 表单布局 |
 | LStackedLayout | `layouts/stacked_layout.hpp` | 堆叠布局 |
 
 ---

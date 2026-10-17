@@ -242,13 +242,6 @@ public:
     static void place(lv_obj_t* child, int32_t col, int32_t row, ...);
 };
 
-// 表单布局（类似QFormLayout）
-class LFormLayout : public LWidgetCRTP<LFormLayout> {
-public:
-    LFormLayout& add_row(const char* label_text, lv_obj_t* input_widget);
-    LFormLayout& set_label_width(int32_t width);
-};
-
 // 堆叠布局（类似QStackedLayout）
 class LStackedLayout : public LWidgetCRTP<LStackedLayout> {
 public:

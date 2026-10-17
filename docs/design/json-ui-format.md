@@ -231,7 +231,6 @@
 | `LVBoxLayout` | spacing, padding, align_main, size, pos | - |
 | `LHBoxLayout` | spacing, padding, align_main, size, pos | - |
 | `LGridLayout` | columns, rows, col_spacing, row_spacing, pos | - |
-| `LFormLayout` | label_width, row_spacing, col_spacing, pos | - |
 | `LStackedLayout` | current_index, size, pos | - |
 
 ### 其他容器

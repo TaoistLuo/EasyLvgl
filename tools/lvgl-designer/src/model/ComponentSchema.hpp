@@ -357,15 +357,11 @@ struct ComponentSchema {
             comp.props.push_back({"col_spacing", "int", QVariant(5)});
             comp.props.push_back({"row_spacing", "int", QVariant(5)});
             comp.props.push_back({"padding", "int", QVariant(10)});
-        } else if (type == "LFormLayout") {
-            comp.props.push_back({"row_spacing", "int", QVariant(10)});
-            comp.props.push_back({"col_spacing", "int", QVariant(10)});
-            comp.props.push_back({"label_width", "int", QVariant(80)});
-            comp.props.push_back({"padding", "int", QVariant(10)});
         } else if (type == "LStackedLayout") {
             comp.props.push_back({"current_index", "int", QVariant(0)});
             comp.props.push_back({"padding", "int", QVariant(6)});
         } else if (type == "LSpan") {
+            comp.props.push_back({"spans", "string", QVariant(QString("Span one\\nSpan two"))});
             comp.props.push_back({"mode", "int", QVariant(0)});
             comp.props.push_back({"overflow", "int", QVariant(0)});
             comp.props.push_back({"indent", "int", QVariant(0)});

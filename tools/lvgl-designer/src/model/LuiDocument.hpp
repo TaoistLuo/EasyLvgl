@@ -107,7 +107,6 @@ struct WidgetNode {
         if (type == "LVBoxLayout") return QSizeF(300, 400);
         if (type == "LHBoxLayout") return QSizeF(400, 100);
         if (type == "LGridLayout") return QSizeF(300, 300);
-        if (type == "LFormLayout") return QSizeF(300, 300);
         if (type == "LStackedLayout") return QSizeF(300, 300);
         return QSizeF(100, 40);
     }
@@ -338,11 +337,6 @@ struct WidgetNode {
             props.emplace("rows", QVariant(2));
             props.emplace("col_spacing", QVariant(5));
             props.emplace("row_spacing", QVariant(5));
-            props.emplace("padding", QVariant(10));
-        } else if (type == "LFormLayout") {
-            props.emplace("row_spacing", QVariant(10));
-            props.emplace("col_spacing", QVariant(10));
-            props.emplace("label_width", QVariant(80));
             props.emplace("padding", QVariant(10));
         } else if (type == "LStackedLayout") {
             props.emplace("current_index", QVariant(0));

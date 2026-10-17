@@ -641,9 +641,6 @@ class LHBoxLayout : public LWidgetCRTP<LHBoxLayout> { ... };
 // LGridLayout — 网格布局 (Qt: QGridLayout)
 class LGridLayout : public LWidgetCRTP<LGridLayout> { ... };
 
-// LFormLayout — 表单布局：左列标签、右列输入 (Qt: QFormLayout)
-class LFormLayout : public LWidgetCRTP<LFormLayout> { ... };
-
 // LStackedLayout — 堆叠布局：同一时间只显示一个子组件 (Qt: QStackedLayout)
 class LStackedLayout : public LWidgetCRTP<LStackedLayout> { ... };
 ```
@@ -655,7 +652,6 @@ class LStackedLayout : public LWidgetCRTP<LStackedLayout> { ... };
 | `LVBoxLayout` | QVBoxLayout | Flex COLUMN | 垂直排列子组件 |
 | `LHBoxLayout` | QHBoxLayout | Flex ROW | 水平排列子组件 |
 | `LGridLayout` | QGridLayout | Grid | 网格行列布局 |
-| `LFormLayout` | QFormLayout | Grid (2 列) | 标签+输入表单布局 |
 | `LStackedLayout` | QStackedLayout | Flex + hidden | 堆叠切换显示 |
 
 ---
@@ -1070,7 +1066,6 @@ lv_port_linux/
 │   │   ├── vbox_layout.hpp          #   LVBoxLayout (垂直布局)
 │   │   ├── hbox_layout.hpp          #   LHBoxLayout (水平布局)
 │   │   ├── grid_layout.hpp          #   LGridLayout (网格布局)
-│   │   ├── form_layout.hpp          #   LFormLayout (表单布局)
 │   │   └── stacked_layout.hpp       #   LStackedLayout (堆叠布局)
 │   ├── containers/                  # (空目录，布局已迁移至 layouts/)
 │   ├── dialogs/                     # 对话框组件

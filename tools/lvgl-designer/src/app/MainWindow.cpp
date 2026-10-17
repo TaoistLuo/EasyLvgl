@@ -153,7 +153,6 @@ void MainWindow::setupToolbar() {
     toolbar->addAction("VBox", this, &MainWindow::onApplyLayoutVBox);
     toolbar->addAction("HBox", this, &MainWindow::onApplyLayoutHBox);
     toolbar->addAction("Grid", this, &MainWindow::onApplyLayoutGrid);
-    toolbar->addAction("Form", this, &MainWindow::onApplyLayoutForm);
     toolbar->addAction("Stacked", this, &MainWindow::onApplyLayoutStacked);
     toolbar->addSeparator();
     toolbar->addAction("Break Layout", this, &MainWindow::onBreakLayout);
@@ -540,7 +539,6 @@ bool MainWindow::confirmDiscard() {
 void MainWindow::onApplyLayoutVBox()    { applyLayoutToSelection("LVBoxLayout"); }
 void MainWindow::onApplyLayoutHBox()   { applyLayoutToSelection("LHBoxLayout"); }
 void MainWindow::onApplyLayoutGrid()   { applyLayoutToSelection("LGridLayout"); }
-void MainWindow::onApplyLayoutForm()   { applyLayoutToSelection("LFormLayout"); }
 void MainWindow::onApplyLayoutStacked() { applyLayoutToSelection("LStackedLayout"); }
 
 void MainWindow::onBreakLayout() {
@@ -552,7 +550,7 @@ void MainWindow::onBreakLayout() {
     if (!node) return;
 
     static const std::set<std::string> layoutTypes = {
-        "LVBoxLayout", "LHBoxLayout", "LGridLayout", "LFormLayout", "LStackedLayout"
+        "LVBoxLayout", "LHBoxLayout", "LGridLayout", "LStackedLayout"
     };
     if (layoutTypes.find(node->type) == layoutTypes.end()) return;
     if (node->children.empty()) return;

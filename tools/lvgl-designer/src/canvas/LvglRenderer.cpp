@@ -258,13 +258,6 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
             LV_FLEX_ALIGN_START);
     } else if (node.type == "LGridLayout") {
         obj = lv_obj_create(targetParent);
-    } else if (node.type == "LFormLayout") {
-        obj = lv_obj_create(targetParent);
-        lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(obj,
-            LV_FLEX_ALIGN_START,
-            LV_FLEX_ALIGN_START,
-            LV_FLEX_ALIGN_START);
     } else if (node.type == "LStackedLayout") {
         obj = lv_obj_create(targetParent);
     } else if (node.type == "LWin") {
@@ -286,7 +279,7 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 
         if (node.type == "LVBoxLayout" || node.type == "LHBoxLayout"
-            || node.type == "LGridLayout" || node.type == "LFormLayout"
+            || node.type == "LGridLayout"
             || node.type == "LStackedLayout" || node.type == "LGroupBox") {
             if (!node.props.count("padding")) {
                 lv_obj_set_style_pad_all(obj, 0, 0);
@@ -810,12 +803,6 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             m_gridDescArrays.push_back(std::move(col_dsc));
             m_gridDescArrays.push_back(std::move(row_dsc));
         }
-    } else if (node.type == "LFormLayout") {
-        if (node.props.count("row_spacing")) lv_obj_set_style_pad_row(obj, propInt("row_spacing"), 0);
-        if (node.props.count("col_spacing")) lv_obj_set_style_pad_column(obj, propInt("col_spacing"), 0);
-        if (node.props.count("label_width")) {
-            lv_obj_set_style_min_width(obj, propInt("label_width"), 0);
-        }
     } else if (node.type == "LStackedLayout") {
         if (node.props.count("padding")) lv_obj_set_style_pad_all(obj, node.propInt("padding", 0), 0);
     } else if (node.type == "LTabView") {
@@ -890,6 +877,13 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             if (list.size() == 2) lv_calendar_set_showed_date(obj, list[0].toUInt(), list[1].toUInt());
         }
     } else if (node.type == "LSpan") {
+        if (node.props.count("spans")) {
+            for (auto& line : splitStr(unescapeNewlines(propStr("spans")), '\n')) {
+                if (line.empty()) continue;
+                lv_span_t* sp = lv_spangroup_new_span(obj);
+                lv_span_set_text(sp, line.c_str());
+            }
+        }
         if (node.props.count("mode")) lv_spangroup_set_mode(obj, (lv_span_mode_t)propInt("mode"));
         if (node.props.count("overflow")) lv_spangroup_set_overflow(obj, (lv_span_overflow_t)propInt("overflow"));
         if (node.props.count("indent")) lv_spangroup_set_indent(obj, propInt("indent"));
@@ -1447,7 +1441,7 @@ void LvglRenderer::updateHandlePositions() {
 std::string LvglRenderer::findContainerAt(int x, int y) const {
     static const std::set<std::string> containerTypes = {
         "LVBoxLayout", "LHBoxLayout",
-        "LGridLayout", "LFormLayout", "LStackedLayout",
+        "LGridLayout", "LStackedLayout",
         "LTabView", "LMenu", "LTileView", "LList", "LWin", "LCanvas",
         "LGroupBox"
     };
