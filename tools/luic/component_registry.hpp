@@ -235,6 +235,8 @@ public:
                 {"src",       "string",   "set_src"},
                 {"rotation",  "int",      "set_rotation"},
                 {"scale",     "int",      "set_scale"},
+                {"scale_x",   "int",      "set_scale_x"},
+                {"scale_y",   "int",      "set_scale_y"},
                 {"pivot",     "int_pair", "set_pivot"},
                 {"offset",    "int_pair", "set_offset"},
                 {"opacity",   "int",      "set_opacity"},
@@ -256,6 +258,7 @@ public:
                 {"mode",        "int",      "set_mode"},
                 {"bg_angles",   "int_pair", "set_bg_angles"},
                 {"angles",      "int_pair", "set_angles"},
+                {"knob_offset", "int",      "set_knob_offset"},
                 {"change_rate", "int",      "set_change_rate"},
                 {"knob_enabled","bool",     "set_knob_enabled"},
                 {"size",        "int_pair", "set_size"},
@@ -334,6 +337,8 @@ public:
         reg("LSpinbox", {
             .is_container = false,
             .props = {
+                {"cursor_pos", "int", "set_cursor_pos"},
+                {"digit_step_direction", "int", "set_digit_step_direction"},
                 {"range",        "int_pair", "set_range"},
                 {"value",        "int",      "set_value"},
                 {"step",         "int",      "set_step"},
@@ -420,6 +425,7 @@ public:
         reg("LScale", {
             .is_container = false,
             .props = {
+                {"draw_ticks_on_top", "bool", "set_draw_ticks_on_top"},
                 {"mode",             "int",      "set_mode"},
                 {"range",            "int_pair", "set_range"},
                 {"total_tick_count", "int",      "set_total_tick_count"},
@@ -594,7 +600,7 @@ public:
             .props = {
                 {"src",   "string",   "set_src"},
                 {"loop",  "bool",     "set_loop"},
-                {"speed", "float",    "set_speed"},
+                {"speed", "int",      "set_speed"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },

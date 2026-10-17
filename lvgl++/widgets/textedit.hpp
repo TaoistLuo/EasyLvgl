@@ -91,6 +91,12 @@ public:
         }
         return *this;
     }
+    LTextEdit& set_password_mode(bool on) { lv_textarea_set_password_mode(m_obj, on); return *this; }
+
+    LTextEdit& set_password_show_time(int ms) { lv_textarea_set_password_show_time(m_obj, ms); return *this; }
+
+    LTextEdit& set_text_selection(bool on) { lv_textarea_set_text_selection(m_obj, on); return *this; }
+
 };
 
 } // namespace lvgl

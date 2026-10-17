@@ -85,6 +85,10 @@ LImage& set_antialias(bool enable) {
         connect_event(m_obj, LV_EVENT_CLICKED, std::forward<Func>(callback));
         return *this;
     }
+    LImage& set_scale_y(int zoom_y) { lv_image_set_scale_y(m_obj, zoom_y); return *this; }
+
+    LImage& set_scale_x(int zoom_x) { lv_image_set_scale_x(m_obj, zoom_x); return *this; }
+
 };
 
 } // namespace lvgl

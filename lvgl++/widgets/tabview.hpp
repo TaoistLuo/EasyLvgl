@@ -31,6 +31,10 @@ public:
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }
+    LTabView& set_tab_bar_position(int dir) { lv_tabview_set_tab_bar_position(m_obj, static_cast<lv_dir_t>(dir)); return *this; }
+
+    LTabView& set_tab_bar_size(int size) { lv_tabview_set_tab_bar_size(m_obj, size); return *this; }
+
 };
 
 } // namespace lvgl

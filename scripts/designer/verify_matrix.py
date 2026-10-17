@@ -1,14 +1,16 @@
 import json, os, re, subprocess, sys
 ROOT=os.getcwd(); LUIC=os.path.join(ROOT,'bin/luic'); OUT='/tmp/matrix_out'
 os.makedirs(OUT, exist_ok=True)
+SKIP={"LLottie"}   # LV_USE_LOTTIE=0 时该组件不存在
 defaults={}
 for line in open('/tmp/schema_defaults.json'):
     line=line.strip().rstrip(',')
     if line: defaults.update(json.loads('{'+line+'}'))
 CONTAINERS={"LVBoxLayout","LHBoxLayout","LGridLayout","LStackedLayout","LTabView","LMenu",
-            "LMenuPage","LMenuCont","LMenuSection","LTileView","LTile","LList","LWin","LCanvas","LGroupBox"}
+            "LMenuPage","LMenuCont","LMenuSection","LTileView","LTile","LList","LWin","LGroupBox"}
 ok=[]; bad=[]
 for typ, props in defaults.items():
+    if typ in SKIP: continue
     node={"id":"w","type":typ,"props":dict(props)}
     node["props"]["pos"]=[10,10]; node["props"]["size"]=[120,60]
     if typ in CONTAINERS:

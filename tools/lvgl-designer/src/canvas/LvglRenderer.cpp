@@ -1494,7 +1494,7 @@ std::string LvglRenderer::findContainerAt(int x, int y) const {
         "LVBoxLayout", "LHBoxLayout",
         "LGridLayout", "LStackedLayout",
         "LTabView", "LMenu", "LMenuPage", "LMenuCont", "LMenuSection",
-        "LTileView", "LTile", "LList", "LWin", "LCanvas",
+        "LTileView", "LTile", "LList", "LWin",
         "LGroupBox"
     };
 

@@ -58,6 +58,10 @@ public:
         lv_obj_set_size(m_obj, w, h);
         return *this;
     }
+    LSpinbox& set_digit_step_direction(int dir) { lv_spinbox_set_digit_step_direction(m_obj, static_cast<lv_dir_t>(dir)); return *this; }
+
+    LSpinbox& set_cursor_pos(int pos) { lv_spinbox_set_cursor_pos(m_obj, pos); return *this; }
+
 };
 
 } // namespace lvgl

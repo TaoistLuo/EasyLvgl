@@ -14,7 +14,7 @@ public:
     std::optional<lui_document_t> parse(const std::string& filepath) {
         std::ifstream file(filepath);
         if (!file.is_open()) {
-            fprintf(stderr, "luic: cannot open file: %s\n", filepath.c_str());
+            fprintf(stderr, "luic: 无法打开文件：%s\n", filepath.c_str());
             return std::nullopt;
         }
 
@@ -22,7 +22,7 @@ public:
         try {
             file >> j;
         } catch (const json::parse_error& e) {
-            fprintf(stderr, "luic: JSON parse error in %s: %s\n",
+            fprintf(stderr, "luic: JSON 解析错误 %s：%s\n",
                     filepath.c_str(), e.what());
             return std::nullopt;
         }
@@ -49,7 +49,7 @@ public:
 private:
     std::optional<widget_node_t> parse_node(const json& j) {
         if (!j.contains("type") || !j["type"].is_string()) {
-            fprintf(stderr, "luic: node missing 'type' field\n");
+            fprintf(stderr, "luic: 节点缺少 'type' 字段\n");
             return std::nullopt;
         }
 

@@ -99,6 +99,8 @@ public:
         }
         return *this;
     }
+    LComboBox& set_selected_highlight(bool on) { lv_dropdown_set_selected_highlight(m_obj, on); return *this; }
+
 };
 
 } // namespace lvgl

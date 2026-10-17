@@ -57,6 +57,8 @@ public:
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }
+    LScale& set_draw_ticks_on_top(bool on) { lv_scale_set_draw_ticks_on_top(m_obj, on); return *this; }
+
 };
 
 } // namespace lvgl

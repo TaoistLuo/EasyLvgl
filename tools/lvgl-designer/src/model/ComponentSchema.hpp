@@ -250,8 +250,7 @@ struct ComponentSchema {
             comp.props.push_back({"pivot", "int_pair", QVariant(pair0)});
             comp.props.push_back({"offset", "int_pair", QVariant(pair0)});
             comp.props.push_back({"antialias", "bool", QVariant(true)});
-            comp.props.push_back({"inner_align", "int", QVariant(0)});
-            comp.props.push_back({"blend_mode", "int", QVariant(0)});
+                        comp.props.push_back({"blend_mode", "int", QVariant(0)});
             comp.props.push_back({"opacity", "int", QVariant(255)});
         } else if (type == "LArc") {
             comp.props.push_back({"range", "int_pair", QVariant(pair100)});
@@ -270,12 +269,10 @@ struct ComponentSchema {
             comp.props.push_back({"value", "int", QVariant(0)});
             comp.props.push_back({"start_value", "int", QVariant(0)});
             comp.props.push_back({"mode", "int", QVariant(0)});
-            comp.props.push_back({"orientation", "int", QVariant(0)});
+            comp.props.push_back({"orientation", "bool", QVariant(false)});
         } else if (type == "LSpinner") {
             comp.props.push_back({"color", "hex", QVariant(QString("0x2196F3"))});
-            comp.props.push_back({"anim_speed", "int", QVariant(1000)});
-            comp.props.push_back({"anim_period", "int", QVariant(1000)});
-        } else if (type == "LLed") {
+                    } else if (type == "LLed") {
             comp.props.push_back({"color", "hex", QVariant(QString("0x00FF00"))});
             comp.props.push_back({"brightness", "int", QVariant(255)});
             comp.props.push_back({"on", "bool", QVariant(true)});
@@ -284,10 +281,7 @@ struct ComponentSchema {
             comp.props.push_back({"width", "int", QVariant(2)});
             comp.props.push_back({"color", "hex", QVariant(QString("0xFFFFFF"))});
             comp.props.push_back({"y_invert", "bool", QVariant(false)});
-            comp.props.push_back({"dash_width", "int", QVariant(0)});
-            comp.props.push_back({"dash_gap", "int", QVariant(0)});
-            comp.props.push_back({"rounded", "bool", QVariant(false)});
-        } else if (type == "LRoller") {
+                                } else if (type == "LRoller") {
             comp.props.push_back({"options", "string", QVariant(QString("Item 1\\nItem 2\\nItem 3"))});
             comp.props.push_back({"selected", "int", QVariant(0)});
             comp.props.push_back({"visible_row_count", "int", QVariant(3)});

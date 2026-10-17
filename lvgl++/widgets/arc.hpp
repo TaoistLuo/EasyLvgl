@@ -87,6 +87,8 @@ public:
         
         return *this;
     }
+    LArc& set_knob_offset(int offset) { lv_arc_set_knob_offset(m_obj, offset); return *this; }
+
 };
 
 } // namespace lvgl

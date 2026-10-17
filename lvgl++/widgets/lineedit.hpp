@@ -87,6 +87,12 @@ public:
         }
         return *this;
     }
+    LLineEdit& set_cursor_click_pos(bool on) { lv_textarea_set_cursor_click_pos(m_obj, on); return *this; }
+
+    LLineEdit& set_password_show_time(int ms) { lv_textarea_set_password_show_time(m_obj, ms); return *this; }
+
+    LLineEdit& set_text_selection(bool on) { lv_textarea_set_text_selection(m_obj, on); return *this; }
+
 };
 
 } // namespace lvgl

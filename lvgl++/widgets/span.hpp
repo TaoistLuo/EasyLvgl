@@ -38,6 +38,8 @@ public:
     LSpan& set_mode(int mode) {
         return set_mode(static_cast<lv_span_mode_t>(mode));
     }
+    LSpan& set_overflow(int overflow) { lv_spangroup_set_overflow(m_obj, static_cast<lv_span_overflow_t>(overflow)); return *this; }
+
 };
 
 } // namespace lvgl

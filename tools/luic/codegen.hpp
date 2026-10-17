@@ -124,7 +124,7 @@ class CodeGenerator {
             out << pad << "}\n";
             }
         } else if (def.expand == "ref") {
-            m_pendingRefs.push_back("m_" + id + "->" + def.method + "(m_" + prop.str_val + "->native());");
+            if (!prop.str_val.empty()) m_pendingRefs.push_back("m_" + id + "->" + def.method + "(m_" + prop.str_val + "->native());");
         } else if (def.expand == "spans") {
             for (auto& line : split(prop.str_val, '\n')) {
                 if (line.empty()) continue;

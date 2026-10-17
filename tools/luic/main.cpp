@@ -10,11 +10,11 @@
 #include <errno.h>
 
 void print_usage() {
-    printf("Usage: luic <input.lui> [-o output.hpp] [--verbose]\n");
-    printf("\nOptions:\n");
-    printf("  -o <file>    Output file path (default: <input>_ui.hpp)\n");
-    printf("  --verbose    Print detailed information\n");
-    printf("  --help       Show this help\n");
+    printf("用法：luic <输入.lui> [-o 输出.hpp] [--verbose]\n");
+    printf("\n选项：\n");
+    printf("  -o <文件>    输出文件路径（默认 <输入>_ui.hpp）\n");
+    printf("  --verbose    打印详细信息\n");
+    printf("  --help       显示本帮助\n");
 }
 
 std::string replace_ext(const std::string& path, const std::string& new_ext) {
@@ -30,7 +30,7 @@ bool mkdir_p(const std::string& path) {
             struct stat st;
             if (stat(dir.c_str(), &st) != 0) {
                 if (mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST) {
-                    fprintf(stderr, "luic: cannot create directory %s: %s\n",
+                    fprintf(stderr, "luic: 无法创建目录 %s：%s\n",
                             dir.c_str(), strerror(errno));
                     return false;
                 }
@@ -40,7 +40,7 @@ bool mkdir_p(const std::string& path) {
     struct stat st;
     if (stat(path.c_str(), &st) != 0) {
         if (mkdir(path.c_str(), 0755) != 0 && errno != EEXIST) {
-            fprintf(stderr, "luic: cannot create directory %s: %s\n",
+            fprintf(stderr, "luic: 无法创建目录 %s：%s\n",
                     path.c_str(), strerror(errno));
             return false;
         }
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (input_file.empty()) {
-        fprintf(stderr, "luic: no input file\n");
+        fprintf(stderr, "luic: 未指定输入文件\n");
         return 1;
     }
 
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 
     if (verbose) {
         auto nodes = doc->all_nodes();
-        printf("luic: parsed '%s' (%zu nodes)\n", doc->name.c_str(), nodes.size());
+        printf("luic: 已解析 '%s'（%zu 个节点）\n", doc->name.c_str(), nodes.size());
     }
 
     luic::ComponentRegistry registry;
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
     if (!errors.empty()) {
         for (auto& err : errors) {
-            fprintf(stderr, "luic: error: %s\n", err.c_str());
+            fprintf(stderr, "luic: 错误：%s\n", err.c_str());
         }
         return 1;
     }
@@ -118,13 +118,13 @@ int main(int argc, char* argv[]) {
 
     std::ofstream out(output_file);
     if (!out.is_open()) {
-        fprintf(stderr, "luic: cannot write to %s\n", output_file.c_str());
+        fprintf(stderr, "luic: 无法写入 %s\n", output_file.c_str());
         return 1;
     }
     out << code;
     out.close();
 
-    printf("luic: %s -> %s (%zu bytes)\n",
+    printf("luic: %s -> %s（%zu 字节）\n",
            input_file.c_str(), output_file.c_str(), code.size());
     return 0;
 }
