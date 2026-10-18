@@ -97,10 +97,21 @@ class CodeGenerator {
         return "\"" + escape_string(s) + "\"";
     }
 
+    /* .lui 里多行文本用字面量 "\\n" 表示换行（设计器就是这么写的），
+     * 生成 C++ 字符串前先还原成真正的换行，否则 LVGL 会把它当作字面量 */
+    static std::string unescape_newlines(std::string s) {
+        size_t pos = 0;
+        while ((pos = s.find("\\n", pos)) != std::string::npos) {
+            s.replace(pos, 2, "\n");
+            pos += 1;
+        }
+        return s;
+    }
+
     std::string format_value(const prop_def_t& def, const property_t& prop) {
         if (def.type == "string") {
             if (is_src_prop(def, prop.name)) return src_value(prop.str_val);
-            return "\"" + escape_string(prop.str_val) + "\"";
+            return "\"" + escape_string(unescape_newlines(prop.str_val)) + "\"";
         }
         if (def.type == "int")      return std::to_string(prop.int_val);
         if (def.type == "hex")      return prop.str_val;
@@ -266,6 +277,11 @@ class CodeGenerator {
             if (!pdef) continue;
             /* 空图片路径会让 lv_image_set_src() 直接崩，空值表示"未设置图片" */
             if (is_src_prop(*pdef, prop.name) && prop.str_val.empty()) continue;
+            /* 下拉框的 symbol 为空时会传给图片 API（空串当图片源）→ 绘制阶段崩溃，
+             * 空 symbol 表示"用主题默认箭头"，跳过 */
+            if (prop.name == "symbol" && prop.str_val.empty()) continue;
+            /* 下拉框 text 为空串时会覆盖"显示已选项"的行为（LVGL 一旦有 text 就不显示选中项） */
+            if (node.type == "LComboBox" && prop.name == "text" && prop.str_val.empty()) continue;
 
             if (pdef->after_children) {
                 deferred.push_back(&prop);
