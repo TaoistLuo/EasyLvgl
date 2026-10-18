@@ -58,13 +58,18 @@ static void applyTheme(lv_obj_t* obj, const std::string& theme) {
     }
 }
 
-static void applyRadioButtonStyle(lv_obj_t* obj) {
+static void applyRadioButtonStyle(lv_obj_t* obj, const WidgetNode* node = nullptr) {
     if (!obj) return;
-    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(obj, 0, LV_PART_MAIN);
-    lv_obj_set_style_radius(obj, 0, LV_PART_MAIN);
-    lv_obj_set_style_shadow_width(obj, 0, LV_PART_MAIN);
+    /* 单选按钮的"透明底板"只是缺省外观；用户显式设置的样式优先 */
+    auto has = [&](const char* k) { return node && node->props.count(k) > 0; };
+    if (!has("bg_opa")) lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN);
+    if (!has("border_width")) lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN);
+    if (!has("pad_top")) lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN);
+    if (!has("pad_bottom")) lv_obj_set_style_pad_bottom(obj, 0, LV_PART_MAIN);
+    if (!has("pad_left")) lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN);
+    if (!has("pad_right")) lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN);
+    if (!has("radius")) lv_obj_set_style_radius(obj, 0, LV_PART_MAIN);
+    if (!has("shadow_width")) lv_obj_set_style_shadow_width(obj, 0, LV_PART_MAIN);
 
     lv_obj_t* ring = lv_obj_get_child(obj, 0);
     lv_obj_t* dot = ring ? lv_obj_get_child(ring, 0) : nullptr;
@@ -148,7 +153,7 @@ static std::string trimStr(const std::string& s) {
     return s.substr(a, b - a + 1);
 }
 
-static void applyCheckableAlignment(lv_obj_t* obj) {
+static void applyCheckableAlignment(lv_obj_t* obj, const WidgetNode* node = nullptr) {
     if (!obj) return;
     lv_obj_update_layout(obj);
     const lv_font_t* font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
@@ -158,9 +163,11 @@ static void applyCheckableAlignment(lv_obj_t* obj) {
     const int top_extra = extra > 0 ? extra + 1 : 0;
     const int bottom_extra = extra > 0 ? extra - 1 : 0;
 
-    lv_obj_set_style_pad_top(obj, top_extra, LV_PART_MAIN);
-    lv_obj_set_style_pad_bottom(obj, bottom_extra, LV_PART_MAIN);
-    lv_obj_set_style_pad_column(obj, 6, LV_PART_MAIN);
+    /* 垂直居中只是缺省排版；用户显式设了对应的 padding 就以用户为准 */
+    auto has = [&](const char* k) { return node && node->props.count(k) > 0; };
+    if (!has("pad_top")) lv_obj_set_style_pad_top(obj, top_extra, LV_PART_MAIN);
+    if (!has("pad_bottom")) lv_obj_set_style_pad_bottom(obj, bottom_extra, LV_PART_MAIN);
+    if (!has("pad_column")) lv_obj_set_style_pad_column(obj, 6, LV_PART_MAIN);
     lv_obj_set_style_pad_all(obj, 1, LV_PART_INDICATOR);
 }
 
@@ -178,7 +185,7 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         obj = lv_bar_create(targetParent);
     } else if (node.type == "LCheckbox") {
         obj = lv_checkbox_create(targetParent);
-        applyCheckableAlignment(obj);
+        applyCheckableAlignment(obj, &node);
     } else if (node.type == "LSwitch") {
         obj = lv_switch_create(targetParent);
     } else if (node.type == "LComboBox") {
@@ -296,9 +303,9 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         applyProps(obj, node);
 
         if (node.type == "LCheckbox") {
-            applyCheckableAlignment(obj);
+            applyCheckableAlignment(obj, &node);
         } else if (node.type == "LRadioButton") {
-            applyRadioButtonStyle(obj);
+            applyRadioButtonStyle(obj, &node);
         }
 
         if (node.type == "LVBoxLayout" || node.type == "LHBoxLayout"
@@ -371,7 +378,10 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     };
 
     // === Position & Size ===
-    if (node.props.count("pos")) {
+    /* 图块由 tileview 按 col/row 定位（lv_tileview_add_tile 用百分比坐标并铺满视图），
+     * 这里若再写死坐标，预览会和运行时的 grid 布局不一致，col/row 也会失效。 */
+    const bool placedByParent = node.type == "LTile";
+    if (!placedByParent && node.props.count("pos")) {
         auto pos = node.pos();
         /* 有些控件创建时自带对齐（lv_keyboard 默认 LV_ALIGN_BOTTOM_MID），
          * 而 LVGL 里对齐优先于坐标 —— 不清掉的话 set_pos 会被忽略，
@@ -380,7 +390,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         lv_obj_set_pos(obj, (int)pos.x(), (int)pos.y());
     }
 
-    if (node.props.count("size")) {
+    if (!placedByParent && node.props.count("size")) {
         auto sz = node.size();
         lv_obj_set_size(obj, (int)sz.width(), (int)sz.height());
     }
@@ -484,11 +494,21 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     if (node.props.count("min_height")) lv_obj_set_style_min_height(obj, propInt("min_height"), 0);
     if (node.props.count("max_height")) lv_obj_set_style_max_height(obj, propInt("max_height"), 0);
 
+    /* LVGL 9.2 的软件渲染在"无内容对象 + transform"以及"无内容对象 + 非 0 混合模式"
+     * 下会陷入死循环（空 image / 空 canvas / 空 animimg / 图块 / 富文本组）。
+     * 这类对象跳过对应样式，避免改个属性就把设计器卡死。 */
+    const bool imgHasSrc = (node.props.count("src") && !propStr("src").empty()) ||
+                           (node.props.count("src_released") && !propStr("src_released").empty());
+    const bool noContent = node.type == "LCanvas" || node.type == "LTile" ||
+                           node.type == "LAnimImage" ||
+                           ((node.type == "LImage" || node.type == "LImageButton") && !imgHasSrc);
+    const bool noBlend = noContent || node.type == "LSpan";
+
     // === Section I: Appearance ===
     if (node.props.count("radius")) lv_obj_set_style_radius(obj, propInt("radius"), 0);
     if (node.props.count("clip_corner")) lv_obj_set_style_clip_corner(obj, propBool("clip_corner"), 0);
     if (node.props.count("opa")) lv_obj_set_style_opa(obj, propInt("opa"), 0);
-    if (node.props.count("blend_mode")) lv_obj_set_style_blend_mode(obj, (lv_blend_mode_t)propInt("blend_mode"), 0);
+    if (!noBlend && node.props.count("blend_mode")) lv_obj_set_style_blend_mode(obj, (lv_blend_mode_t)propInt("blend_mode"), 0);
     if (node.props.count("base_dir")) lv_obj_set_style_base_dir(obj, (lv_base_dir_t)propInt("base_dir"), 0);
 
     // === Section J: Text Style (generic, applied to all) ===
@@ -510,7 +530,8 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     if (node.props.count("text_align")) lv_obj_set_style_text_align(obj, (lv_text_align_t)propInt("text_align"), 0);
     if (node.props.count("text_decor")) lv_obj_set_style_text_decor(obj, (lv_text_decor_t)propInt("text_decor"), 0);
 
-    // === Section K: Transform ===
+    // === Section K: Transform (无内容对象见上方 noContent 说明) ===
+    if (!noContent) {
     if (node.props.count("transform_rotation")) lv_obj_set_style_transform_rotation(obj, propInt("transform_rotation"), 0);
     if (node.props.count("transform_scale_x")) lv_obj_set_style_transform_scale_x(obj, propInt("transform_scale_x"), 0);
     if (node.props.count("transform_scale_y")) lv_obj_set_style_transform_scale_y(obj, propInt("transform_scale_y"), 0);
@@ -520,6 +541,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     if (node.props.count("translate_y")) lv_obj_set_style_translate_y(obj, propInt("translate_y"), 0);
     if (node.props.count("transform_skew_x")) lv_obj_set_style_transform_skew_x(obj, propInt("transform_skew_x"), 0);
     if (node.props.count("transform_skew_y")) lv_obj_set_style_transform_skew_y(obj, propInt("transform_skew_y"), 0);
+    }
 
     // === Section L: Line Style ===
     if (node.props.count("line_color")) lv_obj_set_style_line_color(obj, lv_color_hex(propHex("line_color")), 0);
@@ -576,7 +598,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             if (list.size() == 2) lv_slider_set_range(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("value")) lv_slider_set_value(obj, propInt("value"), LV_ANIM_OFF);
-        if (node.props.count("left_value")) {
+        if (node.props.count("left_value") && node.props.count("range")) {
             auto list = node.props.at("range").toList();
             if (list.size() == 2) lv_slider_set_left_value(obj, propInt("left_value"), LV_ANIM_OFF);
         }
@@ -668,6 +690,9 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("checked") && propBool("checked")) lv_obj_add_state(obj, LV_STATE_CHECKED);
         else lv_obj_remove_state(obj, LV_STATE_CHECKED);
     } else if (node.type == "LGroupBox") {
+        if (node.props.count("padding") && !node.props.count("pad_top") && !node.props.count("pad_bottom") &&
+            !node.props.count("pad_left") && !node.props.count("pad_right"))
+            lv_obj_set_style_pad_all(obj, propInt("padding"), 0);
         if (node.props.count("title")) {
             // GroupBox title rendered as a child label
             lv_obj_t* title = lv_label_create(obj);
@@ -681,8 +706,9 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         }
         if (node.props.count("rotation")) lv_image_set_rotation(obj, propInt("rotation"));
         if (node.props.count("scale")) lv_image_set_scale(obj, propInt("scale"));
-        if (node.props.count("scale_x")) lv_image_set_scale_x(obj, propInt("scale_x"));
-        if (node.props.count("scale_y")) lv_image_set_scale_y(obj, propInt("scale_y"));
+        /* 256 表示该轴不单独缩放（跟随 scale 等比缩放）；否则 scale 永远被默认值覆盖 */
+        if (node.props.count("scale_x") && propInt("scale_x") != 256) lv_image_set_scale_x(obj, propInt("scale_x"));
+        if (node.props.count("scale_y") && propInt("scale_y") != 256) lv_image_set_scale_y(obj, propInt("scale_y"));
         if (node.props.count("pivot")) {
             auto list = node.props.at("pivot").toList();
             if (list.size() == 2) lv_image_set_pivot(obj, list[0].toInt(), list[1].toInt());
@@ -728,9 +754,14 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         }
     } else if (node.type == "LLed") {
         if (node.props.count("color")) lv_led_set_color(obj, lv_color_hex(propHex("color")));
-        if (node.props.count("brightness")) lv_led_set_brightness(obj, propInt("brightness"));
-        if (node.props.count("on") && propBool("on")) lv_led_on(obj);
-        else lv_led_off(obj);
+        /* lv_led_on() 内部会把亮度置为最大值，必须先做开关再设亮度，
+         * 否则 brightness 永远被覆盖（实测像素完全不变）。 */
+        if (node.props.count("on") ? propBool("on") : true) {
+            lv_led_on(obj);
+            if (node.props.count("brightness")) lv_led_set_brightness(obj, propInt("brightness"));
+        } else {
+            lv_led_off(obj);
+        }
     } else if (node.type == "LLine") {
         if (node.props.count("points")) {
             std::vector<lv_point_precise_t>& pts = storePoints();
@@ -836,12 +867,17 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             lv_flex_align_t align = (lv_flex_align_t)(node.props.count("align_cross")
                 ? propInt("align_cross")
                 : propInt("align_items"));
+            /* LVGL 的 cross_place 只把子项对齐到"轨道"内部，而轨道宽度等于最宽子项，
+             * 等宽子项时看不出变化；轨道对齐一并设置才符合"交叉轴对齐"的直觉。 */
             lv_obj_set_flex_align(obj,
                                   lv_obj_get_style_flex_main_place(obj, 0),
                                   align,
-                                  lv_obj_get_style_flex_track_place(obj, 0));
+                                  align);
         }
     } else if (node.type == "LGridLayout") {
+        if (node.props.count("padding") && !node.props.count("pad_top") && !node.props.count("pad_bottom") &&
+            !node.props.count("pad_left") && !node.props.count("pad_right"))
+            lv_obj_set_style_pad_all(obj, propInt("padding"), 0);
         if (node.props.count("col_spacing")) lv_obj_set_style_pad_column(obj, propInt("col_spacing"), 0);
         if (node.props.count("row_spacing")) lv_obj_set_style_pad_row(obj, propInt("row_spacing"), 0);
         int cols = node.props.count("columns") ? propInt("columns") : 0;
@@ -860,7 +896,9 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             m_gridDescArrays.push_back(std::move(row_dsc));
         }
     } else if (node.type == "LStackedLayout") {
-        if (node.props.count("padding")) lv_obj_set_style_pad_all(obj, node.propInt("padding", 0), 0);
+        if (node.props.count("padding") && !node.props.count("pad_top") && !node.props.count("pad_bottom") &&
+            !node.props.count("pad_left") && !node.props.count("pad_right"))
+            lv_obj_set_style_pad_all(obj, node.propInt("padding", 0), 0);
     } else if (node.type == "LTabView") {
         if (node.props.count("tabs")) {
             for (auto& name : splitStr(unescapeNewlines(propStr("tabs")), '\n')) {
@@ -897,13 +935,15 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             if (list.size() == 2) lv_spinbox_set_range(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("value")) lv_spinbox_set_value(obj, propInt("value"));
+        /* lv_spinbox_set_cursor_pos 会按光标所在位重算 step，必须放在 step 之前，
+         * 否则用户设置的 step 一定被重置为 1。 */
+        if (node.props.count("cursor_pos")) lv_spinbox_set_cursor_pos(obj, propInt("cursor_pos"));
         if (node.props.count("step")) lv_spinbox_set_step(obj, propInt("step"));
         if (node.props.count("digit_format")) {
             auto list = node.props.at("digit_format").toList();
             if (list.size() == 2) lv_spinbox_set_digit_format(obj, list[0].toUInt(), list[1].toUInt());
         }
         if (node.props.count("rollover")) lv_spinbox_set_rollover(obj, propBool("rollover"));
-        if (node.props.count("cursor_pos")) lv_spinbox_set_cursor_pos(obj, propInt("cursor_pos"));
         if (node.props.count("digit_step_direction")) lv_spinbox_set_digit_step_direction(obj, (lv_dir_t)propInt("digit_step_direction"));
     } else if (node.type == "LButtonMatrix") {
         if (node.props.count("map")) {
@@ -1289,8 +1329,19 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
      * lv_spinner / lv_image / lv_chart），LVGL 的命中判定会直接跳过它们，导致在设计器
      * 里点不中、无法选中也就改不了属性。给"没有子对象"的叶节点补上该标志；
      * 有子对象的（按钮等）不动，避免抢走本该由父控件接收的点击。 */
+    std::set<std::string> explicitlyNotClickable;
+    std::function<void(const std::vector<WidgetNode>&)> collectNotClickable =
+        [&](const std::vector<WidgetNode>& nodes) {
+            for (const auto& n : nodes) {
+                auto it = n.props.find("clickable");
+                if (it != n.props.end() && !it->second.toBool()) explicitlyNotClickable.insert(n.id);
+                collectNotClickable(n.children);
+            }
+        };
+    collectNotClickable(doc.children());
     for (auto& [id, obj] : m_objects) {
-        if (obj && lv_obj_is_valid(obj) && lv_obj_get_child_count(obj) == 0)
+        if (obj && lv_obj_is_valid(obj) && lv_obj_get_child_count(obj) == 0 &&
+            !explicitlyNotClickable.count(id))
             lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
     }
 
@@ -1417,6 +1468,15 @@ bool isColorStyleProp(const std::string& name) {
 QVariant LvglRenderer::styleValue(const std::string& id, const std::string& prop) const {
     auto it = m_objects.find(id);
     if (it == m_objects.end() || !it->second || !lv_obj_is_valid(it->second)) return QVariant();
+    /* 这些不是样式，但属性面板同样需要显示"实际生效值"：
+     * 未显式设置时若退回 schema 默认值，会和画布上的真实状态不一致
+     * （例如标签显示 scrollable=勾选，实际 LVGL 标签滚动标志是关闭的）。 */
+    if (prop == "scrollable") return QVariant(lv_obj_has_flag(it->second, LV_OBJ_FLAG_SCROLLABLE));
+    if (prop == "clickable") return QVariant(lv_obj_has_flag(it->second, LV_OBJ_FLAG_CLICKABLE));
+    if (prop == "hidden") return QVariant(lv_obj_has_flag(it->second, LV_OBJ_FLAG_HIDDEN));
+    if (prop == "scroll_dir") return QVariant((int)lv_obj_get_scroll_dir(it->second));
+    if (prop == "scrollbar_mode") return QVariant((int)lv_obj_get_scrollbar_mode(it->second));
+
     lv_style_prop_t sp = stylePropId(prop);
     if (sp == LV_STYLE_PROP_INV) return QVariant();
 

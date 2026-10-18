@@ -147,7 +147,7 @@ struct WidgetNode {
             props.emplace("theme", QVariant(QString("primary")));
         } else if (type == "LLabel") {
             props.emplace("text", QVariant(QString("Label")));
-            props.emplace("color", QVariant(QString("0xFFFFFF")));
+            props.emplace("color", QVariant(QString("0x000000")));
             props.emplace("font_size", QVariant(14));
             props.emplace("long_mode", QVariant(0));
         } else if (type == "LSlider") {
@@ -348,6 +348,18 @@ struct WidgetNode {
         } else if (type == "LMenuPage") {
             props.emplace("title", QVariant(QString("Page")));
             props.emplace("padding", QVariant(6));
+        }
+
+        /* 组件属性以 schema 为唯一来源补齐：属性面板对"未显式设置"的属性显示的
+         * 是 schema 默认值，如果这里不写进节点，面板显示的值与实际建出的控件就会
+         * 不一致（例如 TabView 显示有 2 个页签，实际一个都没有）。
+         * 通用样式组（背景/边框/文字…）不写入，以便保留主题真实值。 */
+        for (auto& g : ComponentSchema::propsFor(type)) {
+            if (g.groupName != type) continue;
+            for (auto& p : g.props) {
+                if (p.type == "string" && p.defaultVal.toString().isEmpty()) continue;
+                props.emplace(p.name, p.defaultVal);
+            }
         }
 
         setSize(defaultSize());

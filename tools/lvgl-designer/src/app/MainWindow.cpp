@@ -82,6 +82,8 @@ void MainWindow::scheduleRebuild() {
         if (!m_selectedId.empty()) {
             m_renderer.selectObject(m_selectedId);
         }
+        /* 重建后把面板显示值同步成 LVGL 真实生效值（新加组件/撤销重做后会变） */
+        m_propPanel->refreshValues();
     });
 }
 

@@ -11,6 +11,10 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QColorDialog>
+#include <QComboBox>
+#include <QSignalBlocker>
+#include <map>
+#include <set>
 #include <QUndoStack>
 #include <functional>
 #include "model/LuiDocument.hpp"
@@ -30,6 +34,9 @@ class PropertyPanel : public QScrollArea {
     std::function<void(int, int)> m_onRootSize;
     /** 查询对象当前实际生效的样式值；返回无效 QVariant 表示不是样式属性 */
     std::function<QVariant(const std::string&, const std::string&)> m_styleValue;
+    /** 字段刷新器：只改显示值、不重建控件，用于重建后同步"真实生效值" */
+    std::map<std::string, std::function<void(const QVariant&)>> m_fieldSetters;
+    std::map<std::string, QVariant> m_fieldDefaults;
 
 public:
     explicit PropertyPanel(QWidget* parent = nullptr) : QScrollArea(parent) {
@@ -97,14 +104,80 @@ public:
 
                 QString qkey = QString::fromStdString(prop.name);
                 std::string key = prop.name;
-                // 未显式设置的样式属性：显示 LVGL 里实际生效的值，
-                // 否则会显示 schema 里写死的默认值（例如按钮显示黑色，实际是主题蓝）
-                QVariant val;
-                if (node->props.find(key) == node->props.end() && m_styleValue)
-                    val = m_styleValue(node->id, key);
-                if (!val.isValid()) val = readProp(node, key, prop.defaultVal);
+                // 优先显示 LVGL 里实际生效的值，其次 schema 默认值
+                QVariant val = valueFor(node, key, prop.defaultVal);
+                m_fieldDefaults[key] = prop.defaultVal;
 
-                if (prop.type == "bool") {
+                if (auto* opts = enumOptionsFor(node->type, key)) {
+                    /* 枚举属性用下拉框选择，不让用户记 LVGL 的数字取值 */
+                    auto* combo = new QComboBox();
+                    int cur = val.toInt();
+                    int curIdx = -1;
+                    for (size_t i = 0; i < opts->size(); ++i) {
+                        combo->addItem(QString::fromUtf8((*opts)[i].label), (*opts)[i].value);
+                        combo->setItemData((int)i, QString::fromUtf8((*opts)[i].symbol), Qt::ToolTipRole);
+                        if ((*opts)[i].value == cur) curIdx = (int)i;
+                    }
+                    if (curIdx < 0) {
+                        combo->addItem(QString("自定义 (%1)").arg(cur), cur);
+                        curIdx = combo->count() - 1;
+                    }
+                    combo->setCurrentIndex(curIdx);
+                    connect(combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                            [this, combo, key](int idx) {
+                                if (idx < 0) return;
+                                writeProp(key, QVariant(combo->itemData(idx).toInt()));
+                            });
+                    glayout->addRow(qkey, combo);
+                } else if (auto* sopts = stringOptionsFor(node->type, key)) {
+                    auto* combo = new QComboBox();
+                    QString curStr = val.toString();
+                    int curIdx = 0;
+                    for (size_t i = 0; i < sopts->size(); ++i) {
+                        combo->addItem(QString::fromUtf8((*sopts)[i].label),
+                                       QString::fromUtf8((*sopts)[i].value));
+                        if (curStr == QString::fromUtf8((*sopts)[i].value)) curIdx = (int)i;
+                    }
+                    combo->setCurrentIndex(curIdx);
+                    connect(combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                            [this, combo, key](int idx) {
+                                if (idx < 0) return;
+                                writeProp(key, combo->itemData(idx).toString());
+                            });
+                    glayout->addRow(qkey, combo);
+                } else if (key == "textarea" || key == "active_page") {
+                    /* 引用其它对象的属性：列出候选对象的 ID，避免手输 ID 输错后静默失效 */
+                    auto* combo = new QComboBox();
+                    combo->addItem("（未指定）", QString(""));
+                    std::set<std::string> want = key == "textarea"
+                        ? std::set<std::string>{"LLineEdit", "LTextEdit"}
+                        : std::set<std::string>{"LMenuPage"};
+                    std::function<void(const std::vector<WidgetNode>&)> addRefs =
+                        [&](const std::vector<WidgetNode>& nodes) {
+                            for (auto& n : nodes) {
+                                if (want.count(n.type))
+                                    combo->addItem(QString::fromStdString(n.id + "（" + n.type + "）"),
+                                                   QString::fromStdString(n.id));
+                                addRefs(n.children);
+                            }
+                        };
+                    addRefs(m_doc->children());
+                    QString curRef = val.toString();
+                    int curIdx = 0;
+                    for (int i = 1; i < combo->count(); ++i)
+                        if (combo->itemData(i).toString() == curRef) curIdx = i;
+                    if (curIdx == 0 && !curRef.isEmpty()) {
+                        combo->addItem(curRef + "（不存在）", curRef);
+                        curIdx = combo->count() - 1;
+                    }
+                    combo->setCurrentIndex(curIdx);
+                    connect(combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                            [this, combo, key](int idx) {
+                                if (idx < 0) return;
+                                writeProp(key, combo->itemData(idx).toString());
+                            });
+                    glayout->addRow(qkey, combo);
+                } else if (prop.type == "bool") {
                     auto* cb = new QCheckBox();
                     cb->setChecked(val.toBool());
                     connect(cb, &QCheckBox::toggled, [this, key](bool checked) {
@@ -194,10 +267,27 @@ public:
                     glayout->addRow(qkey, field);
                 }
             }
+            registerFields(glayout);
             m_topLayout->addWidget(gbox);
         }
 
         m_topLayout->addStretch();
+    }
+
+    /** 重建后同步显示值（例如新加组件、撤销/重做之后） */
+    void refreshValues() {
+        if (!m_doc || m_currentId.empty()) return;
+        // 正在编辑某个字段时不要回写，否则光标会跳
+        QWidget* fw = window()->focusWidget();
+        if (fw && m_content->isAncestorOf(fw)) return;
+        auto* node = m_doc->findById(m_currentId);
+        if (!node) return;
+        for (auto& kv : m_fieldSetters) {
+            auto d = m_fieldDefaults.find(kv.first);
+            QVariant v = valueFor(node, kv.first,
+                                  d == m_fieldDefaults.end() ? QVariant() : d->second);
+            if (v.isValid()) kv.second(v);
+        }
     }
 
     void clearSelection() {
@@ -242,6 +332,89 @@ signals:
     void documentModified();
 
 private:
+    QVariant valueFor(WidgetNode* node, const std::string& key, const QVariant& def) {
+        if (!node) return def;
+        auto it = node->props.find(key);
+        if (it != node->props.end()) return it->second;
+        if (key == "x") return QVariant((int)node->pos().x());
+        if (key == "y") return QVariant((int)node->pos().y());
+        if (key == "width") return QVariant((int)node->size().width());
+        if (key == "height") return QVariant((int)node->size().height());
+        if (m_styleValue) {
+            QVariant v = m_styleValue(node->id, key);
+            if (v.isValid()) return v;
+        }
+        return def;
+    }
+
+    static std::function<void(const QVariant&)> makeSetter(QWidget* w) {
+        if (auto* cb = qobject_cast<QCheckBox*>(w)) {
+            return [cb](const QVariant& v) { QSignalBlocker b(cb); cb->setChecked(v.toBool()); };
+        }
+        if (auto* combo = qobject_cast<QComboBox*>(w)) {
+            return [combo](const QVariant& v) {
+                QSignalBlocker b(combo);
+                int idx = combo->findData(v);
+                if (idx < 0) idx = combo->findData(v.toInt());
+                if (idx < 0) idx = combo->findData(v.toString());
+                if (idx < 0) {
+                    combo->addItem(QString("自定义 (%1)").arg(v.toString()), v);
+                    idx = combo->count() - 1;
+                }
+                combo->setCurrentIndex(idx);
+            };
+        }
+        if (auto* pt = qobject_cast<QPlainTextEdit*>(w)) {
+            return [pt](const QVariant& v) { QSignalBlocker b(pt); pt->setPlainText(v.toString()); };
+        }
+        if (auto* le = qobject_cast<QLineEdit*>(w)) {
+            return [le](const QVariant& v) {
+                QSignalBlocker b(le);
+                if (v.type() == QVariant::List) {
+                    QString s;
+                    auto list = v.toList();
+                    for (int i = 0; i < list.size(); ++i) {
+                        if (i) s += ", ";
+                        s += list[i].toString();
+                    }
+                    le->setText(s);
+                } else {
+                    le->setText(v.toString());
+                }
+            };
+        }
+        /* 颜色行是"色块 + 十六进制输入"的容器 */
+        if (auto* le = w->findChild<QLineEdit*>()) {
+            QPushButton* swatch = w->findChild<QPushButton*>();
+            return [le, swatch](const QVariant& v) {
+                QSignalBlocker b(le);
+                QString s = v.toString();
+                le->setText(s);
+                if (swatch) {
+                    QString hex = s;
+                    hex.remove("0x").remove("0X");
+                    QColor c(hex.toInt(nullptr, 16));
+                    if (!c.isValid()) c = QColor(0, 0, 0);
+                    swatch->setStyleSheet(QString("background-color: %1; border: 1px solid #555; "
+                                                  "border-radius: 2px;").arg(c.name()));
+                }
+            };
+        }
+        return nullptr;
+    }
+
+    void registerFields(QFormLayout* glayout) {
+        for (int i = 0; i < glayout->rowCount(); ++i) {
+            QLayoutItem* litem = glayout->itemAt(i, QFormLayout::LabelRole);
+            QLayoutItem* fitem = glayout->itemAt(i, QFormLayout::FieldRole);
+            if (!litem || !fitem) continue;
+            auto* lbl = qobject_cast<QLabel*>(litem->widget());
+            if (!lbl || !fitem->widget()) continue;
+            auto setter = makeSetter(fitem->widget());
+            if (setter) m_fieldSetters[lbl->text().toStdString()] = std::move(setter);
+        }
+    }
+
     QVariant readProp(WidgetNode* node, const std::string& key, const QVariant& def) {
         if (!node) return def;
         if (key == "x") {
@@ -324,6 +497,8 @@ private:
     }
 
     void clearLayout() {
+        m_fieldSetters.clear();
+        m_fieldDefaults.clear();
         QLayoutItem* item;
         while ((item = m_topLayout->takeAt(0)) != nullptr) {
             if (item->widget()) {
