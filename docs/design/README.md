@@ -9,4 +9,4 @@
 | [json-ui-format.md](json-ui-format.md) | `.lui` 格式规范 |
 | [project-level-design.md](project-level-design.md) | 工程级设计（组件化 / 工程管理 / 实施状态） |
 
-> 已删除：`lvglcpp-arch-desiner.md`（早期架构草稿，内容已并入 architecture-design 与 layer1/layer2）。
+> 已删除：`早期架构草稿.md`（早期架构草稿，内容已并入 architecture-design 与 layer1/layer2）。
