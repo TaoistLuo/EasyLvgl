@@ -9,7 +9,8 @@ DesignerView::DesignerView(QWidget* parent)
     setAcceptDrops(true);
     setDragMode(QGraphicsView::RubberBandDrag);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-    setBackgroundBrush(QColor(0xb8, 0xb8, 0xb8));
+    /* 画布外围：深灰（接近 Qt Creator），让 LVGL 屏幕区域（白）自然突出 */
+    setBackgroundBrush(QColor(0x2b, 0x2b, 0x2b));
     setFrameShape(QFrame::NoFrame);
 }
 

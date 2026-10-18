@@ -99,7 +99,20 @@ void SDL2Widget::resizeEvent(QResizeEvent* event) {
 
 void SDL2Widget::paintEvent(QPaintEvent*) {
     QPainter painter(this);
-    painter.fillRect(rect(), QColor(0xb8, 0xb8, 0xb8));
+    /* 屏幕之外的区域：深灰 + 点阵网格（类似 Qt Creator 的表单设计器）。
+     * 屏幕区域由 LVGL 自己渲染，不加任何装饰，保证与运行时一致。 */
+    painter.fillRect(rect(), QColor(0x2b, 0x2b, 0x2b));
+    {
+        const QRect canvasRect(0, 0, m_width, m_height);
+        painter.setPen(QPen(QColor(0x4a, 0x4a, 0x4a), 1));
+        const int step = 10;
+        for (int y = 0; y < height(); y += step) {
+            for (int x = 0; x < width(); x += step) {
+                if (canvasRect.contains(x, y)) continue;
+                painter.drawPoint(x, y);
+            }
+        }
+    }
     if (!m_fb) return;
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);

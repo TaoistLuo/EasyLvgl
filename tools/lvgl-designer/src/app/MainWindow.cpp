@@ -22,6 +22,10 @@ namespace designer {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
     setWindowTitle("LVGL++ Designer");
+    /* 停靠面板的标签放在上方（更接近 Qt Creator） */
+    setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::North);
+    setTabPosition(Qt::BottomDockWidgetArea, QTabWidget::North);
+    setDockNestingEnabled(true);
     resize(1400, 900);
 
     m_undoStack = new QUndoStack(this);
