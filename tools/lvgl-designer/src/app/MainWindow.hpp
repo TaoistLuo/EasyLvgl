@@ -79,6 +79,11 @@ class MainWindow : public QMainWindow {
     QDockWidget* m_buildDock;
     QDockWidget* m_runDock;
     QProcess* m_runProc = nullptr;
+    QProcess* m_buildProc = nullptr;   // 构建/配置进程（异步，避免阻塞 UI）
+    QString   m_buildSrcDir;           // 本次构建的源码目录
+    QString   m_buildDir;              // 本次构建的构建目录
+    int       m_buildStage = 0;        // 0=空闲 1=配置 2=构建
+    bool      m_runAfterBuild = false; // 构建成功后再运行
     QUndoStack* m_undoStack;
     std::string m_selectedId;
     std::vector<std::string> m_multiSelectedIds;
@@ -151,6 +156,8 @@ private:
     void onOpenProject();
     void onSettings();
     void onBuildProject();
+    void startBuildStage(int stage);   // 1=cmake 配置 2=cmake --build
+    void onBuildFinished(int code, QProcess::ExitStatus status);
     void onRunProject();
     void onBuildAndRun();
     void onApplyLayoutVBox();

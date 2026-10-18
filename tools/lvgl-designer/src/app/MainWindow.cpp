@@ -1302,8 +1302,8 @@ void MainWindow::onCanvasSize() {
 /* 运行：启动构建产物，stdout/stderr 进输出面板 */
 /* 一步：构建工程，成功后直接运行 */
 void MainWindow::onBuildAndRun() {
+    m_runAfterBuild = true;   // 构建成功后由 onBuildFinished 触发运行
     onBuildProject();
-    onRunProject();
 }
 
 void MainWindow::onRunProject() {
@@ -1351,70 +1351,113 @@ void MainWindow::onSettings() {
 
 /* 构建工程：先 cmake 配置（构建目录为空时），再 cmake --build */
 void MainWindow::onBuildProject() {
+    if (m_buildStage != 0) {
+        statusBar()->showMessage("已有构建任务在进行中…", 3000);
+        m_runAfterBuild = false;
+        return;
+    }
     if (m_projectFile.isEmpty()) {
+        m_runAfterBuild = false;
         QMessageBox::information(this, "构建工程", "请先新建或打开一个工程（构建需要工程的 CMakeLists.txt）。");
         return;
     }
     const QString srcDir = QFileInfo(m_projectFile).absolutePath();
     QString buildDir = SettingsDialog::buildDir();
     if (buildDir.isEmpty()) buildDir = srcDir + "/build";   // 默认放工程目录下
-    const QString cmake = SettingsDialog::cmakePath();
     QDir().mkpath(buildDir);
     /* 构建目录里若已有指向别的源码树的缓存，必须清掉，否则会去构建那个工程 */
     const QString cache = buildDir + "/CMakeCache.txt";
-    if (QFileInfo::exists(cache)) {
+    bool needConfigure = !QFileInfo::exists(cache);
+    if (!needConfigure) {
         QFile cf(cache);
-        bool otherSource = false;
         if (cf.open(QIODevice::ReadOnly)) {
             for (auto& line : QString::fromLocal8Bit(cf.readAll()).split('\n')) {
                 if (line.startsWith("CMAKE_HOME_DIRECTORY:")) {
                     const QString v = line.section('=', 1).trimmed();
-                    if (v != srcDir) otherSource = true;
+                    if (v != srcDir) needConfigure = true;
                 }
             }
         }
-        if (otherSource) {
+        if (needConfigure) {
             if (QMessageBox::question(this, "构建工程",
                     "构建目录已被其它工程使用：\n" + buildDir + "\n\n清空并重新配置？")
-                != QMessageBox::Yes)
+                != QMessageBox::Yes) {
+                m_runAfterBuild = false;
                 return;
+            }
             QDir(buildDir).removeRecursively();
             QDir().mkpath(buildDir);
         }
     }
-    if (!QFileInfo::exists(buildDir + "/CMakeCache.txt")) {
-        m_buildPanel->append("=== 配置 " + srcDir + " -> " + buildDir + " ===\n");
-        QStringList cfg{"-S", srcDir, "-B", buildDir};
-        const QString gen = SettingsDialog::generator();
-        if (!gen.isEmpty()) cfg << "-G" << gen;
-        for (auto& a : SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts)) cfg << a;
-        QProcess c;
-        c.setProcessEnvironment(designerBuildEnv());
-        c.start(cmake, cfg);
-        if (!c.waitForFinished(60000) || c.exitCode() != 0) {
-            QMessageBox::critical(this, "构建工程",
-                "CMake 配置失败：\n" + QString::fromLocal8Bit(c.readAllStandardError()));
-            return;
-        }
-    }
-    m_buildPanel->append("=== 构建 " + buildDir + " ===\n");
+    m_buildSrcDir = srcDir;
+    m_buildDir = buildDir;
+    m_buildPanel->clear();  // 若无此方法请删除本行
     m_buildDock->show();
     m_buildDock->raise();
-    QProcess b;
-    b.setProcessEnvironment(designerBuildEnv());
-    b.start(cmake, {"--build", buildDir, "-j"});
-    statusBar()->showMessage("正在构建…");
-    if (!b.waitForFinished(600000)) {
-        QMessageBox::critical(this, "构建工程", "构建超时。");
+    startBuildStage(needConfigure ? 1 : 2);
+}
+
+/* 启动一个构建阶段（异步）：输出实时进面板，结束后由 onBuildFinished 决定下一步 */
+void MainWindow::startBuildStage(int stage) {
+    if (m_buildProc) {
+        m_buildProc->deleteLater();
+        m_buildProc = nullptr;
+    }
+    m_buildProc = new QProcess(this);
+    m_buildProc->setProcessEnvironment(designerBuildEnv());
+    m_buildStage = stage;
+
+    connect(m_buildProc, &QProcess::readyReadStandardOutput, this, [this] {
+        if (m_buildProc) m_buildPanel->append(QString::fromLocal8Bit(m_buildProc->readAllStandardOutput()));
+    });
+    connect(m_buildProc, &QProcess::readyReadStandardError, this, [this] {
+        if (m_buildProc) m_buildPanel->append(QString::fromLocal8Bit(m_buildProc->readAllStandardError()));
+    });
+    connect(m_buildProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, &MainWindow::onBuildFinished);
+    connect(m_buildProc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+        if (m_buildStage == 0 || !m_buildProc) return;
+        m_buildPanel->append("=== 无法启动 cmake：" + m_buildProc->errorString() + " ===\n");
+        m_buildStage = 0;
+        m_runAfterBuild = false;
+        statusBar()->showMessage("构建失败", 5000);
+    });
+
+    const QString cmake = SettingsDialog::cmakePath();
+    if (stage == 1) {
+        QStringList cfg{"-S", m_buildSrcDir, "-B", m_buildDir};
+        const QString gen = SettingsDialog::generator();
+        if (!gen.isEmpty()) cfg << "-G" << gen;
+        for (auto& a : SettingsDialog::extraArgs().split(' ', Qt::SkipEmptyParts)) cfg << a;
+        m_buildPanel->append("=== 配置 " + m_buildSrcDir + " -> " + m_buildDir + " ===\n");
+        statusBar()->showMessage("正在配置…");
+        m_buildProc->start(cmake, cfg);
+    } else {
+        m_buildPanel->append("=== 构建 " + m_buildDir + " ===\n");
+        statusBar()->showMessage("正在构建…");
+        m_buildProc->start(cmake, {"--build", m_buildDir, "--parallel"});
+    }
+}
+
+void MainWindow::onBuildFinished(int code, QProcess::ExitStatus) {
+    const int stage = m_buildStage;
+    m_buildStage = 0;
+    if (stage == 1) {
+        if (code == 0) { startBuildStage(2); return; }
+        m_buildPanel->append("=== 配置失败 (code=" + QString::number(code) + ") ===\n");
+        statusBar()->showMessage("配置失败", 5000);
+        m_runAfterBuild = false;
         return;
     }
-    const QString out = QString::fromLocal8Bit(b.readAllStandardError());
-    m_buildPanel->append(QString::fromLocal8Bit(b.readAllStandardOutput()));
-    m_buildPanel->append(out);
-    if (b.exitCode() == 0)
+    if (code == 0) {
+        m_buildPanel->append("=== 构建成功 ===\n");
         statusBar()->showMessage("构建成功", 5000);
-    else
-        QMessageBox::critical(this, "构建错误", out.right(4000));
+        if (m_runAfterBuild) { m_runAfterBuild = false; onRunProject(); }
+    } else {
+        m_buildPanel->append("=== 构建失败 (code=" + QString::number(code) + ") ===\n");
+        statusBar()->showMessage("构建失败", 5000);
+        m_runAfterBuild = false;
+    }
 }
 
 void MainWindow::onCompile() {
