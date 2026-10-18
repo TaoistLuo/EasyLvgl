@@ -114,6 +114,9 @@ public:
                 QVariant val = valueFor(node, key, prop.defaultVal);
                 m_fieldDefaults[key] = prop.defaultVal;
 
+                const bool srcLike = key == "src" || key.rfind("src_", 0) == 0 ||
+                                     (key.size() > 4 && key.compare(key.size() - 4, 4, "_src") == 0);
+
                 if (auto* opts = enumOptionsFor(node->type, key)) {
                     /* 枚举属性用下拉框选择，不让用户记 LVGL 的数字取值 */
                     auto* combo = new QComboBox();
@@ -264,11 +267,27 @@ public:
                         writeProp(key, QVariant(field->toPlainText()));
                     });
                     glayout->addRow(qkey, field);
+                } else if (srcLike && m_doc) {
+                    /* 图片资源：可编辑下拉，右侧小三角展开候选（类似 Qt 的属性编辑器） */
+                    auto* combo = new QComboBox();
+                    combo->setEditable(true);
+                    combo->addItem("");                       // 未设置
+                    for (auto& kv : m_doc->allResources())
+                        combo->addItem(QString::fromStdString("#" + kv.first));
+                    combo->setCurrentText(val.toString());
+                    connect(combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated),
+                            this, [this, combo, key](int i) {
+                                if (i < 0) return;
+                                writeProp(key, combo->itemText(i));
+                            });
+                    if (auto* le = combo->lineEdit()) {
+                        connect(le, &QLineEdit::editingFinished, this, [this, combo, key] {
+                            writeProp(key, combo->currentText());
+                        });
+                    }
+                    glayout->addRow(qkey, combo);
                 } else {
                     auto* field = new QLineEdit(val.toString());
-                    /* 图片路径：给已登记的资源名做补全（"#别名"） */
-                    bool srcLike = key == "src" || key.rfind("src_", 0) == 0 ||
-                                   (key.size() > 4 && key.compare(key.size() - 4, 4, "_src") == 0);
                     /* 资源是工程级的：要用 allResources()（文件 + 工程合并） */
                     if (srcLike && m_doc && !m_doc->allResources().empty()) {
                         QStringList names;
@@ -277,7 +296,16 @@ public:
                         auto* completer = new QCompleter(names, field);
                         completer->setCaseSensitivity(Qt::CaseInsensitive);
                         completer->setCompletionMode(QCompleter::PopupCompletion);
+                        completer->setFilterMode(Qt::MatchStartsWith);
                         field->setCompleter(completer);
+                        /* 输入 "#" 时立即弹出（QCompleter 默认只在有匹配前缀后弹） */
+                        connect(field, &QLineEdit::textEdited, field,
+                                [completer](const QString& t) {
+                            if (t == "#" || t.endsWith("/")) {
+                                completer->setCompletionPrefix(t);
+                                completer->complete();
+                            }
+                        });
                     }
                     connect(field, &QLineEdit::editingFinished, [this, field, key, prop]() {
                         QVariant newVal = (prop.type == "int") ? QVariant(field->text().toInt()) : QVariant(field->text());

@@ -75,7 +75,15 @@ QLineEdit, QPlainTextEdit, QTextEdit, QComboBox {
     background: #1f1f1f; border: 1px solid #454545; border-radius: 3px;
     padding: 3px 6px; selection-background-color: #2f5d8a; }
 QLineEdit:focus, QPlainTextEdit:focus, QComboBox:focus { border-color: #3c78b4; }
-QComboBox::drop-down { width: 18px; border: none; }
+QComboBox::drop-down { width: 18px; border: none; background: transparent; }
+/* 自绘下拉箭头：QSS 里一旦设置 drop-down，Qt 就不再画默认箭头 */
+QComboBox::down-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #c8c8c8;
+    margin-right: 5px; }
+QComboBox::down-arrow:disabled { border-top-color: #6a6a6a; }
 QComboBox QAbstractItemView { background: #2f2f2f; border: 1px solid #4a4a4a;
                               selection-background-color: #2f5d8a; }
 

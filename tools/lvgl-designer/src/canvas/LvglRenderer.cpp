@@ -1646,6 +1646,10 @@ QVariant LvglRenderer::styleValue(const std::string& id, const std::string& prop
     lv_style_prop_t sp = stylePropId(prop);
     if (sp == LV_STYLE_PROP_INV) return QVariant();
 
+    /* 指针型样式属性（背景图片源等）：未设置时是空指针，
+     * 用 v.num 显示会变成 "0"，没有意义 → 交给面板显示 schema 默认值 */
+    if (sp == LV_STYLE_BG_IMAGE_SRC) return QVariant();
+
     lv_style_value_t v = lv_obj_get_style_prop(it->second, 0, sp);
     if (isColorStyleProp(prop)) {
         char buf[16];
