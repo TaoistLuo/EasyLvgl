@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QClipboard>
 #include <QTimer>
+#include <QGuiApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPainter>
@@ -107,7 +108,10 @@ void MainWindow::scheduleRebuild() {
     QTimer::singleShot(0, this, [this]() {
         m_rebuildScheduled = false;
         rebuildFromDocument();
-        if (!m_selectedId.empty()) {
+        /* 重建会清掉选中状态：多选时整体恢复，单选时恢复单个 */
+        if (m_multiSelectedIds.size() > 1) {
+            m_renderer.selectMultiple(m_multiSelectedIds);
+        } else if (!m_selectedId.empty()) {
             m_renderer.selectObject(m_selectedId);
         }
         /* 重建后把面板显示值同步成 LVGL 真实生效值（新加组件/撤销重做后会变） */
@@ -390,9 +394,40 @@ void MainWindow::setupDocks() {
 }
 
 void MainWindow::setupConnections() {
+    /* Ctrl+点击（Qt 侧，带修饰键）：加选到多选集合 */
+    connect(m_lvglWidget, &SDL2Widget::widgetClicked, this,
+            [this](int x, int y, Qt::KeyboardModifiers mod) {
+        if (!(mod & Qt::ControlModifier)) return;
+        std::string id = m_renderer.findIdAt(x, y);
+        if (id.empty() || id == LvglRenderer::kRootId) return;
+        /* 第一次 Ctrl+点击：先把"当前单选的对象"并入多选集合，
+         * 否则第二个对象会顶替掉第一个，看起来没加进去 */
+        if (m_multiSelectedIds.empty() && !m_selectedId.empty() && m_selectedId != id)
+            m_multiSelectedIds.push_back(m_selectedId);
+        if (std::find(m_multiSelectedIds.begin(), m_multiSelectedIds.end(), id) ==
+            m_multiSelectedIds.end())
+            m_multiSelectedIds.push_back(id);
+        m_renderer.selectMultiple(m_multiSelectedIds);
+        statusBar()->showMessage(
+            QString("已选中 %1 个组件（Ctrl+点击继续加选，然后点布局）")
+                .arg(m_multiSelectedIds.size()), 5000);
+    });
+
     connect(m_lvglWidget, &SDL2Widget::lvglReady, this, [this]() {
         m_renderer.setOnClick([this](const std::string& id) {
+            /* Ctrl 按住时的点击交给 widgetClicked 做加选，这里不改变选中 */
+            if (QGuiApplication::keyboardModifiers() & Qt::ControlModifier) return;
+            /* 点中的是本就在多选集合里的对象：保留多选（例如多选后拖动） */
+            const bool inMulti = m_multiSelectedIds.size() > 1 &&
+                std::find(m_multiSelectedIds.begin(), m_multiSelectedIds.end(), id) !=
+                    m_multiSelectedIds.end();
             m_selectedId = id;
+            if (inMulti) {
+                m_renderer.selectMultiple(m_multiSelectedIds);
+                updateStatusBar();
+                return;
+            }
+            m_multiSelectedIds.clear();   // 普通点击 = 单选，清空多选
             m_renderer.selectObject(id);
             m_lvglWidget->setRootSelected(id == LvglRenderer::kRootId);
             if (id == LvglRenderer::kRootId) {

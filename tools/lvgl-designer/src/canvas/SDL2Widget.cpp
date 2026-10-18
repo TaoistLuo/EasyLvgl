@@ -193,6 +193,7 @@ void SDL2Widget::setRootSelected(bool on) {
 }
 
 void SDL2Widget::mousePressEvent(QMouseEvent* event) {
+    m_ctrlPressed = (event->modifiers() & Qt::ControlModifier) != 0;
     if (event->button() == Qt::LeftButton && m_rootSelected) {
         const int edge = rootHandleAt(event->pos());
         if (edge >= 0) {

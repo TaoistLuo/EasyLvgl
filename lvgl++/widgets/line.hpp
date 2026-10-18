@@ -33,6 +33,24 @@ public:
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }
+
+    /** 虚线：实线段长度（0 = 实线） */
+    LLine& set_dash_width(int w) {
+        lv_obj_set_style_line_dash_width(m_obj, w, 0);
+        return static_cast<LLine&>(*this);
+    }
+
+    /** 虚线：间隔长度 */
+    LLine& set_dash_gap(int g) {
+        lv_obj_set_style_line_dash_gap(m_obj, g, 0);
+        return static_cast<LLine&>(*this);
+    }
+
+    /** 线段端点是否圆角 */
+    LLine& set_rounded(bool on) {
+        lv_obj_set_style_line_rounded(m_obj, on, 0);
+        return static_cast<LLine&>(*this);
+    }
 };
 
 } // namespace lvgl

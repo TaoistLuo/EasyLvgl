@@ -1250,6 +1250,25 @@ void LvglRenderer::applyInstanceExports(lv_obj_t* instanceRoot, const WidgetNode
     }
 }
 
+/* 从屏幕往下按 z 序（后创建的在上）递归找第一个命中的已注册控件 */
+std::string LvglRenderer::findIdAt(int x, int y) const {
+    lv_point_t pt{(lv_coord_t)x, (lv_coord_t)y};
+    std::function<lv_obj_t*(lv_obj_t*)> search = [&](lv_obj_t* parent) -> lv_obj_t* {
+        int n = (int)lv_obj_get_child_count(parent);
+        for (int i = n - 1; i >= 0; i--) {
+            lv_obj_t* child = lv_obj_get_child(parent, (uint32_t)i);
+            if (!child || !lv_obj_is_valid(child)) continue;
+            if (lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN)) continue;
+            if (auto* deep = search(child)) return deep;
+            if (m_idMap.find(child) == m_idMap.end()) continue;   // 手柄等辅助对象
+            if (lv_obj_hit_test(child, &pt)) return child;
+        }
+        return nullptr;
+    };
+    lv_obj_t* hit = search(lv_scr_act());
+    return hit ? findId(hit) : std::string();
+}
+
 void LvglRenderer::registerObject(const std::string& id, const std::string& type, lv_obj_t* obj) {
     m_objects[id] = obj;
     m_idMap[obj] = id;
@@ -1325,6 +1344,20 @@ void LvglRenderer::registerObject(const std::string& id, const std::string& type
             self->m_mouseStartX = point.x;
             self->m_mouseStartY = point.y;
             self->m_widgetMoved = false;
+
+            /* 多选：记录所有选中对象的起始位置，一起移动 */
+            self->m_multiMoveObjs.clear();
+            self->m_multiMoveOrig.clear();
+            if (self->m_multiSelectedObjs.size() > 1) {
+                for (auto* o : self->m_multiSelectedObjs) {
+                    if (!o || !lv_obj_is_valid(o)) continue;
+                    self->m_multiMoveObjs.push_back(o);
+                    lv_point_t q;
+                    q.x = lv_obj_get_x(o);
+                    q.y = lv_obj_get_y(o);
+                    self->m_multiMoveOrig.push_back(q);
+                }
+            }
         }
 
         int dx = point.x - self->m_mouseStartX;
@@ -1334,6 +1367,12 @@ void LvglRenderer::registerObject(const std::string& id, const std::string& type
         self->m_widgetMoved = true;
 
         lv_obj_set_pos(target, self->m_widgetOrigX + dx, self->m_widgetOrigY + dy);
+        /* 其余选中对象按同一增量移动 */
+        for (size_t i = 0; i < self->m_multiMoveObjs.size(); i++) {
+            lv_obj_t* o = self->m_multiMoveObjs[i];
+            if (!o || !lv_obj_is_valid(o) || o == target) continue;
+            lv_obj_set_pos(o, self->m_multiMoveOrig[i].x + dx, self->m_multiMoveOrig[i].y + dy);
+        }
         self->updateHandlePositions();
     }, LV_EVENT_PRESSING, this);
 
@@ -1350,6 +1389,23 @@ void LvglRenderer::registerObject(const std::string& id, const std::string& type
             self->m_widgetMoving = false;
             if (self->m_widgetMoved) {
                 auto idIt = self->m_idMap.find(target);
+                /* 多选：先为其余选中对象派发 Moved（主对象随后派发） */
+                for (size_t i = 0; i < self->m_multiMoveObjs.size(); i++) {
+                    lv_obj_t* o = self->m_multiMoveObjs[i];
+                    if (!o || !lv_obj_is_valid(o) || o == target) continue;
+                    auto it2 = self->m_idMap.find(o);
+                    if (it2 == self->m_idMap.end()) continue;
+                    PendingEvent evt2;
+                    evt2.type = PendingEvent::Moved;
+                    evt2.id = it2->second;
+                    evt2.x = lv_obj_get_x(o);
+                    evt2.y = lv_obj_get_y(o);
+                    evt2.w = lv_obj_get_width(o);
+                    evt2.h = lv_obj_get_height(o);
+                    self->m_pendingMutex.lock();
+                    self->m_pendingEvents.push_back(std::move(evt2));
+                    self->m_pendingMutex.unlock();
+                }
                 if (idIt != self->m_idMap.end()) {
                     PendingEvent evt;
                     evt.type = PendingEvent::Moved;
@@ -1644,6 +1700,7 @@ void LvglRenderer::selectObject(const std::string& id) {
 }
 
 void LvglRenderer::deselectAll() {
+    clearMultiHandles();
     destroyHandles();
     if (m_selectedObj && lv_obj_is_valid(m_selectedObj)) {
         lv_obj_set_style_outline_width(m_selectedObj, 0, 0);
@@ -1878,7 +1935,38 @@ void LvglRenderer::clearMultiSelection() {
     m_multiSelectedObjs.clear();
 }
 
+void LvglRenderer::clearMultiHandles() {
+    for (auto* h : m_multiHandles)
+        if (h && lv_obj_is_valid(h)) lv_obj_delete(h);
+    m_multiHandles.clear();
+}
+
+/* 非主选中对象：四角各画一个小方块，表示"已选中" */
+void LvglRenderer::drawMultiHandles(lv_obj_t* obj) {
+    if (!obj || !lv_obj_is_valid(obj)) return;
+    lv_area_t a;
+    lv_obj_get_coords(obj, &a);
+    const int HS = 10;
+    const int xs[2] = {a.x1 - HS / 2, a.x2 + 1 - HS / 2};
+    const int ys[2] = {a.y1 - HS / 2, a.y2 + 1 - HS / 2};
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            lv_obj_t* h = lv_obj_create(lv_scr_act());
+            lv_obj_remove_style_all(h);
+            lv_obj_set_size(h, HS, HS);
+            lv_obj_set_pos(h, xs[i], ys[j]);
+            lv_obj_set_style_bg_color(h, lv_color_hex(0x2196F3), 0);
+            lv_obj_set_style_bg_opa(h, LV_OPA_COVER, 0);
+            lv_obj_set_style_border_width(h, 1, 0);
+            lv_obj_set_style_border_color(h, lv_color_hex(0xFFFFFF), 0);
+            lv_obj_clear_flag(h, LV_OBJ_FLAG_CLICKABLE);
+            m_multiHandles.push_back(h);
+        }
+    }
+}
+
 void LvglRenderer::selectMultiple(const std::vector<std::string>& ids) {
+    clearMultiHandles();
     deselectAll();
     for (size_t i = 0; i < ids.size(); i++) {
         auto it = m_objects.find(ids[i]);
@@ -1894,6 +1982,8 @@ void LvglRenderer::selectMultiple(const std::vector<std::string>& ids) {
                 if (!isLayoutChild(obj)) {
                     createHandles(obj);
                 }
+            } else {
+                drawMultiHandles(obj);
             }
         }
     }

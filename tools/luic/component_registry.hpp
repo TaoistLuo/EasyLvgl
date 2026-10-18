@@ -311,9 +311,12 @@ public:
                 {"points",   "string",   "set_points", false, false, "", "points"},
                 {"width",    "int",      "set_width"},
                 {"color",    "hex",      "set_color"},
-                {"y_invert", "bool",     "set_y_invert"},
-                {"size",     "int_pair", "set_size"},
-                {"pos",      "int_pair", "set_pos"},
+                {"y_invert",  "bool",     "set_y_invert"},
+                {"dash_width","int",      "set_dash_width"},
+                {"dash_gap",  "int",      "set_dash_gap"},
+                {"rounded",   "bool",     "set_rounded"},
+                {"size",      "int_pair", "set_size"},
+                {"pos",       "int_pair", "set_pos"},
             },
             .events = {}
         });

@@ -33,6 +33,11 @@ class LvglRenderer {
     std::function<void(const std::string& id, int x, int y, int w, int h)> m_onMoved;
     lv_obj_t* m_selectedObj = nullptr;
     std::vector<lv_obj_t*> m_multiSelectedObjs;
+    /* 多选时给每个附加选中对象画 4 个角标记（主选中对象仍有 8 个手柄） */
+    std::vector<lv_obj_t*> m_multiHandles;
+    /* 多选拖动：记录每个选中对象的起始位置，按同一增量移动 */
+    std::vector<lv_obj_t*> m_multiMoveObjs;
+    std::vector<lv_point_t> m_multiMoveOrig;
 
     static constexpr int HANDLE_SIZE = 12;
     static constexpr int MIN_WIDGET_SIZE = 20;
@@ -98,6 +103,8 @@ public:
     /** 读取对象当前实际生效的样式值（用于属性面板显示真值） */
     QVariant styleValue(const std::string& id, const std::string& prop) const;
     std::string findId(lv_obj_t* obj) const;
+    /** 坐标处最上层的"已注册控件" id（跳过手柄等辅助对象）；没有则返回空 */
+    std::string findIdAt(int x, int y) const;
     std::string findContainerAt(int x, int y) const;
     std::string objectType(const std::string& id) const;
     void screenToRelative(const std::string& parentId, int& x, int& y) const;
@@ -123,6 +130,8 @@ private:
     void applyProps(lv_obj_t* obj, const WidgetNode& node);
     void registerObject(const std::string& id, const std::string& type, lv_obj_t* obj);
     void createHandles(lv_obj_t* widget);
+    void drawMultiHandles(lv_obj_t* obj);
+    void clearMultiHandles();
     void destroyHandles();
     void updateHandlePositions();
     bool isLayoutChild(lv_obj_t* obj) const;

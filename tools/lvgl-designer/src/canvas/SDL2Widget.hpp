@@ -30,6 +30,8 @@ signals:
     void lvglReady();
     void rootResized(int w, int h);
     void widgetDropped(const QString& widgetType, int x, int y);
+    /** Ctrl+左键：画布坐标（LVGL 坐标），由主窗口做加选 */
+    void ctrlClickAt(int x, int y);
     void wheelScrolled(int delta, int x, int y);
     void widgetClicked(int x, int y, Qt::KeyboardModifiers modifiers);
     void ctrlStateChanged(bool ctrl);
@@ -39,6 +41,13 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+
+public:
+    /** 本次按下时是否按着 Ctrl（用于画布上 Ctrl+点击多选） */
+    bool ctrlPressed() const { return m_ctrlPressed; }
+
+private:
+    bool m_ctrlPressed = false;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
