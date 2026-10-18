@@ -21,11 +21,6 @@ public:
               .on()
               .set_pos(20, 20)
               .set_size(50, 50);
-        {
-            LStyle st;
-            st.set_color(0x00FF00);
-            st.apply_to(m_w->native());
-        }
 
     }
 

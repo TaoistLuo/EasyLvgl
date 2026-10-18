@@ -3,11 +3,15 @@
 #include <QDrag>
 #include <QMimeData>
 #include <QHeaderView>
+#include <string>
+#include <vector>
+#include <utility>
 
 namespace designer {
 
 class ComponentPanel : public QTreeWidget {
     Q_OBJECT
+    QTreeWidgetItem* m_projectGroup = nullptr;
 public:
     explicit ComponentPanel(QWidget* parent = nullptr) : QTreeWidget(parent) {
         setDragEnabled(true);
@@ -101,6 +105,31 @@ public:
             {"LAnimImage",     "动画图片"},
             {"LLottie",        "Lottie 动画"},
         });
+    }
+
+public:
+    /* 工程里的自定义组件（"项目组件"分组，拖动即插入 "@Name" 实例） */
+    void setProjectComponents(const std::vector<std::string>& comps) {
+        if (m_projectGroup) {
+            delete m_projectGroup;
+            m_projectGroup = nullptr;
+        }
+        if (comps.empty()) return;
+        m_projectGroup = new QTreeWidgetItem();
+        insertTopLevelItem(0, m_projectGroup);
+        m_projectGroup->setText(0, "项目组件");
+        m_projectGroup->setFlags(Qt::ItemIsEnabled);
+        QFont f = m_projectGroup->font(0);
+        f.setBold(true);
+        m_projectGroup->setFont(0, f);
+        for (auto& c : comps) {
+            auto* item = new QTreeWidgetItem(m_projectGroup);
+            item->setText(0, QString("%1(@%2)")
+                                 .arg(QString::fromStdString(c), QString::fromStdString(c)));
+            item->setData(0, Qt::UserRole, QString::fromStdString("@" + c));
+            item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
+        }
+        m_projectGroup->setExpanded(true);
     }
 
 protected:

@@ -375,6 +375,10 @@ class LuiDocument {
     int m_height = 480;
     std::vector<WidgetNode> m_children;
     QString m_filePath;
+    /* "screen"（默认）或 "component"：组件没有屏幕语义，预览时建独立根容器 */
+    std::string m_kind = "screen";
+    /* 导出参数：对外名 -> "<节点id>.<属性名>"，仅组件可用 */
+    std::map<std::string, std::string> m_exports;
     /* 图片资源：别名 -> 路径（相对 .lui 所在目录），控件里用 "#别名" 引用 */
     std::map<std::string, std::string> m_resources;
     bool m_modified = false;
@@ -393,6 +397,13 @@ public:
         auto root = jdoc.object();
         m_version = root["version"].toString("1.0").toStdString();
         m_name = root["name"].toString("Unnamed").toStdString();
+        m_kind = root["kind"].toString("screen").toStdString();
+        m_exports.clear();
+        if (root.contains("exports") && root["exports"].isObject()) {
+            auto ex = root["exports"].toObject();
+            for (auto it = ex.begin(); it != ex.end(); ++it)
+                m_exports[it.key().toStdString()] = it.value().toString().toStdString();
+        }
 
         if (root.contains("size") && root["size"].isArray()) {
             auto arr = root["size"].toArray();
@@ -430,6 +441,13 @@ public:
         root["version"] = QString::fromStdString(m_version);
         root["name"] = QString::fromStdString(m_name);
         root["size"] = QJsonArray{m_width, m_height};
+        if (m_kind != "screen") root["kind"] = QString::fromStdString(m_kind);
+        if (!m_exports.empty()) {
+            QJsonObject ex;
+            for (auto& kv : m_exports)
+                ex[QString::fromStdString(kv.first)] = QString::fromStdString(kv.second);
+            root["exports"] = ex;
+        }
 
         if (!m_resources.empty()) {
             QJsonObject res;
@@ -457,6 +475,23 @@ public:
     int height() const { return m_height; }
     void setScreenSize(int w, int h) { m_width = w; m_height = h; m_modified = true; }
     const QString& filePath() const { return m_filePath; }
+
+    /* ---- 组件 ---- */
+    bool isComponent() const { return m_kind == "component"; }
+    const std::string& kind() const { return m_kind; }
+    const std::map<std::string, std::string>& exports() const { return m_exports; }
+    void setExport(const std::string& alias, const std::string& path) {
+        m_exports[alias] = path;
+        m_modified = true;
+    }
+    void removeExport(const std::string& alias) {
+        m_exports.erase(alias);
+        m_modified = true;
+    }
+    std::string exportNameFor(const std::string& path) const {
+        for (auto& kv : m_exports) if (kv.second == path) return kv.first;
+        return "";
+    }
 
     /* ---- 图片资源（qrc 式编译期嵌入） ---- */
     const std::map<std::string, std::string>& resources() const { return m_resources; }
@@ -529,7 +564,11 @@ public:
     std::string generateUniqueId(const std::string& type) {
         std::string prefix = type;
         if (!prefix.empty() && prefix.front() == 'L') prefix.erase(prefix.begin());
-        for (auto& ch : prefix) ch = std::tolower(static_cast<unsigned char>(ch));
+        std::string sanitized;                    // "@MyCard" -> "mycard"
+        for (char ch : prefix)
+            if (std::isalnum(static_cast<unsigned char>(ch)))
+                sanitized += std::tolower(static_cast<unsigned char>(ch));
+        prefix = sanitized;
 
         int counter = 1;
         while (true) {

@@ -24,11 +24,6 @@ public:
         m_title->set_color(0x2196F3)
               .set_font_size(24)
               .set_text("Dashboard");
-        {
-            LStyle st;
-            st.set_color(0x2196F3);
-            st.apply_to(m_title->native());
-        }
 
         m_btn_login = new LButton(root);
         m_btn_login->set_size(120, 50)
@@ -38,11 +33,6 @@ public:
         m_info_panel->set_padding(15)
               .set_size(400, 300)
               .set_spacing(10);
-        {
-            LStyle st;
-            st.set_padding(15);
-            st.apply_to(m_info_panel->native());
-        }
 
         m_brightness = new LSlider(m_info_panel->native());
         m_brightness->set_range(0, 100)

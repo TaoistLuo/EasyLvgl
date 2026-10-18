@@ -34,6 +34,7 @@ add_executable(lvgl-designer
     src/panels/PropertyPanel.hpp
     src/panels/PropertyPanel.cpp
     src/panels/TreePanel.hpp
+    src/panels/ProjectPanel.hpp
     src/panels/TreePanel.cpp
     src/commands/UndoCommands.hpp
     src/commands/UndoCommands.cpp

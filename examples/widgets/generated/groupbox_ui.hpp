@@ -20,11 +20,6 @@ public:
               .set_pos(20, 20)
               .set_size(240, 160)
               .set_title("Group");
-        {
-            LStyle st;
-            st.set_padding(10);
-            st.apply_to(m_w->native());
-        }
 
     }
 

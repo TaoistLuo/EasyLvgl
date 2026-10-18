@@ -30,8 +30,11 @@ public:
         lui_document_t doc;
         doc.version = j.value("version", "1.0");
         doc.name = j.value("name", "Unnamed");
+        doc.kind = j.value("kind", "screen");
+        doc.filePath = filepath;
 
         if (j.contains("size") && j["size"].is_array() && j["size"].size() == 2) {
+            doc.hadSize = true;
             doc.width = j["size"][0].get<int>();
             doc.height = j["size"][1].get<int>();
         }
@@ -39,6 +42,12 @@ public:
         if (j.contains("resources") && j["resources"].is_object()) {
             for (auto it = j["resources"].begin(); it != j["resources"].end(); ++it) {
                 if (it.value().is_string()) doc.resources[it.key()] = it.value().get<std::string>();
+            }
+        }
+
+        if (j.contains("exports") && j["exports"].is_object()) {
+            for (auto it = j["exports"].begin(); it != j["exports"].end(); ++it) {
+                if (it.value().is_string()) doc.exports[it.key()] = it.value().get<std::string>();
             }
         }
 

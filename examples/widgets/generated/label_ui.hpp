@@ -21,11 +21,6 @@ public:
               .set_pos(20, 20)
               .set_size(300, 40)
               .set_text("Hello LVGL++");
-        {
-            LStyle st;
-            st.set_color(0x2196F3);
-            st.apply_to(m_w->native());
-        }
 
     }
 

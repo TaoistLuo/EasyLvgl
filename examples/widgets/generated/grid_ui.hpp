@@ -27,13 +27,6 @@ public:
               .set_row_spacing(6)
               .set_rows(2)
               .set_size(300, 200);
-        {
-            LStyle st;
-            st.set_col_spacing(6);
-            st.set_padding(6);
-            st.set_row_spacing(6);
-            st.apply_to(m_w->native());
-        }
 
         m_c1 = new LButton(m_w->native());
         m_c1->set_pos(0, 0)

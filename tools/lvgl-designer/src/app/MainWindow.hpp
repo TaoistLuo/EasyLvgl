@@ -14,6 +14,11 @@
 #include <QCloseEvent>
 #include <QTimer>
 #include <optional>
+#include <memory>
+#include <map>
+#include <string>
+#include <utility>
+#include <functional>
 #include <vector>
 #include "model/LuiDocument.hpp"
 #include "canvas/SDL2Widget.hpp"
@@ -21,6 +26,8 @@
 #include "panels/ComponentPanel.hpp"
 #include "panels/PropertyPanel.hpp"
 #include "panels/TreePanel.hpp"
+#include "panels/ProjectPanel.hpp"
+#include "app/SettingsDialog.hpp"
 
 namespace designer {
 
@@ -33,11 +40,19 @@ class MainWindow : public QMainWindow {
     ComponentPanel* m_compPanel;
     PropertyPanel* m_propPanel;
     TreePanel* m_treePanel;
+    ProjectPanel* m_projectPanel;
     QUndoStack* m_undoStack;
     std::string m_selectedId;
     std::vector<std::string> m_multiSelectedIds;
 
+    /* ---- 工程（组件化） ---- */
+    QString m_projectFile;                                     // 工程清单路径
+    std::vector<std::unique_ptr<LuiDocument>> m_projectDocs;   // 工程内其他文档
+    std::map<std::string, LuiDocument*> m_componentDocs;       // 名字 -> 文档
+    std::vector<std::pair<std::string, QString>> m_projectComponents;  // (名字, 路径)
+
     QDockWidget* m_compDock;
+    QDockWidget* m_projectDock;
     QDockWidget* m_treeDock;
     QDockWidget* m_propDock;
     QLabel* m_statusInfo;
@@ -50,6 +65,14 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     bool openFile(const QString& path);
+    void loadProject(const QString& manifest);
+    void onNewProject();
+    void onNewComponent();
+    void onNewScreen();
+    void onAddProjectFiles();
+    void removeFromProject(const QString& path);
+    void refreshProjectPanel();
+    bool updateManifestFiles(const std::function<void(QJsonArray&)>& fn);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -84,6 +107,9 @@ private:
     void onContextMenu(const QPoint& pos);
     bool confirmDiscard();
 
+    void onOpenProject();
+    void onSettings();
+    void onBuildProject();
     void onApplyLayoutVBox();
     void onApplyLayoutHBox();
     void onApplyLayoutGrid();

@@ -23,11 +23,6 @@ public:
               .set_pos(20, 16)
               .set_size(260, 24)
               .set_text("Embedded image (like qrc)");
-        {
-            LStyle st;
-            st.set_color(0x000000);
-            st.apply_to(m_title->native());
-        }
 
         m_logo = new LImage(root);
         m_logo->set_pos(40, 60)

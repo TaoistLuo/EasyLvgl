@@ -6,6 +6,12 @@
 #include <QInputDialog>
 #include <QClipboard>
 #include <QTimer>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QInputDialog>
+#include <QRegularExpression>
 #include <algorithm>
 #include <set>
 
@@ -56,6 +62,7 @@ bool MainWindow::openFile(const QString& path) {
     updateTitle();
     rebuildFromDocument();
     updateStatusBar();
+    if (m_projectPanel) m_projectPanel->setCurrentFile(path);
     return true;
 }
 
@@ -91,6 +98,9 @@ void MainWindow::setupMenus() {
     auto* fileMenu = menuBar()->addMenu("文件(&F)");
     fileMenu->addAction("新建(&N)", this, &MainWindow::onNew, QKeySequence("Ctrl+N"));
     fileMenu->addAction("打开(&O)...", this, &MainWindow::onOpen, QKeySequence::Open);
+    fileMenu->addAction("新建工程(&J)...", this, &MainWindow::onNewProject);
+    fileMenu->addAction("打开工程(&P)...", this, &MainWindow::onOpenProject);
+    fileMenu->addAction("新建组件(&M)...", this, &MainWindow::onNewComponent);
     fileMenu->addAction("保存(&S)", this, &MainWindow::onSave, QKeySequence::Save);
     fileMenu->addAction("另存为(&A)...", this, &MainWindow::onSaveAs, QKeySequence("Ctrl+Shift+S"));
     fileMenu->addSeparator();
@@ -119,6 +129,7 @@ void MainWindow::setupMenus() {
     auto* viewMenu = menuBar()->addMenu("视图(&V)");
     m_compDock->toggleViewAction()->setText("组件(&C)");
     viewMenu->addAction(m_compDock->toggleViewAction());
+    viewMenu->addAction(m_projectDock->toggleViewAction());
     m_treeDock->toggleViewAction()->setText("组件树(&T)");
     viewMenu->addAction(m_treeDock->toggleViewAction());
     m_propDock->toggleViewAction()->setText("属性(&P)");
@@ -133,6 +144,8 @@ void MainWindow::setupMenus() {
 
     auto* buildMenu = menuBar()->addMenu("构建(&B)");
     buildMenu->addAction("编译 .lui(&C)", this, &MainWindow::onCompile, QKeySequence("F5"));
+    buildMenu->addAction("构建工程(&B)", this, &MainWindow::onBuildProject, QKeySequence("Ctrl+B"));
+    buildMenu->addAction("设置(&S)...", this, &MainWindow::onSettings);
 
     auto* helpMenu = menuBar()->addMenu("帮助(&H)");
     helpMenu->addAction("关于(&A)", this, &MainWindow::onAbout);
@@ -169,6 +182,13 @@ void MainWindow::setupDocks() {
     m_compDock->setWidget(m_compPanel);
     m_compDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, m_compDock);
+
+    m_projectDock = new QDockWidget("工程", this);
+    m_projectPanel = new ProjectPanel(this);
+    m_projectDock->setWidget(m_projectPanel);
+    m_projectDock->setFeatures(QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_projectDock);
+    tabifyDockWidget(m_compDock, m_projectDock);
 
     m_treeDock = new QDockWidget("组件树", this);
     m_treeDock->setWidget(m_treePanel);
@@ -264,6 +284,19 @@ void MainWindow::setupConnections() {
 
     m_propPanel->setStyleValueProvider([this](const std::string& id, const std::string& prop) {
         return m_renderer.styleValue(id, prop);
+    });
+    connect(m_projectPanel, &ProjectPanel::openRequested, this, [this](const QString& p) {
+        if (m_doc.isModified() && !confirmDiscard()) return;
+        openFile(p);
+    });
+    connect(m_projectPanel, &ProjectPanel::newComponentRequested, this, &MainWindow::onNewComponent);
+    connect(m_projectPanel, &ProjectPanel::newScreenRequested, this, &MainWindow::onNewScreen);
+    connect(m_projectPanel, &ProjectPanel::addFilesRequested, this, &MainWindow::onAddProjectFiles);
+    connect(m_projectPanel, &ProjectPanel::removeRequested, this, &MainWindow::removeFromProject);
+
+    m_propPanel->setComponentResolver([this](const std::string& name) -> const LuiDocument* {
+        auto it = m_componentDocs.find(name);
+        return it == m_componentDocs.end() ? nullptr : it->second;
     });
 
     m_propPanel->setRootResizeCallback([this](int w, int h) {
@@ -408,6 +441,322 @@ void MainWindow::onOpen() {
     if (!path.isEmpty()) openFile(path);
 }
 
+/* 打开工程：读取清单 -> 加载全部 .lui -> 填组件面板 -> 打开入口文件 */
+void MainWindow::loadProject(const QString& manifest) {
+    QFile f(manifest);
+    if (!f.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, "打开工程", "无法读取：" + manifest);
+        return;
+    }
+    QJsonParseError err;
+    auto jdoc = QJsonDocument::fromJson(f.readAll(), &err);
+    if (err.error != QJsonParseError::NoError) {
+        QMessageBox::critical(this, "打开工程", "清单 JSON 错误：" + err.errorString());
+        return;
+    }
+    auto root = jdoc.object();
+    const QString base = QFileInfo(manifest).absolutePath();
+    const QString entryName = root["entry"].toString();
+
+    m_projectFile = manifest;
+    m_projectDocs.clear();
+    m_componentDocs.clear();
+    m_projectComponents.clear();
+
+    QString entryPath;
+    for (auto v : root["files"].toArray()) {
+        QString rel = v.toString();
+        QString path = QDir(base).absoluteFilePath(rel);
+        auto doc = std::make_unique<LuiDocument>();
+        if (!doc->load(path)) {
+            QMessageBox::warning(this, "打开工程", "加载失败：" + path);
+            continue;
+        }
+        /* 只有 kind: component 的文件能作为实例插入（屏幕不是部件） */
+        if (doc->isComponent()) m_projectComponents.push_back({doc->name(), path});
+        m_componentDocs[doc->name()] = doc.get();
+        if (!entryName.isEmpty() && doc->name() == entryName.toStdString())
+            entryPath = path;
+        m_projectDocs.push_back(std::move(doc));
+    }
+
+    {
+        std::vector<std::string> names;
+        for (auto& c : m_projectComponents) names.push_back(c.first);
+        m_compPanel->setProjectComponents(names);
+    }
+    m_renderer.setComponentResolver([this](const std::string& name) -> const LuiDocument* {
+        auto it = m_componentDocs.find(name);
+        return it == m_componentDocs.end() ? nullptr : it->second;
+    });
+
+    statusBar()->showMessage(QString("工程已打开：%1（%2 个文件）")
+                                 .arg(QFileInfo(manifest).fileName())
+                                 .arg(m_projectComponents.size()), 6000);
+
+    if (entryPath.isEmpty() && !m_projectComponents.empty())
+        entryPath = m_projectComponents.front().second;
+    if (!entryPath.isEmpty()) openFile(entryPath);
+    refreshProjectPanel();
+}
+
+/* ---------------- 新建工程 / 新建组件 ---------------- */
+namespace {
+
+/* 写一个 .lui（带一个可编译的最小内容） */
+bool write_lui(const QString& path, const QString& name, const QString& kind,
+               const QString& defaultText) {
+    QJsonObject props{
+        {"pos", QJsonArray{20, 20}},
+        {"size", QJsonArray{300, 30}},
+        {"text", defaultText},
+        {"color", "0x000000"},
+    };
+    QJsonObject label{
+        {"type", "LLabel"}, {"id", "title"}, {"props", props},
+    };
+    QJsonObject root{
+        {"version", "1.0"},
+        {"name", name},
+        {"kind", kind},
+        {"children", QJsonArray{label}},
+    };
+    if (kind == "screen") root["size"] = QJsonArray{800, 480};
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly)) return false;
+    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    return true;
+}
+
+} // namespace
+
+void MainWindow::onNewProject() {
+    if (m_doc.isModified() && !confirmDiscard()) return;
+
+    bool ok = false;
+    QString name = QInputDialog::getText(this, "新建工程", "工程名称：",
+                                         QLineEdit::Normal, "MyProject", &ok).trimmed();
+    if (!ok || name.isEmpty()) return;
+
+    QString parent = QFileDialog::getExistingDirectory(this, "选择工程存放位置");
+    if (parent.isEmpty()) return;
+
+    QString dir = QDir(parent).absoluteFilePath(name);
+    if (QDir(dir).exists() && !QDir(dir).entryList(QDir::NoDotAndDotDot | QDir::AllEntries).isEmpty()) {
+        QMessageBox::warning(this, "新建工程", "目录已存在且不为空：\n" + dir);
+        return;
+    }
+    QDir().mkpath(dir + "/ui/screens");
+    QDir().mkpath(dir + "/ui/components");
+
+    const QString screenName = "MainScreen";
+    const QString screenPath = dir + "/ui/screens/" + screenName + ".lui";
+    if (!write_lui(screenPath, screenName, "screen", "Hello LVGL++")) {
+        QMessageBox::critical(this, "新建工程", "无法写入：" + screenPath);
+        return;
+    }
+
+    QJsonObject manifest{
+        {"version", "1.0"},
+        {"name", name},
+        {"entry", screenName},
+        {"files", QJsonArray{"ui/screens/" + screenName + ".lui"}},
+    };
+    const QString manifestPath = dir + "/lvglpp.project.json";
+    QFile f(manifestPath);
+    if (!f.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "新建工程", "无法写入：" + manifestPath);
+        return;
+    }
+    f.write(QJsonDocument(manifest).toJson(QJsonDocument::Indented));
+    f.close();
+
+    loadProject(manifestPath);
+    statusBar()->showMessage("已新建工程：" + dir, 6000);
+}
+
+/* 在已打开的工程里新建一个组件（kind: component），并加进清单 */
+void MainWindow::onNewComponent() {
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "新建组件", "请先新建或打开一个工程。");
+        return;
+    }
+    bool ok = false;
+    QString name = QInputDialog::getText(this, "新建组件", "组件名称（C++ 标识符）：",
+                                         QLineEdit::Normal, "MyWidget", &ok).trimmed();
+    if (!ok || name.isEmpty()) return;
+    static const QRegularExpression ident("^[A-Za-z_][A-Za-z0-9_]*$");
+    if (!ident.match(name).hasMatch()) {
+        QMessageBox::warning(this, "新建组件", "名称必须是合法的 C++ 标识符。");
+        return;
+    }
+    if (m_componentDocs.count(name.toStdString())) {
+        QMessageBox::warning(this, "新建组件", "工程里已有同名组件或屏幕。");
+        return;
+    }
+
+    const QString base = QFileInfo(m_projectFile).absolutePath();
+    const QString rel = "ui/components/" + name + ".lui";
+    const QString path = QDir(base).absoluteFilePath(rel);
+    if (QFileInfo::exists(path)) {
+        QMessageBox::warning(this, "新建组件", "文件已存在：" + path);
+        return;
+    }
+    if (!write_lui(path, name, "component", name)) {
+        QMessageBox::critical(this, "新建组件", "无法写入：" + path);
+        return;
+    }
+
+    /* 加进清单 files */
+    QFile mf(m_projectFile);
+    QJsonObject root;
+    if (mf.open(QIODevice::ReadOnly)) {
+        root = QJsonDocument::fromJson(mf.readAll()).object();
+        mf.close();
+    }
+    QJsonArray files = root["files"].toArray();
+    files.append(rel);
+    root["files"] = files;
+    if (mf.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        mf.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+        mf.close();
+    }
+
+    const QString manifest = m_projectFile;
+    loadProject(manifest);
+    openFile(path);
+}
+
+void MainWindow::refreshProjectPanel() {
+    if (m_projectFile.isEmpty()) {
+        m_projectPanel->showEmpty();
+        return;
+    }
+    QString name = QFileInfo(m_projectFile).completeBaseName();
+    QFile f(m_projectFile);
+    if (f.open(QIODevice::ReadOnly)) {
+        auto j = QJsonDocument::fromJson(f.readAll()).object();
+        if (!j["name"].toString().isEmpty()) name = j["name"].toString();
+    }
+    std::vector<ProjectFile> files;
+    for (auto& kv : m_componentDocs) {
+        if (!kv.second) continue;
+        ProjectFile pf;
+        pf.name = kv.first;
+        pf.path = kv.second->filePath();
+        pf.isComponent = kv.second->isComponent();
+        files.push_back(pf);
+    }
+    m_projectPanel->setProject(name, m_projectFile, files);
+    if (!m_doc.filePath().isEmpty()) m_projectPanel->setCurrentFile(m_doc.filePath());
+}
+
+bool MainWindow::updateManifestFiles(const std::function<void(QJsonArray&)>& fn) {
+    QFile f(m_projectFile);
+    if (!f.open(QIODevice::ReadOnly)) return false;
+    auto root = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+    QJsonArray files = root["files"].toArray();
+    fn(files);
+    root["files"] = files;
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    return true;
+}
+
+/* 新建屏幕：与新建组件同流程，放到 ui/screens */
+void MainWindow::onNewScreen() {
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "新建屏幕", "请先新建或打开一个工程。");
+        return;
+    }
+    bool ok = false;
+    QString name = QInputDialog::getText(this, "新建屏幕", "屏幕名称（C++ 标识符）：",
+                                         QLineEdit::Normal, "MyScreen", &ok).trimmed();
+    if (!ok || name.isEmpty()) return;
+    static const QRegularExpression ident("^[A-Za-z_][A-Za-z0-9_]*$");
+    if (!ident.match(name).hasMatch()) {
+        QMessageBox::warning(this, "新建屏幕", "名称必须是合法的 C++ 标识符。");
+        return;
+    }
+    const QString base = QFileInfo(m_projectFile).absolutePath();
+    const QString rel = "ui/screens/" + name + ".lui";
+    const QString path = QDir(base).absoluteFilePath(rel);
+    if (QFileInfo::exists(path) || m_componentDocs.count(name.toStdString())) {
+        QMessageBox::warning(this, "新建屏幕", "同名文件已存在。");
+        return;
+    }
+    if (!write_lui(path, name, "screen", name)) {
+        QMessageBox::critical(this, "新建屏幕", "无法写入：" + path);
+        return;
+    }
+    updateManifestFiles([&](QJsonArray& files) { files.append(rel); });
+    loadProject(m_projectFile);
+    openFile(path);
+}
+
+/* 把外部复制进来的 .lui 收进工程（必要时先复制到 ui/components 或 ui/screens） */
+void MainWindow::onAddProjectFiles() {
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "添加已有文件", "请先新建或打开一个工程。");
+        return;
+    }
+    QStringList paths = QFileDialog::getOpenFileNames(this, "添加已有 .lui 到工程",
+        QFileInfo(m_projectFile).absolutePath(), "LUI (*.lui)");
+    if (paths.isEmpty()) return;
+
+    const QString base = QFileInfo(m_projectFile).absolutePath();
+    QJsonArray rels;
+    for (auto& p : paths) {
+        LuiDocument probe;
+        if (!probe.load(p)) {
+            QMessageBox::warning(this, "添加已有文件", "无法解析：" + p);
+            continue;
+        }
+        QString target = p;
+        if (!p.startsWith(base + "/")) {
+            QString sub = probe.isComponent() ? "/ui/components/" : "/ui/screens/";
+            QDir().mkpath(base + sub);
+            target = base + sub + QFileInfo(p).fileName();
+            QFile::remove(target);
+            if (!QFile::copy(p, target)) {
+                QMessageBox::warning(this, "添加已有文件", "复制失败：" + p);
+                continue;
+            }
+        }
+        rels.append(QDir(base).relativeFilePath(target));
+    }
+    if (rels.isEmpty()) return;
+    updateManifestFiles([&](QJsonArray& files) {
+        for (auto v : rels) files.append(v);
+    });
+    loadProject(m_projectFile);
+}
+
+void MainWindow::removeFromProject(const QString& path) {
+    if (m_projectFile.isEmpty()) return;
+    if (QMessageBox::question(this, "从工程中删除",
+            "从工程移除并删除文件？\n\n" + path) != QMessageBox::Yes)
+        return;
+    const QString base = QFileInfo(m_projectFile).absolutePath();
+    const QString rel = QDir(base).relativeFilePath(path);
+    updateManifestFiles([&](QJsonArray& files) {
+        QJsonArray out;
+        for (auto v : files) if (v.toString() != rel) out.append(v);
+        files = out;
+    });
+    QFile::remove(path);
+    loadProject(m_projectFile);
+}
+
+void MainWindow::onOpenProject() {
+    if (m_doc.isModified() && !confirmDiscard()) return;
+    QString path = QFileDialog::getOpenFileName(this, "打开工程", QString(),
+                                                "LVGL++ 工程 (lvglpp.project.json);;JSON (*.json)");
+    if (!path.isEmpty()) loadProject(path);
+}
+
 void MainWindow::onSave() {
     if (m_doc.filePath().isEmpty()) {
         onSaveAs();
@@ -517,6 +866,47 @@ void MainWindow::onCanvasSize() {
     updateStatusBar();
 }
 
+void MainWindow::onSettings() {
+    SettingsDialog dlg(this);
+    dlg.exec();
+}
+
+/* 构建工程：先 cmake 配置（构建目录为空时），再 cmake --build */
+void MainWindow::onBuildProject() {
+    const QString buildDir = SettingsDialog::buildDir();
+    if (buildDir.isEmpty()) {
+        QMessageBox::information(this, "构建工程", "请先在「设置」里配置 CMake 与构建目录。");
+        onSettings();
+        return;
+    }
+    const QString cmake = SettingsDialog::cmakePath();
+    QDir().mkpath(buildDir);
+    if (!QFileInfo::exists(buildDir + "/CMakeCache.txt")) {
+        QStringList cfg{"-S", QDir::currentPath(), "-B", buildDir,
+                        "-G", SettingsDialog::generator()};
+        for (auto& a : SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts)) cfg << a;
+        QProcess c;
+        c.start(cmake, cfg);
+        if (!c.waitForFinished(60000) || c.exitCode() != 0) {
+            QMessageBox::critical(this, "构建工程",
+                "CMake 配置失败：\n" + QString::fromLocal8Bit(c.readAllStandardError()));
+            return;
+        }
+    }
+    QProcess b;
+    b.start(cmake, {"--build", buildDir, "-j"});
+    statusBar()->showMessage("正在构建…");
+    if (!b.waitForFinished(600000)) {
+        QMessageBox::critical(this, "构建工程", "构建超时。");
+        return;
+    }
+    const QString out = QString::fromLocal8Bit(b.readAllStandardError());
+    if (b.exitCode() == 0)
+        statusBar()->showMessage("构建成功", 5000);
+    else
+        QMessageBox::critical(this, "构建错误", out.right(4000));
+}
+
 void MainWindow::onCompile() {
     onSave();
     if (m_doc.filePath().isEmpty()) {
@@ -525,7 +915,7 @@ void MainWindow::onCompile() {
     }
 
     QProcess proc;
-    QString luicPath = QApplication::applicationDirPath() + "/luic";
+    QString luicPath = SettingsDialog::luicPath();
     QFileInfo luicFi(luicPath);
     if (!luicFi.exists()) {
         luicPath = QApplication::applicationDirPath() + "/../bin/luic";
@@ -541,7 +931,14 @@ void MainWindow::onCompile() {
     QDir().mkpath(outputDir);
     QString outputPath = outputDir + "/" + fi.baseName() + "_ui.hpp";
 
-    proc.start(luicPath, {m_doc.filePath(), "-o", outputPath, "--verbose"});
+    QStringList args;
+    if (!m_projectFile.isEmpty()) {
+        /* 工程模式：一次生成全部文件（含 "@组件" 实例展开） */
+        args << "--project" << m_projectFile << "--verbose";
+    } else {
+        args << m_doc.filePath() << "-o" << outputPath << "--verbose";
+    }
+    proc.start(luicPath, args);
     statusBar()->showMessage("正在编译...");
 
     if (!proc.waitForFinished(10000)) {
@@ -553,8 +950,12 @@ void MainWindow::onCompile() {
     QString stdoutStr = proc.readAllStandardOutput();
     QString stderrStr = proc.readAllStandardError();
     if (proc.exitCode() == 0) {
-        statusBar()->showMessage("编译成功：" + outputPath, 5000);
-        QMessageBox::information(this, "编译成功", "已生成：\n" + outputPath + (stdoutStr.isEmpty() ? "" : "\n\n" + stdoutStr));
+        const QString target = m_projectFile.isEmpty() ? outputPath : m_projectFile;
+        statusBar()->showMessage("编译成功", 5000);
+        QMessageBox::information(this, "编译成功",
+                                 (m_projectFile.isEmpty() ? "已生成：\n" + outputPath
+                                                          : "工程已生成：" + target) +
+                                 (stdoutStr.isEmpty() ? "" : "\n\n" + stdoutStr));
     } else {
         statusBar()->showMessage("编译失败", 5000);
         QString msg = "luic exited with code " + QString::number(proc.exitCode());

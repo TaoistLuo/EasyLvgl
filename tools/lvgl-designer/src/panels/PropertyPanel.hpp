@@ -13,8 +13,10 @@
 #include <QColorDialog>
 #include <QComboBox>
 #include <QCompleter>
+#include <QToolButton>
 #include <QSignalBlocker>
 #include <map>
+#include <vector>
 #include <set>
 #include <QUndoStack>
 #include <functional>
@@ -33,6 +35,8 @@ class PropertyPanel : public QScrollArea {
     QUndoStack* m_undoStack = nullptr;
     RebuildCallback m_rebuild;
     std::function<void(int, int)> m_onRootSize;
+    /** 工程组件解析（"@Name" 实例的参数来自被引用组件的 exports） */
+    std::function<const LuiDocument*(const std::string&)> m_componentResolver;
     /** 查询对象当前实际生效的样式值；返回无效 QVariant 表示不是样式属性 */
     std::function<QVariant(const std::string&, const std::string&)> m_styleValue;
     /** 字段刷新器：只改显示值、不重建控件，用于重建后同步"真实生效值" */
@@ -91,7 +95,8 @@ public:
         idLayout->addRow("ID", idField);
         m_topLayout->addWidget(idGroup);
 
-        auto groups = ComponentSchema::propsFor(node->type);
+        const bool isInstance = !node->type.empty() && node->type[0] == '@';
+        auto groups = isInstance ? instanceGroups(node) : ComponentSchema::propsFor(node->type);
         for (auto& group : groups) {
             auto* gbox = new QGroupBox(QString::fromStdString(group.groupName));
             auto* glayout = new QFormLayout(gbox);
@@ -280,6 +285,7 @@ public:
                     glayout->addRow(qkey, field);
                 }
             }
+            addExportButtons(glayout, node);
             registerFields(glayout);
             m_topLayout->addWidget(gbox);
         }
@@ -313,6 +319,9 @@ public:
     void setStyleValueProvider(std::function<QVariant(const std::string&, const std::string&)> cb) {
         m_styleValue = std::move(cb);
     }
+    void setComponentResolver(std::function<const LuiDocument*(const std::string&)> cb) {
+        m_componentResolver = std::move(cb);
+    }
 
     void showRoot(const std::string& rootId, int w, int h) {
         clearLayout();
@@ -345,6 +354,105 @@ signals:
     void documentModified();
 
 private:
+    /* 实例的属性面板：只有"对象"（位置尺寸）+ 被引用组件导出的参数 */
+    std::vector<PropGroup> instanceGroups(WidgetNode* node) {
+        std::vector<PropGroup> out;
+        for (auto& g : ComponentSchema::propsFor("LButton")) {
+            if (g.groupName == "对象") out.push_back(g);
+        }
+        const LuiDocument* cdoc = m_componentResolver ? m_componentResolver(node->type.substr(1)) : nullptr;
+        if (!cdoc || cdoc->exports().empty()) return out;
+
+        PropGroup params;
+        params.groupName = "组件参数";
+        for (auto& kv : cdoc->exports()) {
+            std::string path = kv.second;
+            auto dot = path.find('.');
+            if (dot == std::string::npos) continue;
+            std::string targetId = path.substr(0, dot);
+            std::string propName = path.substr(dot + 1);
+            if (targetId.rfind("m_", 0) == 0) targetId = targetId.substr(2);
+            if (targetId == "root") continue;          // 根上的样式导出暂不在面板编辑
+
+            const WidgetNode* target = nullptr;
+            std::function<void(const std::vector<WidgetNode>&)> walk =
+                [&](const std::vector<WidgetNode>& nodes) {
+                    for (auto& n : nodes) {
+                        if (n.id == targetId) target = &n;
+                        walk(n.children);
+                    }
+                };
+            walk(cdoc->children());
+            if (!target) continue;
+
+            PropSchema ps;
+            ps.name = kv.first;
+            ps.type = "int";
+            ps.defaultVal = QVariant(0);
+            for (auto& g : ComponentSchema::propsFor(target->type)) {
+                for (auto& p : g.props) {
+                    if (p.name != propName) continue;
+                    ps.type = p.type;
+                    auto it = target->props.find(propName);
+                    ps.defaultVal = (it != target->props.end()) ? it->second : p.defaultVal;
+                }
+            }
+            params.props.push_back(ps);
+        }
+        if (!params.props.empty()) out.push_back(std::move(params));
+        return out;
+    }
+
+    /* 组件作者视角：每个属性行右侧一个"设为导出"按钮 */
+    void addExportButtons(QFormLayout* glayout, WidgetNode* node) {
+        if (!m_doc || !m_doc->isComponent()) return;
+        for (int i = 0; i < glayout->rowCount(); ++i) {
+            QLayoutItem* litem = glayout->itemAt(i, QFormLayout::LabelRole);
+            QLayoutItem* fitem = glayout->itemAt(i, QFormLayout::FieldRole);
+            if (!litem || !fitem || !fitem->widget()) continue;
+            auto* lbl = qobject_cast<QLabel*>(litem->widget());
+            if (!lbl) continue;
+            std::string prop = lbl->text().toStdString();
+            if (prop == "x" || prop == "y" || prop == "width" || prop == "height") continue;
+            if (fitem->widget()->objectName() == "exportRow") continue;
+
+            const std::string path = node->id + "." + prop;
+            const std::string alias = m_doc->exportNameFor(path);
+            QWidget* field = fitem->widget();
+            auto* holder = new QWidget();
+            holder->setObjectName("exportRow");
+            auto* h = new QHBoxLayout(holder);
+            h->setContentsMargins(0, 0, 0, 0);
+            h->setSpacing(2);
+            field->setParent(holder);
+            h->addWidget(field, 1);
+
+            auto* btn = new QToolButton(holder);
+            btn->setAutoRaise(true);
+            btn->setCheckable(true);
+            btn->setChecked(!alias.empty());
+            btn->setText(alias.empty() ? "⇪" : "★");
+            btn->setToolTip(alias.empty() ? "设为导出参数"
+                                          : QString("已导出为 %1（点击取消）")
+                                                .arg(QString::fromStdString(alias)));
+            h->addWidget(btn);
+            connect(btn, &QToolButton::clicked, this, [this, prop, path, btn](bool on) {
+                if (!m_doc || m_currentId.empty()) return;
+                if (on) {
+                    std::string a = prop;
+                    int n = 2;
+                    while (m_doc->exports().count(a)) a = prop + "_" + std::to_string(n++);
+                    m_doc->setExport(a, path);
+                } else {
+                    m_doc->removeExport(m_doc->exportNameFor(path));
+                }
+                emit documentModified();
+                showWidget(m_doc->findById(m_currentId));
+            });
+            glayout->setWidget(i, QFormLayout::FieldRole, holder);
+        }
+    }
+
     QVariant valueFor(WidgetNode* node, const std::string& key, const QVariant& def) {
         if (!node) return def;
         auto it = node->props.find(key);
@@ -396,7 +504,26 @@ private:
                 }
             };
         }
-        /* 颜色行是"色块 + 十六进制输入"的容器 */
+        /* 包了一层的行（导出按钮 / 颜色行）：继续往里找控件 */
+        if (auto* cb = w->findChild<QCheckBox*>()) {
+            return [cb](const QVariant& v) { QSignalBlocker b(cb); cb->setChecked(v.toBool()); };
+        }
+        if (auto* combo = w->findChild<QComboBox*>()) {
+            return [combo](const QVariant& v) {
+                QSignalBlocker b(combo);
+                int idx = combo->findData(v);
+                if (idx < 0) idx = combo->findData(v.toInt());
+                if (idx < 0) idx = combo->findData(v.toString());
+                if (idx < 0) {
+                    combo->addItem(QString("自定义 (%1)").arg(v.toString()), v);
+                    idx = combo->count() - 1;
+                }
+                combo->setCurrentIndex(idx);
+            };
+        }
+        if (auto* pt = w->findChild<QPlainTextEdit*>()) {
+            return [pt](const QVariant& v) { QSignalBlocker b(pt); pt->setPlainText(v.toString()); };
+        }
         if (auto* le = w->findChild<QLineEdit*>()) {
             QPushButton* swatch = w->findChild<QPushButton*>();
             return [le, swatch](const QVariant& v) {

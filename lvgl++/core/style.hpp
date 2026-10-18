@@ -77,6 +77,103 @@ inline const lv_font_t* font_by_size(int px) {
     return &lv_font_montserrat_48;
 }
 
+
+namespace detail {
+
+/**
+ * @brief LStyle::apply_to() 逐条复制时使用的属性表
+ *
+ * lv_obj_add_style() 只保存指针、不复制内容；LStyle 常常是栈上的临时对象
+ * （生成代码里就是 `{ LStyle st; ...; st.apply_to(obj); }`），样式对象析构后
+ * 对象会持有悬垂指针，渲染时读到已释放内存，表现为"样式没生效"。
+ * 因此 apply_to() 用本表把每条属性复制到对象的本地样式上。
+ *
+ * 本表与下面的 set_* 一一对应；新增 setter 时请同步追加（漏加只会让该属性
+ * 不随 apply_to 生效）。
+ */
+inline const lv_style_prop_t* style_prop_list() {
+    static const lv_style_prop_t list[] = {
+        LV_STYLE_ARC_COLOR,
+        LV_STYLE_ARC_OPA,
+        LV_STYLE_ARC_ROUNDED,
+        LV_STYLE_ARC_WIDTH,
+        LV_STYLE_BASE_DIR,
+        LV_STYLE_BG_COLOR,
+        LV_STYLE_BG_GRAD_COLOR,
+        LV_STYLE_BG_GRAD_DIR,
+        LV_STYLE_BG_GRAD_STOP,
+        LV_STYLE_BG_IMAGE_OPA,
+        LV_STYLE_BG_IMAGE_RECOLOR,
+        LV_STYLE_BG_IMAGE_RECOLOR_OPA,
+        LV_STYLE_BG_IMAGE_SRC,
+        LV_STYLE_BG_IMAGE_TILED,
+        LV_STYLE_BG_MAIN_STOP,
+        LV_STYLE_BG_OPA,
+        LV_STYLE_BLEND_MODE,
+        LV_STYLE_BORDER_COLOR,
+        LV_STYLE_BORDER_OPA,
+        LV_STYLE_BORDER_POST,
+        LV_STYLE_BORDER_SIDE,
+        LV_STYLE_BORDER_WIDTH,
+        LV_STYLE_CLIP_CORNER,
+        LV_STYLE_IMAGE_OPA,
+        LV_STYLE_IMAGE_RECOLOR,
+        LV_STYLE_IMAGE_RECOLOR_OPA,
+        LV_STYLE_LINE_COLOR,
+        LV_STYLE_LINE_DASH_GAP,
+        LV_STYLE_LINE_DASH_WIDTH,
+        LV_STYLE_LINE_OPA,
+        LV_STYLE_LINE_ROUNDED,
+        LV_STYLE_LINE_WIDTH,
+        LV_STYLE_MARGIN_BOTTOM,
+        LV_STYLE_MARGIN_LEFT,
+        LV_STYLE_MARGIN_RIGHT,
+        LV_STYLE_MARGIN_TOP,
+        LV_STYLE_MAX_HEIGHT,
+        LV_STYLE_MAX_WIDTH,
+        LV_STYLE_MIN_HEIGHT,
+        LV_STYLE_MIN_WIDTH,
+        LV_STYLE_OPA,
+        LV_STYLE_OUTLINE_COLOR,
+        LV_STYLE_OUTLINE_OPA,
+        LV_STYLE_OUTLINE_PAD,
+        LV_STYLE_OUTLINE_WIDTH,
+        LV_STYLE_PAD_BOTTOM,
+        LV_STYLE_PAD_COLUMN,
+        LV_STYLE_PAD_LEFT,
+        LV_STYLE_PAD_RIGHT,
+        LV_STYLE_PAD_ROW,
+        LV_STYLE_PAD_TOP,
+        LV_STYLE_RADIUS,
+        LV_STYLE_SHADOW_COLOR,
+        LV_STYLE_SHADOW_OFS_X,
+        LV_STYLE_SHADOW_OFS_Y,
+        LV_STYLE_SHADOW_OPA,
+        LV_STYLE_SHADOW_SPREAD,
+        LV_STYLE_SHADOW_WIDTH,
+        LV_STYLE_TEXT_ALIGN,
+        LV_STYLE_TEXT_COLOR,
+        LV_STYLE_TEXT_DECOR,
+        LV_STYLE_TEXT_FONT,
+        LV_STYLE_TEXT_LETTER_SPACE,
+        LV_STYLE_TEXT_LINE_SPACE,
+        LV_STYLE_TEXT_OPA,
+        LV_STYLE_TRANSFORM_PIVOT_X,
+        LV_STYLE_TRANSFORM_PIVOT_Y,
+        LV_STYLE_TRANSFORM_ROTATION,
+        LV_STYLE_TRANSFORM_SCALE_X,
+        LV_STYLE_TRANSFORM_SCALE_Y,
+        LV_STYLE_TRANSFORM_SKEW_X,
+        LV_STYLE_TRANSFORM_SKEW_Y,
+        LV_STYLE_TRANSLATE_X,
+        LV_STYLE_TRANSLATE_Y,
+        LV_STYLE_PROP_INV
+    };
+    return list;
+}
+
+} // namespace detail
+
 class LStyle {
 private:
     lv_style_t m_style;      ///< LVGL样式对象
@@ -387,8 +484,22 @@ public:
 
     LStyle& set_text_font_size(int px) { lv_style_set_text_font(&m_style, font_by_size(px)); return *this; }
 
+    /**
+     * @brief 把样式应用到对象
+     *
+     * 注意：lv_obj_add_style() 只保存指针，不复制。LStyle 通常是栈上的临时对象
+     * （生成代码里就是 `{ LStyle st; ...; st.apply_to(obj); }`），直接传 &m_style
+     * 会在 LStyle 析构后留下悬垂指针，对象渲染时读到已释放内存，样式表现为"没生效"。
+     * 因此这里复制一份到堆上，并注册删除回调在对象销毁时释放。
+     */
     void apply_to(lv_obj_t* obj, lv_style_selector_t selector = 0) {
-        lv_obj_add_style(obj, &m_style, selector);
+        /* 逐条复制到对象本地样式，避免 LStyle 析构后对象持有悬垂指针 */
+        const lv_style_prop_t* list = detail::style_prop_list();
+        for (int i = 0; list[i] != LV_STYLE_PROP_INV; i++) {
+            lv_style_value_t value;
+            if (lv_style_get_prop(&m_style, list[i], &value) == LV_STYLE_RES_FOUND)
+                lv_obj_set_local_style_prop(obj, list[i], value, selector);
+        }
     }
     
     /**

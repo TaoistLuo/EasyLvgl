@@ -171,11 +171,19 @@ static void applyCheckableAlignment(lv_obj_t* obj, const WidgetNode* node = null
     lv_obj_set_style_pad_all(obj, 1, LV_PART_INDICATOR);
 }
 
-lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
+lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, bool selectable) {
     lv_obj_t* obj = nullptr;
     lv_obj_t* targetParent = parent ? parent : lv_scr_act();
 
-    if (node.type == "LButton") {
+    const bool isInstance = !node.type.empty() && node.type[0] == '@';
+
+    if (isInstance) {
+        /* 组件实例：透明根容器，稍后把组件内容递归建到它下面 */
+        obj = lv_obj_create(targetParent);
+        lv_obj_remove_style_all(obj);
+        lv_obj_remove_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    } else if (node.type == "LButton") {
         obj = lv_button_create(targetParent);
     } else if (node.type == "LLabel") {
         obj = lv_label_create(targetParent);
@@ -299,8 +307,27 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
     }
 
     if (obj) {
-        registerObject(node.id, node.type, obj);
+        if (selectable) {
+            registerObject(node.id, node.type, obj);
+        } else {
+            /* 组件内部节点：不可单独选中，点击冒泡到实例根，同时记录以便应用导出参数 */
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE);
+            m_instanceObjects[node.id] = obj;
+        }
         applyProps(obj, node);
+
+        if (isInstance && m_instanceDepth < 8) {
+            const LuiDocument* cdoc = m_componentResolver ? m_componentResolver(node.type.substr(1)) : nullptr;
+            if (cdoc) {
+                auto saved = m_instanceObjects;
+                m_instanceObjects.clear();
+                m_instanceDepth++;
+                for (const auto& c : cdoc->children()) createWidget(c, obj, false);
+                m_instanceDepth--;
+                applyInstanceExports(obj, node, *cdoc);
+                m_instanceObjects = saved;
+            }
+        }
 
         if (node.type == "LCheckbox") {
             applyCheckableAlignment(obj, &node);
@@ -317,7 +344,7 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent) {
         }
 
         for (const auto& child : node.children) {
-            createWidget(child, obj);
+            createWidget(child, obj, selectable);
         }
 
         if (node.type == "LGridLayout" && node.props.count("columns")) {
@@ -1177,6 +1204,52 @@ void LvglRenderer::updateStackedNav(const std::string& id) {
     lv_label_set_text(nav.indexLabel, text.c_str());
 }
 
+/* 把实例上的参数应用到底层组件的对应节点上：
+ * 导出是 "<节点id>.<属性名>"，这里复用 applyProps，保证与组件内部属性的应用方式一致。 */
+void LvglRenderer::applyInstanceExports(lv_obj_t* instanceRoot, const WidgetNode& node,
+                                        const LuiDocument& componentDoc) {
+    std::function<const WidgetNode*(const std::vector<WidgetNode>&, const std::string&)> findNode =
+        [&](const std::vector<WidgetNode>& nodes, const std::string& id) -> const WidgetNode* {
+            for (const auto& n : nodes) {
+                if (n.id == id) return &n;
+                if (auto* r = findNode(n.children, id)) return r;
+            }
+            return nullptr;
+        };
+
+    for (const auto& kv : node.props) {
+        const std::string& key = kv.first;
+        if (key == "pos" || key == "size" || key == "align" || key == "hidden" || key == "clickable")
+            continue;
+        auto ex = componentDoc.exports().find(key);
+        if (ex == componentDoc.exports().end()) continue;      // 普通样式属性，已由 applyProps 处理
+
+        std::string path = ex->second;
+        auto dot = path.find('.');
+        if (dot == std::string::npos) continue;
+        std::string targetId = path.substr(0, dot);
+        std::string propName = path.substr(dot + 1);
+        if (targetId.rfind("m_", 0) == 0) targetId = targetId.substr(2);
+
+        lv_obj_t* targetObj = nullptr;
+        WidgetNode tmp;
+        if (targetId == "root") {
+            targetObj = instanceRoot;
+            tmp.type = "LObj";
+        } else {
+            auto objIt = m_instanceObjects.find(targetId);
+            if (objIt == m_instanceObjects.end()) continue;
+            targetObj = objIt->second;
+            const WidgetNode* tn = findNode(componentDoc.children(), targetId);
+            if (!tn) continue;
+            tmp.type = tn->type;
+        }
+        tmp.id = targetId;
+        tmp.props[propName] = kv.second;
+        applyProps(targetObj, tmp);
+    }
+}
+
 void LvglRenderer::registerObject(const std::string& id, const std::string& type, lv_obj_t* obj) {
     m_objects[id] = obj;
     m_idMap[obj] = id;
@@ -1191,6 +1264,10 @@ void LvglRenderer::registerObject(const std::string& id, const std::string& type
         auto* self = static_cast<LvglRenderer*>(lv_event_get_user_data(e));
         if (!self) return;
         lv_obj_t* target = static_cast<lv_obj_t*>(lv_event_get_target(e));
+        /* 组件实例内部的子对象没有注册：向上找到最近的已注册对象（实例根） */
+        while (target && self->m_idMap.find(target) == self->m_idMap.end())
+            target = lv_obj_get_parent(target);
+        if (!target) return;
         lv_obj_t* selectionTarget = target;
 
         lv_obj_t* parent = lv_obj_get_parent(target);
@@ -1338,8 +1415,23 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
         self->m_pendingMutex.unlock();
     }, LV_EVENT_PRESSED, this);
 
-    for (const auto& child : doc.children()) {
-        createWidget(child, nullptr);
+    if (doc.isComponent()) {
+        /* 组件文档：预览时建一个透明根容器（与生成的 LObj 根一致） */
+        lv_obj_t* root = lv_obj_create(screen);
+        lv_obj_remove_style_all(root);
+        lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_pos(root, 20, 20);
+        lv_obj_set_size(root, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        m_objects[kRootId] = root;
+        m_idMap[root] = kRootId;
+        m_types[kRootId] = "LComponentRoot";
+        for (const auto& child : doc.children()) {
+            createWidget(child, root);
+        }
+    } else {
+        for (const auto& child : doc.children()) {
+            createWidget(child, nullptr);
+        }
     }
 
     /* 有些控件默认没有 LV_OBJ_FLAG_CLICKABLE（如 lv_line / lv_arc / lv_bar / lv_led /

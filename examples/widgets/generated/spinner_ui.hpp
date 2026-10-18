@@ -19,11 +19,6 @@ public:
         m_w->set_color(0x2196F3)
               .set_pos(20, 20)
               .set_size(70, 70);
-        {
-            LStyle st;
-            st.set_color(0x2196F3);
-            st.apply_to(m_w->native());
-        }
 
     }
 

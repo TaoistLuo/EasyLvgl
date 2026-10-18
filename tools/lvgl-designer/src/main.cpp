@@ -27,7 +27,12 @@ int main(int argc, char* argv[]) {
     window.show();
 
     if (argc > 1) {
-        window.openFile(QString::fromLocal8Bit(argv[1]));
+        QString arg = QString::fromLocal8Bit(argv[1]);
+        /* 传工程清单（.json）则按工程打开，传 .lui 则单文件打开 */
+        if (arg.endsWith(".json", Qt::CaseInsensitive))
+            window.loadProject(arg);
+        else
+            window.openFile(arg);
     }
 
     return app.exec();

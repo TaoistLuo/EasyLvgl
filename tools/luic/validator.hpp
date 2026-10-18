@@ -5,11 +5,15 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
+#include <functional>
 
 namespace luic {
 
 class Validator {
     const ComponentRegistry& m_registry;
+    /* 工程模式下的全部文档（名字 -> 文档），用于解析 "@Name" 实例 */
+    const std::map<std::string, const lui_document_t*>* m_components = nullptr;
 
     static const std::set<std::string>& base_props() {
         static const std::set<std::string> s = {
@@ -39,6 +43,10 @@ class Validator {
     }
 
 public:
+    void setComponents(const std::map<std::string, const lui_document_t*>* comps) {
+        m_components = comps;
+    }
+
     explicit Validator(const ComponentRegistry& reg) : m_registry(reg) {}
 
     std::vector<std::string> validate(const lui_document_t& doc) {
@@ -50,6 +58,41 @@ public:
 
         if (doc.children.empty()) {
             errors.push_back("document has no children");
+        }
+
+        /* ---- kind ---- */
+        if (doc.kind != "screen" && doc.kind != "component") {
+            errors.push_back("invalid kind '" + doc.kind + "' (expected 'screen' or 'component')");
+        }
+        if (doc.is_component() && doc.hadSize) {
+            errors.push_back("component '" + doc.name + "' must not declare 'size'");
+        }
+        if (!doc.is_component() && !doc.exports.empty()) {
+            errors.push_back("only components can declare 'exports' (doc '" + doc.name + "')");
+        }
+
+        /* ---- exports: "<id>.<prop>" 必须指向存在的节点与属性 ---- */
+        for (auto& kv : doc.exports) {
+            std::string path = kv.second;
+            auto dot = path.find('.');
+            if (dot == std::string::npos) {
+                errors.push_back("export '" + kv.first + "': expected '<id>.<property>', got '" + path + "'");
+                continue;
+            }
+            std::string nodeId = path.substr(0, dot);
+            std::string propName = path.substr(dot + 1);
+            if (nodeId.rfind("m_", 0) == 0) nodeId = nodeId.substr(2);   // 兼容 m_title 写法
+            auto* target = find_node(doc, nodeId);
+            if (!target) {
+                errors.push_back("export '" + kv.first + "': node '" + nodeId + "' not found");
+                continue;
+            }
+            auto* cdef = m_registry.find(target->type);
+            if (!cdef) continue;
+            if (!cdef->find_prop(propName) && !style_props().count(propName)) {
+                errors.push_back("export '" + kv.first + "': '" + target->type +
+                                 "' has no property '" + propName + "'");
+            }
         }
 
         for (auto& child : doc.children) {
@@ -80,7 +123,59 @@ private:
             [&](const char* item) { return value == item; });
     }
 
+    static const widget_node_t* find_node(const lui_document_t& doc, const std::string& id) {
+        const widget_node_t* found = nullptr;
+        std::function<void(const std::vector<widget_node_t>&)> walk =
+            [&](const std::vector<widget_node_t>& nodes) {
+                for (auto& n : nodes) {
+                    if (n.id == id) found = &n;
+                    walk(n.children);
+                }
+            };
+        walk(doc.children);
+        return found;
+    }
+
+    /* "@MyCard" 实例：父文件里声明一个组件实例 */
+    void validate_instance(const widget_node_t& node, std::vector<std::string>& errors) {
+        std::string compName = node.type.substr(1);
+        if (!m_components) {
+            errors.push_back(node.id + ": component instance '@" + compName +
+                             "' requires project mode (luic --project ...)");
+            return;
+        }
+        auto it = m_components->find(compName);
+        if (it == m_components->end()) {
+            errors.push_back(node.id + ": unknown component '@" + compName + "'");
+            return;
+        }
+        const lui_document_t* cdoc = it->second;
+        if (!cdoc->is_component()) {
+            errors.push_back(node.id + ": '@" + compName + "' is not a component (kind: screen)");
+            return;
+        }
+        if (!node.events.empty()) {
+            errors.push_back(node.id + ": component instances do not support 'events' yet");
+        }
+        for (auto& prop : node.props) {
+            if (prop.name == "pos" || prop.name == "size" || prop.name == "align" ||
+                prop.name == "hidden" || prop.name == "clickable") continue;
+            if (style_props().count(prop.name)) continue;
+            if (!cdoc->exports.count(prop.name)) {
+                errors.push_back(node.id + ": '@" + compName + "' has no exported parameter '" +
+                                 prop.name + "'");
+            }
+        }
+        for (auto& child : node.children) {
+            validate_node(child, errors);
+        }
+    }
+
     void validate_node(const widget_node_t& node, std::vector<std::string>& errors) {
+        if (!node.type.empty() && node.type[0] == '@') {
+            validate_instance(node, errors);
+            return;
+        }
         auto* comp = m_registry.find(node.type);
         if (!comp) {
             errors.push_back("unknown component type: " + node.type);

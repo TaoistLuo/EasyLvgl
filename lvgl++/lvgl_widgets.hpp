@@ -11,6 +11,7 @@
  */
 
 // Buttons
+#include "lvgl++/widgets/obj.hpp"
 #include "lvgl++/widgets/button.hpp"
 #include "lvgl++/widgets/imagebutton.hpp"
 #include "lvgl++/widgets/checkbox.hpp"
