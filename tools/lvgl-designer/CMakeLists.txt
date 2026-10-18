@@ -4,6 +4,7 @@ project(lvgl-designer LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 find_package(PkgConfig REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
@@ -36,6 +37,7 @@ add_executable(lvgl-designer
     src/panels/TreePanel.hpp
     src/panels/ProjectPanel.hpp
     src/panels/OutputPanel.hpp
+    resources/icons/icons.qrc
     src/panels/TreePanel.cpp
     src/commands/UndoCommands.hpp
     src/commands/UndoCommands.cpp

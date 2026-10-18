@@ -57,7 +57,8 @@ class MainWindow : public QMainWindow {
     std::map<std::string, LuiDocument*> m_componentDocs;       // 名字 -> 文档
     std::vector<std::pair<std::string, QString>> m_projectComponents;  // (名字, 路径)
 
-    QDockWidget* m_compDock;
+    QDockWidget* m_compDock = nullptr;
+    QDockWidget* m_leftDock = nullptr;
     QDockWidget* m_projectDock;
     QDockWidget* m_treeDock;
     QDockWidget* m_propDock;
@@ -117,6 +118,7 @@ private:
     void onSettings();
     void onBuildProject();
     void onRunProject();
+    void onBuildAndRun();
     void onApplyLayoutVBox();
     void onApplyLayoutHBox();
     void onApplyLayoutGrid();

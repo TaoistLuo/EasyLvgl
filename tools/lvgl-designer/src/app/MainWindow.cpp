@@ -8,9 +8,17 @@
 #include <QTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPainter>
+#include <QPixmap>
+#include <QPolygonF>
+#include <QTabWidget>
 #include <QSettings>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QPainter>
+#include <QPixmap>
+#include <QPolygonF>
+#include <QTabWidget>
 #include <QSettings>
 #include <QInputDialog>
 #include <QRegularExpression>
@@ -140,13 +148,10 @@ void MainWindow::setupMenus() {
     editMenu->addAction("添加图片资源(&I)...", this, &MainWindow::onAddImageResource);
 
     auto* viewMenu = menuBar()->addMenu("视图(&V)");
-    m_compDock->toggleViewAction()->setText("组件(&C)");
-    viewMenu->addAction(m_compDock->toggleViewAction());
-    viewMenu->addAction(m_projectDock->toggleViewAction());
+    m_leftDock->toggleViewAction()->setText("组件 / 工程(&C)");
+    viewMenu->addAction(m_leftDock->toggleViewAction());
     viewMenu->addAction(m_buildDock->toggleViewAction());
     viewMenu->addAction(m_runDock->toggleViewAction());
-    m_treeDock->toggleViewAction()->setText("组件树(&T)");
-    viewMenu->addAction(m_treeDock->toggleViewAction());
     m_propDock->toggleViewAction()->setText("属性(&P)");
     viewMenu->addAction(m_propDock->toggleViewAction());
     viewMenu->addSeparator();
@@ -161,6 +166,7 @@ void MainWindow::setupMenus() {
     buildMenu->addAction("编译 .lui(&C)", this, &MainWindow::onCompile, QKeySequence("F5"));
     buildMenu->addAction("构建工程(&B)", this, &MainWindow::onBuildProject, QKeySequence("Ctrl+B"));
     buildMenu->addAction("运行(&R)", this, &MainWindow::onRunProject, QKeySequence("Ctrl+R"));
+    buildMenu->addAction("全构建并运行(&A)", this, &MainWindow::onBuildAndRun, QKeySequence("Ctrl+F5"));
     buildMenu->addAction("设置(&S)...", this, &MainWindow::onSettings);
 
     auto* helpMenu = menuBar()->addMenu("帮助(&H)");
@@ -168,44 +174,194 @@ void MainWindow::setupMenus() {
     helpMenu->addAction("关于 Qt(&Q)", this, &QApplication::aboutQt);
 }
 
+
+/* 自绘图标：主题图标在深色工具栏上多为黑色，且部分名称缺失。
+ * 这里用 QPainter 画一组浅色线框图标，保证任何系统上都清晰可见。 */
+namespace {
+
+QIcon makeIcon(const QString& kind) {
+    const QColor fg(0xd8, 0xd8, 0xd8);
+    const QColor accent(0x4c, 0xc0, 0x6a);   // 运行类用绿色，和 Qt Creator 一致
+    QPixmap pm(32, 32);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    if (kind == "compile") {                       // 环形箭头（重新生成）
+        p.setPen(QPen(fg, 2.4, Qt::SolidLine, Qt::RoundCap));
+        p.drawArc(QRectF(7, 7, 18, 18), 40 * 16, 280 * 16);
+        QPolygonF head; head << QPointF(22,4) << QPointF(27,10) << QPointF(19,11);
+        p.setBrush(fg); p.setPen(Qt::NoPen); p.drawPolygon(head);
+    } else if (kind == "build") {                  // 锤子
+        p.setPen(QPen(fg, 3, Qt::SolidLine, Qt::RoundCap));
+        p.drawLine(QPointF(11, 24), QPointF(21, 12));
+        p.setBrush(fg); p.setPen(Qt::NoPen);
+        p.save(); p.translate(21, 9); p.rotate(45);
+        p.drawRoundedRect(QRectF(-7, -5, 14, 10), 2, 2); p.restore();
+    } else if (kind == "run") {                    // 播放三角（绿）
+        p.setBrush(accent); p.setPen(Qt::NoPen);
+        QPolygonF tri; tri << QPointF(11,7) << QPointF(26,16) << QPointF(11,25); p.drawPolygon(tri);
+    } else if (kind == "buildrun") {               // 三角 + 构建条
+        p.setPen(QPen(fg, 2.4, Qt::SolidLine, Qt::RoundCap));
+        p.drawLine(QPointF(6, 9), QPointF(6, 23));
+        p.setBrush(accent); p.setPen(Qt::NoPen);
+        QPolygonF tri2; tri2 << QPointF(11,9) << QPointF(25,16) << QPointF(11,23); p.drawPolygon(tri2);
+    } else if (kind == "vbox") {                   // 三条横线
+        p.setPen(QPen(fg, 3, Qt::SolidLine, Qt::RoundCap));
+        for (int i = 0; i < 3; i++) p.drawLine(QPointF(8, 10 + i * 6), QPointF(24, 10 + i * 6));
+    } else if (kind == "hbox") {                   // 三条竖线
+        p.setPen(QPen(fg, 3, Qt::SolidLine, Qt::RoundCap));
+        for (int i = 0; i < 3; i++) p.drawLine(QPointF(10 + i * 6, 8), QPointF(10 + i * 6, 24));
+    } else if (kind == "grid") {                   // 2x2 方格
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(QRectF(7, 7, 8, 8));   p.drawRect(QRectF(17, 7, 8, 8));
+        p.drawRect(QRectF(7, 17, 8, 8));  p.drawRect(QRectF(17, 17, 8, 8));
+    } else if (kind == "stacked") {                // 叠放
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(QRectF(9, 5, 14, 14));
+        p.drawRect(QRectF(5, 11, 14, 14));
+    } else if (kind == "new") {                    // 空白页 + 加号
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(6, 5, 14, 20), 2, 2);
+        p.drawLine(QPointF(20, 18), QPointF(27, 18));
+        p.drawLine(QPointF(23.5, 14.5), QPointF(23.5, 21.5));
+    } else if (kind == "open") {                   // 文件夹
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        QPolygonF folder;
+        folder << QPointF(6,10) << QPointF(14,10) << QPointF(16,13)
+               << QPointF(26,13) << QPointF(26,23) << QPointF(6,23);
+        p.drawPolygon(folder);
+    } else if (kind == "save") {                   // 软盘
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(6, 6, 20, 20), 2, 2);
+        p.drawRect(QRectF(10, 6, 12, 7));
+        p.drawRect(QRectF(10, 17, 12, 9));
+    } else if (kind == "cut") {                    // 剪刀（加粗）
+        p.setPen(QPen(fg, 3, Qt::SolidLine, Qt::RoundCap));
+        p.drawLine(QPointF(11, 7), QPointF(21, 22));
+        p.drawLine(QPointF(21, 7), QPointF(11, 22));
+        p.setBrush(Qt::NoBrush);
+        p.drawEllipse(QPointF(8, 24), 4, 4);
+        p.drawEllipse(QPointF(24, 24), 4, 4);
+    } else if (kind == "copy") {                   // 两张纸（实心+描边）
+        p.setPen(QPen(fg, 2));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(5, 10, 14, 17), 2, 2);
+        p.setBrush(fg);
+        p.drawRoundedRect(QRectF(13, 5, 14, 17), 2, 2);
+    } else if (kind == "paste") {                  // 剪贴板（粗框 + 实心夹子）
+        p.setPen(QPen(fg, 2.5));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(6, 6, 20, 22), 2, 2);
+        p.setBrush(fg);
+        p.drawRoundedRect(QRectF(11, 3, 10, 6), 1, 1);
+    } else if (kind == "delete") {                 // 垃圾桶（加粗）
+        p.setPen(QPen(fg, 2.6, Qt::SolidLine, Qt::RoundCap));
+        p.drawLine(QPointF(7, 10), QPointF(25, 10));
+        p.drawLine(QPointF(13, 6), QPointF(19, 6));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(9, 12, 14, 15), 2, 2);
+        p.drawLine(QPointF(14, 16), QPointF(14, 24));
+        p.drawLine(QPointF(18, 16), QPointF(18, 24));
+    } else if (kind == "undo" || kind == "redo") { // 弧形箭头
+        p.setPen(QPen(fg, 2.4, Qt::SolidLine, Qt::RoundCap));
+        p.drawArc(QRectF(7, 9, 18, 16), 30 * 16, 240 * 16);
+        QPolygonF head;
+        if (kind == "undo") head << QPointF(8,12) << QPointF(14,10) << QPointF(13,17);
+        else                head << QPointF(24,12) << QPointF(18,10) << QPointF(19,17);
+        p.setBrush(fg); p.setPen(Qt::NoPen); p.drawPolygon(head);
+    } else if (kind == "break") {                  // 断开布局
+        p.setPen(QPen(fg, 2.6, Qt::SolidLine, Qt::RoundCap));
+        p.drawLine(QPointF(8, 8), QPointF(24, 24));
+        p.drawLine(QPointF(24, 8), QPointF(8, 24));
+    }
+    p.end();
+    return QIcon(pm);
+}
+
+} // namespace
+
 void MainWindow::setupToolbar() {
+    /* 剪切/复制/粘贴/删除：使用 Lucide 图标（ISC 许可），随 qrc 打包；
+     * 资源缺失时回退到自绘图标 */
+    auto svgIcon = [this](const char* res, const char* fb) {
+        QIcon ic(QString(":/icons/%1").arg(QString::fromLatin1(res)));
+        /* Qt5.7 的 SVG 插件在部分环境下加载失败：图标对象非空但没有像素，
+         * 所以用"能否取到 16x16 像素"来判断可用性 */
+        if (ic.pixmap(16, 16).isNull()) ic = makeIcon(QString::fromLatin1(fb));
+        return ic;
+    };
+
     auto* toolbar = addToolBar("主工具栏");
     toolbar->setMovable(false);
-    toolbar->addAction("新建", this, &MainWindow::onNew);
-    toolbar->addAction("打开", this, &MainWindow::onOpen);
-    toolbar->addAction("保存", this, &MainWindow::onSave);
+    toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);   // 图标 + 文字
+    toolbar->setIconSize(QSize(16, 16));
+    toolbar->addAction(makeIcon("new"), "新建", this, &MainWindow::onNew);
+    toolbar->addAction(makeIcon("open"), "打开", this, &MainWindow::onOpen);
+    toolbar->addAction(makeIcon("save"), "保存", this, &MainWindow::onSave);
     toolbar->addSeparator();
-    toolbar->addAction("编译", this, &MainWindow::onCompile);
-    toolbar->addAction("构建", this, &MainWindow::onBuildProject);
-    toolbar->addAction("运行", this, &MainWindow::onRunProject);
+    /* 构建相关：图标 + 文字，悬停有提示 */
+    auto* aCompile = toolbar->addAction(makeIcon("compile"),
+                                        "编译", this, &MainWindow::onCompile);
+    aCompile->setToolTip("生成代码（luic，F5）");
+    auto* aBuild = toolbar->addAction(makeIcon("build"),
+                                      "构建", this, &MainWindow::onBuildProject);
+    aBuild->setToolTip("构建工程（Ctrl+B）");
+    auto* aRun = toolbar->addAction(makeIcon("run"),
+                                    "运行", this, &MainWindow::onRunProject);
+    aRun->setToolTip("运行（Ctrl+R）");
+    auto* aBuildRun = toolbar->addAction(makeIcon("buildrun"),
+                                         "构建运行", this, &MainWindow::onBuildAndRun);
+    aBuildRun->setToolTip("全构建并运行（Ctrl+F5）");
     toolbar->addSeparator();
-    toolbar->addAction("剪切", this, &MainWindow::onCut);
-    toolbar->addAction("复制", this, &MainWindow::onCopy);
-    toolbar->addAction("粘贴", this, &MainWindow::onPaste);
-    toolbar->addAction("删除", this, &MainWindow::onDelete);
+    toolbar->addAction(makeIcon("cut"), "剪切", this, &MainWindow::onCut);
+    toolbar->addAction(makeIcon("copy"), "复制", this, &MainWindow::onCopy);
+    toolbar->addAction(makeIcon("paste"), "粘贴", this, &MainWindow::onPaste);
+    toolbar->addAction(makeIcon("delete"), "删除", this, &MainWindow::onDelete);
     toolbar->addSeparator();
-    toolbar->addAction(m_undoStack->createUndoAction(this, "撤销"));
-    toolbar->addAction(m_undoStack->createRedoAction(this, "重做"));
+    auto* undoAct = m_undoStack->createUndoAction(this, "撤销");
+    undoAct->setIcon(makeIcon("undo"));
+    toolbar->addAction(undoAct);
+    auto* redoAct = m_undoStack->createRedoAction(this, "重做");
+    redoAct->setIcon(makeIcon("redo"));
+    toolbar->addAction(redoAct);
+    auto* layoutBar = addToolBar("布局工具栏");
+    layoutBar->setMovable(false);
+    layoutBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    layoutBar->setIconSize(QSize(16, 16));
+    layoutBar->addAction(makeIcon("vbox"),
+                       "垂直", this, &MainWindow::onApplyLayoutVBox);
+    layoutBar->addAction(makeIcon("hbox"),
+                       "水平", this, &MainWindow::onApplyLayoutHBox);
+    layoutBar->addAction(makeIcon("grid"),
+                       "网格", this, &MainWindow::onApplyLayoutGrid);
+    layoutBar->addAction(makeIcon("stacked"),
+                       "堆叠", this, &MainWindow::onApplyLayoutStacked);
     toolbar->addSeparator();
-    toolbar->addAction("垂直布局", this, &MainWindow::onApplyLayoutVBox);
-    toolbar->addAction("水平布局", this, &MainWindow::onApplyLayoutHBox);
-    toolbar->addAction("网格布局", this, &MainWindow::onApplyLayoutGrid);
-    toolbar->addAction("堆叠布局", this, &MainWindow::onApplyLayoutStacked);
-    toolbar->addSeparator();
-    toolbar->addAction("解除布局", this, &MainWindow::onBreakLayout);
+    layoutBar->addAction(makeIcon("break"),
+                       "解除", this, &MainWindow::onBreakLayout);
 }
 
 void MainWindow::setupDocks() {
-    m_compDock = new QDockWidget("组件", this);
-    m_compDock->setWidget(m_compPanel);
-    m_compDock->setFeatures(QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_compDock);
-
-    m_projectDock = new QDockWidget("工程", this);
+    /* 左侧：一个停靠面板里放「组件 / 工程 / 组件树」三个页签，
+     * 避免多个 QDockWidget tabify 之后留下空白 tab 条 */
+    m_leftDock = new QDockWidget("组件 / 工程", this);
+    m_leftDock->setFeatures(QDockWidget::DockWidgetMovable);
+    auto* leftTabs = new QTabWidget(m_leftDock);
+    leftTabs->setDocumentMode(true);
+    /* 页签顺序（左→右）：工程 / 组件 / 组件树 */
     m_projectPanel = new ProjectPanel(this);
-    m_projectDock->setWidget(m_projectPanel);
-    m_projectDock->setFeatures(QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_projectDock);
+    leftTabs->addTab(m_projectPanel, "工程");
+    leftTabs->addTab(m_compPanel, "组件");
+    leftTabs->addTab(m_treePanel, "组件树");
+    leftTabs->setCurrentIndex(0);
+    m_leftDock->setWidget(leftTabs);
+    addDockWidget(Qt::LeftDockWidgetArea, m_leftDock);
 
     m_buildDock = new QDockWidget("编译输出", this);
     m_buildPanel = new OutputPanel(this);
@@ -224,15 +380,7 @@ void MainWindow::setupDocks() {
     m_buildPanel->setMinimumHeight(60);
     m_runPanel->setMinimumHeight(60);
     resizeDocks({m_buildDock, m_runDock}, {200, 200}, Qt::Vertical);
-    tabifyDockWidget(m_compDock, m_projectDock);
 
-    m_treeDock = new QDockWidget("组件树", this);
-    m_treeDock->setWidget(m_treePanel);
-    m_treeDock->setFeatures(QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_treeDock);
-
-    tabifyDockWidget(m_compDock, m_treeDock);
-    m_compDock->raise();
 
     m_propDock = new QDockWidget("属性", this);
     m_propDock->setWidget(m_propPanel);
@@ -989,6 +1137,12 @@ void MainWindow::onCanvasSize() {
 }
 
 /* 运行：启动构建产物，stdout/stderr 进输出面板 */
+/* 一步：构建工程，成功后直接运行 */
+void MainWindow::onBuildAndRun() {
+    onBuildProject();
+    onRunProject();
+}
+
 void MainWindow::onRunProject() {
     const QString buildDir = SettingsDialog::buildDir();
     if (buildDir.isEmpty() || m_projectFile.isEmpty()) {
@@ -1135,26 +1289,25 @@ void MainWindow::onCompile() {
     statusBar()->showMessage("正在编译...");
 
     if (!proc.waitForFinished(10000)) {
-        QMessageBox::critical(this, "编译错误", "luic 执行超时（10 秒）。");
+        m_buildPanel->append("luic 执行超时（10 秒）\n");
+        m_buildDock->show();
+        m_buildDock->raise();
         statusBar()->showMessage("编译失败：超时", 5000);
         return;
     }
 
     QString stdoutStr = proc.readAllStandardOutput();
     QString stderrStr = proc.readAllStandardError();
+    if (!stdoutStr.isEmpty()) m_buildPanel->append(stdoutStr);
+    if (!stderrStr.isEmpty()) m_buildPanel->append(stderrStr);
+    m_buildDock->show();
+    m_buildDock->raise();
     if (proc.exitCode() == 0) {
-        const QString target = m_projectFile.isEmpty() ? outputPath : m_projectFile;
         statusBar()->showMessage("编译成功", 5000);
-        QMessageBox::information(this, "编译成功",
-                                 (m_projectFile.isEmpty() ? "已生成：\n" + outputPath
-                                                          : "工程已生成：" + target) +
-                                 (stdoutStr.isEmpty() ? "" : "\n\n" + stdoutStr));
+        m_buildPanel->append("=== 编译成功 ===\n");
     } else {
         statusBar()->showMessage("编译失败", 5000);
-        QString msg = "luic exited with code " + QString::number(proc.exitCode());
-        if (!stderrStr.isEmpty()) msg += "\n\n" + stderrStr;
-        if (!stdoutStr.isEmpty()) msg += "\n\n" + stdoutStr;
-        QMessageBox::critical(this, "编译错误", msg);
+        m_buildPanel->append(QString("=== 编译失败（luic 退出码 %1）===\n").arg(proc.exitCode()));
     }
 }
 

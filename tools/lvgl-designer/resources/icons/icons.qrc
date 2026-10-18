@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>scissors.svg</file>
+    <file>copy.svg</file>
+    <file>clipboard.svg</file>
+    <file>trash.svg</file>
+  </qresource>
+</RCC>
