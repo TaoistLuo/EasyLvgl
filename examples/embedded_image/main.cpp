@@ -47,18 +47,9 @@
 
 using namespace easylvgl;
 
-#if LV_USE_SDL
-static void lv_linux_disp_init(void) {
-    lv_sdl_window_create(EmbeddedImage_UI::kScreenWidth, EmbeddedImage_UI::kScreenHeight);
-}
-#else
-#error Unsupported configuration
-#endif
-
 int main(void) {
     lv_init();
-    lv_linux_disp_init();
-    lv_sdl_mouse_create();
+    init_desktop_display(EmbeddedImage_UI::kScreenWidth, EmbeddedImage_UI::kScreenHeight);
 
     SignalHandler signal_handler;
 

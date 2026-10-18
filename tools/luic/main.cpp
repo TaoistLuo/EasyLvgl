@@ -47,6 +47,20 @@
 #include <functional>
 #include "third_party/nlohmann/json.hpp"
 
+/* 跨平台的目录/文件状态封装：
+ *   - Windows（MinGW/MSVC）：mkdir 只有一参版本，stat 用 _stat
+ *   - POSIX：mkdir(path, mode) / stat */
+#if defined(_WIN32)
+    #include <direct.h>
+    typedef struct _stat luic_stat_t;
+    #define luic_stat(p, s) _stat((p), (s))
+    #define luic_mkdir(p)   _mkdir(p)
+#else
+    typedef struct stat luic_stat_t;
+    #define luic_stat(p, s) stat((p), (s))
+    #define luic_mkdir(p)   mkdir((p), 0755)
+#endif
+
 void print_usage() {
     printf("用法：\n");
     printf("  luic <输入.lui> [-o 输出.hpp] [--assets-include <路径>] [--verbose]\n");
@@ -64,17 +78,33 @@ void print_usage() {
 
 std::string replace_ext(const std::string& path, const std::string& new_ext) {
     auto dot = path.rfind('.');
-    if (dot == std::string::npos) return path + new_ext;
+    auto slash = path.find_last_of("/\\");
+    if (dot == std::string::npos || (slash != std::string::npos && dot < slash)) return path + new_ext;
     return path.substr(0, dot) + new_ext;
 }
 
-bool mkdir_p(const std::string& path) {
+/* 同时识别 POSIX(/path) 与 Windows(C:/path、C:\path、\\server\share) 绝对路径 */
+bool is_absolute_path(const std::string& path) {
+    if (path.empty()) return false;
+    if (path[0] == '/' || path[0] == '\\') return true;
+    return path.size() >= 2 && path[1] == ':' &&
+           ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z'));
+}
+
+/* 把反斜杠统一成正斜杠，后续 mkdir/拼接逻辑只处理 '/' */
+std::string normalize_slashes(std::string path) {
+    for (auto& c : path) if (c == '\\') c = '/';
+    return path;
+}
+
+bool mkdir_p(const std::string& raw_path) {
+    std::string path = normalize_slashes(raw_path);
     for (size_t i = 1; i < path.size(); i++) {
         if (path[i] == '/') {
             std::string dir = path.substr(0, i);
-            struct stat st;
-            if (stat(dir.c_str(), &st) != 0) {
-                if (mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST) {
+            luic_stat_t st;
+            if (luic_stat(dir.c_str(), &st) != 0) {
+                if (luic_mkdir(dir.c_str()) != 0 && errno != EEXIST) {
                     fprintf(stderr, "luic: 无法创建目录 %s：%s\n",
                             dir.c_str(), strerror(errno));
                     return false;
@@ -82,9 +112,9 @@ bool mkdir_p(const std::string& path) {
             }
         }
     }
-    struct stat st;
-    if (stat(path.c_str(), &st) != 0) {
-        if (mkdir(path.c_str(), 0755) != 0 && errno != EEXIST) {
+    luic_stat_t st;
+    if (luic_stat(path.c_str(), &st) != 0) {
+        if (luic_mkdir(path.c_str()) != 0 && errno != EEXIST) {
             fprintf(stderr, "luic: 无法创建目录 %s：%s\n",
                     path.c_str(), strerror(errno));
             return false;
@@ -97,12 +127,12 @@ bool mkdir_p(const std::string& path) {
 namespace {
 
 std::string dir_of(const std::string& path) {
-    auto slash = path.find_last_of('/');
+    auto slash = path.find_last_of("/\\");
     return slash == std::string::npos ? std::string(".") : path.substr(0, slash);
 }
 
 std::string base_noext(const std::string& path) {
-    auto slash = path.find_last_of('/');
+    auto slash = path.find_last_of("/\\");
     std::string name = slash == std::string::npos ? path : path.substr(slash + 1);
     auto dot = name.rfind('.');
     return dot == std::string::npos ? name : name.substr(0, dot);
@@ -137,7 +167,7 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
     std::string entry = j.value("entry", "");
     std::string base = dir_of(manifest);
     std::string out_dir = !out_dir_opt.empty() ? out_dir_opt : j.value("outDir", std::string("ui_generated"));
-    if (!out_dir.empty() && out_dir[0] != '/') out_dir = base + "/" + out_dir;
+    if (!out_dir.empty() && !is_absolute_path(out_dir)) out_dir = base + "/" + out_dir;
 
     std::vector<std::string> rel_files;
     if (j.contains("files") && j["files"].is_array())

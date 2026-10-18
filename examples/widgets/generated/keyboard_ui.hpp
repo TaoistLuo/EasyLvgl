@@ -17,8 +17,9 @@ public:
 
         m_w = new LKeyboard(root);
         m_w->set_mode(0)
-              .set_popovers(false)
-              .set_pos(20, 20)
+              .set_popovers(false);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(420, 200);
 
     }

@@ -19,22 +19,26 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LHBoxLayout(root);
-        m_w->set_padding(8)
-              .set_pos(20, 20)
+        m_w->set_padding(8);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(340, 80)
               .set_spacing(8);
 
         m_c1 = new LButton(m_w->native());
+        lv_obj_set_align(m_c1->native(), LV_ALIGN_DEFAULT);
         m_c1->set_pos(0, 0)
               .set_size(90, 44)
               .set_text("A");
 
         m_c2 = new LButton(m_w->native());
+        lv_obj_set_align(m_c2->native(), LV_ALIGN_DEFAULT);
         m_c2->set_pos(0, 0)
               .set_size(90, 44)
               .set_text("B");
 
         m_c3 = new LButton(m_w->native());
+        lv_obj_set_align(m_c3->native(), LV_ALIGN_DEFAULT);
         m_c3->set_pos(0, 0)
               .set_size(90, 44)
               .set_text("C");

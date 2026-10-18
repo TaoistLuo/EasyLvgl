@@ -22,8 +22,9 @@ public:
         m_w = new LMenu(root);
 
         m_w->set_mode_header(0)
-              .set_mode_root_back_button(0)
-              .set_pos(20, 20)
+              .set_mode_root_back_button(0);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(360, 220);
 
         m_pg1 = new LMenuPage(m_w->native(), "Home");
@@ -31,6 +32,7 @@ public:
         m_mc1 = new LMenuCont(m_pg1->native());
 
         m_mb1 = new LButton(m_mc1->native());
+        lv_obj_set_align(m_mb1->native(), LV_ALIGN_DEFAULT);
         m_mb1->set_pos(0, 0)
               .set_size(130, 44)
               .set_text("Menu Item");

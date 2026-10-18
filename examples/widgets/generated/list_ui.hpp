@@ -20,6 +20,7 @@ public:
         m_w->add_text("Header");
         m_w->add_button(NULL, "Item 1");
         m_w->add_button(NULL, "Item 2");
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
         m_w->set_pos(20, 20)
               .set_size(170, 160);
 

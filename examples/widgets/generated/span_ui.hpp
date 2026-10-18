@@ -16,8 +16,9 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LSpan(root);
-        m_w->set_mode(0)
-              .set_pos(20, 20)
+        m_w->set_mode(0);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(300, 80);
 
         { lv_span_t* _sp = m_w->new_span();

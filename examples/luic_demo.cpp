@@ -39,22 +39,6 @@
 
 using namespace easylvgl;
 
-static const char *getenv_default(const char *name, const char *dflt)
-{
-    return getenv(name) ? : dflt;
-}
-
-#if LV_USE_SDL
-static void lv_linux_disp_init(void)
-{
-    const int width = atoi(getenv("LV_SDL_VIDEO_WIDTH") ? : "800");
-    const int height = atoi(getenv("LV_SDL_VIDEO_HEIGHT") ? : "480");
-    lv_sdl_window_create(width, height);
-}
-#else
-#error Unsupported configuration
-#endif
-
 class MainScreen : public MainScreen_UI {
 public:
     void on_btn_login_clicked(lv_event_t* e) override {
@@ -78,8 +62,7 @@ public:
 int main(void)
 {
     lv_init();
-    lv_linux_disp_init();
-    lv_sdl_mouse_create();
+    init_desktop_display(800, 480);
 
     SignalHandler signal_handler;
 

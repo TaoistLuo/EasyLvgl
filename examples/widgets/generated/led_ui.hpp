@@ -18,8 +18,9 @@ public:
         m_w = new LLed(root);
         m_w->set_brightness(255)
               .set_color(0x00FF00)
-              .on()
-              .set_pos(20, 20)
+              .on();
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(50, 50);
 
     }

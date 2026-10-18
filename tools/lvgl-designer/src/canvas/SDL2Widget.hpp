@@ -80,6 +80,8 @@ public:
 
 private:
     bool m_ctrlPressed = false;
+
+public: /* Qt 事件重写：保持 public，便于无头测试直接注入事件 */
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;

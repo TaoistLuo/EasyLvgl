@@ -42,15 +42,30 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifndef ALIGNED_ALLOC
-#define ALIGNED_ALLOC
-static void* aligned_alloc_wrapper(size_t alignment, size_t size) {
-    void* ptr = nullptr;
-    posix_memalign(&ptr, alignment, size);
-    return ptr;
-}
-#define aligned_alloc aligned_alloc_wrapper
+#if defined(_WIN32)
+    #include <malloc.h>
 #endif
+
+/* 可移植的对齐分配（LVGL 绘制缓冲需要对齐）：
+ *   Windows -> _aligned_malloc/_aligned_free
+ *   POSIX   -> posix_memalign/free */
+static void* designer_aligned_alloc(size_t alignment, size_t size) {
+#if defined(_WIN32)
+    return _aligned_malloc(size, alignment);
+#else
+    void* ptr = nullptr;
+    if (posix_memalign(&ptr, alignment, size) != 0) return nullptr;
+    return ptr;
+#endif
+}
+
+static void designer_aligned_free(void* ptr) {
+#if defined(_WIN32)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
 
 namespace designer {
 
@@ -407,7 +422,7 @@ void SDL2Widget::initLvgl() {
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);
     const uint32_t bufSize = stride * m_height;
-    m_fb = static_cast<uint8_t*>(aligned_alloc(64, bufSize));
+    m_fb = static_cast<uint8_t*>(designer_aligned_alloc(64, bufSize));
     if (m_fb) memset(m_fb, 0xFF, bufSize);
     lv_display_set_buffers(m_display, m_fb, nullptr, bufSize, LV_DISPLAY_RENDER_MODE_DIRECT);
 
@@ -434,13 +449,13 @@ void SDL2Widget::initLvgl() {
 
 void SDL2Widget::recreateTexture() {
     if (m_fb) {
-        free(m_fb);
+        designer_aligned_free(m_fb);
         m_fb = nullptr;
     }
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);
     const uint32_t bufSize = stride * m_height;
-    m_fb = static_cast<uint8_t*>(aligned_alloc(64, bufSize));
+    m_fb = static_cast<uint8_t*>(designer_aligned_alloc(64, bufSize));
     if (m_fb) memset(m_fb, 0xFF, bufSize);
 
     if (m_display && m_fb) {
@@ -470,7 +485,7 @@ void SDL2Widget::cleanup() {
     }
 
     if (m_fb) {
-        free(m_fb);
+        designer_aligned_free(m_fb);
         m_fb = nullptr;
     }
 }

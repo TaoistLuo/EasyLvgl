@@ -19,18 +19,21 @@ public:
 
         m_title = new LLabel(root);
         m_title->set_color(0x000000)
-              .set_font_size(14)
-              .set_pos(20, 16)
+              .set_font_size(14);
+        lv_obj_set_align(m_title->native(), LV_ALIGN_DEFAULT);
+        m_title->set_pos(20, 16)
               .set_size(260, 24)
               .set_text("Embedded image (like qrc)");
 
         m_logo = new LImage(root);
+        lv_obj_set_align(m_logo->native(), LV_ALIGN_DEFAULT);
         m_logo->set_pos(40, 60)
               .set_scale(512)
               .set_size(80, 60)
               .set_src(&caret);
 
         m_logo_raw = new LImage(root);
+        lv_obj_set_align(m_logo_raw->native(), LV_ALIGN_DEFAULT);
         m_logo_raw->set_pos(160, 60)
               .set_size(40, 30)
               .set_src(&caret);

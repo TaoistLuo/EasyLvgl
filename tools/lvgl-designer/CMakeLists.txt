@@ -6,9 +6,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(PkgConfig REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-pkg_check_modules(SDL2 REQUIRED sdl2)
+
+# 桌面窗口后端：Windows 用 LVGL 原生 Win32 后端；其它平台沿用 SDL2。
+# 说明：SDL2Widget 实际把 LVGL 渲染到自己的 framebuffer 后交给 Qt 绘制，
+#       并不直接调用 SDL。Windows 上因此无需 SDL2；Linux 保留原 SDL2 链接。
+if(WIN32)
+    # LVGL Win32 后端所需：较新的 Windows 头声明 + 旧 MinGW 缺失的 WM_DPICHANGED
+    add_definitions(-D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -DWM_DPICHANGED=0x02E0)
+    set(DESIGNER_DESKTOP_LIBS
+        user32 gdi32 imm32 shell32 ole32 oleaut32 uuid comctl32)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED sdl2)
+    set(DESIGNER_DESKTOP_LIBS ${SDL2_LIBRARIES})
+endif()
 
 set(LVGL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lvgl")
 set(LVGL_INCLUDE_DIR "${LVGL_DIR}")
@@ -60,7 +72,7 @@ target_compile_definitions(lvgl-designer PRIVATE
 
 target_link_libraries(lvgl-designer PRIVATE
     lvgl
-    ${SDL2_LIBRARIES}
+    ${DESIGNER_DESKTOP_LIBS}
     Qt5::Widgets
 )
 

@@ -55,10 +55,59 @@
 #include <QSettings>
 #include <QInputDialog>
 #include <QRegularExpression>
+#include <QDir>
+#include <QFileInfo>
+#include <QProcessEnvironment>
+#include <QStandardPaths>
+#include <QLibraryInfo>
 #include <algorithm>
 #include <set>
 
 namespace designer {
+
+/* “构建工程”需要 g++ / mingw32-make。用户从桌面直接启动设计器时，
+ * PATH 里可能没有 MinGW 工具链；这里尽量把常见位置的工具链目录补进子进程 PATH。 */
+static QStringList designerToolchainDirs() {
+    QStringList dirs;
+    auto addDir = [&dirs](const QString& d) {
+        if (!d.isEmpty() && QFileInfo(d).isDir()) {
+            const QString a = QDir(d).absolutePath();
+            if (!dirs.contains(a)) dirs << a;
+        }
+    };
+    const QString make = QStandardPaths::findExecutable("mingw32-make");
+    if (!make.isEmpty()) addDir(QFileInfo(make).absolutePath());
+    const QString gxx = QStandardPaths::findExecutable("g++");
+    if (!gxx.isEmpty()) addDir(QFileInfo(gxx).absolutePath());
+
+    const QString qtBin = QLibraryInfo::location(QLibraryInfo::BinariesPath);
+    if (!qtBin.isEmpty()) {
+        const QStringList toolRoots = {
+            QDir(qtBin).absoluteFilePath("../Tools"),
+            QDir(qtBin).absoluteFilePath("../../Tools"),
+            QDir(qtBin).absoluteFilePath("../../../Tools"),
+            QDir(qtBin).absoluteFilePath("../../../../Tools"),
+        };
+        for (const QString& root : toolRoots) {
+            QDir rd(root);
+            if (!rd.exists()) continue;
+            const QStringList sub = rd.entryList(QStringList() << "mingw*",
+                                                 QDir::Dirs | QDir::NoDotAndDotDot);
+            for (const QString& s : sub) addDir(rd.absoluteFilePath(s + "/bin"));
+        }
+    }
+    return dirs;
+}
+
+static QProcessEnvironment designerBuildEnv() {
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    const QStringList dirs = designerToolchainDirs();
+    if (!dirs.isEmpty()) {
+        const QString sep = QString(QDir::listSeparator());
+        env.insert("PATH", dirs.join(sep) + sep + env.value("PATH"));
+    }
+    return env;
+}
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
@@ -871,7 +920,8 @@ void MainWindow::onNewProject() {
         "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
         "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
-        "    COMMENT \"luic: 生成 UI 代码\")\n\n"
+        "    COMMENT \"luic: 生成 UI 代码\")\n"
+        "add_dependencies(ui luic)\n\n"
         "# 图片资源：把工程清单里的 resources 转成 lv_image_dsc_t（qrc 式）\n"
         "find_program(EASYLVGL_PYTHON NAMES python3 python)\n"
         "add_custom_target(assets\n"
@@ -887,15 +937,17 @@ void MainWindow::onNewProject() {
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
         "    ${EASYLVGL_ROOT})\n"
-        "# SDL2：优先用 easylvgl 仓库自带的查找模块\n"
-        "list(APPEND CMAKE_MODULE_PATH \"${EASYLVGL_ROOT}/cmake\" \"${EASYLVGL_ROOT}/lvgl\")\n"
-        "find_package(SDL2)\n"
-        "find_package(SDL2_image)\n"
-        "if(NOT SDL2_FOUND)\n"
-        "  message(FATAL_ERROR \"未找到 SDL2：请安装 libsdl2-dev / SDL2（Windows 用 vcpkg 或官方开发包）\")\n"
+        "# 桌面窗口后端：Windows 用 LVGL 原生 Win32 后端（无需 SDL2），其它平台用 SDL2\n"
+        "if(WIN32)\n"
+        "  target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
+        "      user32 gdi32 imm32 shell32 ole32 oleaut32 uuid comctl32)\n"
+        "else()\n"
+        "  list(APPEND CMAKE_MODULE_PATH \"${EASYLVGL_ROOT}/cmake\" \"${EASYLVGL_ROOT}/lvgl\")\n"
+        "  find_package(SDL2 REQUIRED)\n"
+        "  find_package(SDL2_image)\n"
+        "  target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
+        "      ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)\n"
         "endif()\n"
-        "target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
-        "    ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)\n"
     ).arg(name).arg(repoRoot);
     {
         QFile f(dir + "/CMakeLists.txt");
@@ -905,7 +957,7 @@ void MainWindow::onNewProject() {
         "#include \"easylvgl/lvgl_widgets.hpp\"\n"
         "#include \"easylvgl/core/signal_handler.hpp\"\n"
         "#include \"%1_ui.hpp\"\n"
-        "#include <unistd.h>\n\n"
+        "#include \"easylvgl/core/platform.hpp\"\n\n"
         "using namespace easylvgl;   // 生成的界面类在 namespace lvgl 里\n\n"
         "// 入口：由 lvglpp.project.json 的 entry 指定屏幕\n"
         "class App : public easylvgl::%1_UI {\n"
@@ -914,13 +966,12 @@ void MainWindow::onNewProject() {
         "};\n\n"
         "int main() {\n"
         "    lv_init();\n"
-        "    lv_sdl_window_create(%1_UI::kScreenWidth, %1_UI::kScreenHeight);\n"
-        "    lv_sdl_mouse_create();\n"
+        "    easylvgl::init_desktop_display(%1_UI::kScreenWidth, %1_UI::kScreenHeight);\n"
         "    easylvgl::SignalHandler signal_handler;\n"
         "    App app;\n"
         "    app.setup();\n"
         "    app.bind_events();\n"
-        "    while (signal_handler.is_running()) { lv_timer_handler(); usleep(5000); }\n"
+        "    while (signal_handler.is_running()) { lv_timer_handler(); easylvgl::sleep_ms(5); }\n"
         "    return 0;\n"
         "}\n"
     ).arg(screenName);
@@ -1333,10 +1384,12 @@ void MainWindow::onBuildProject() {
     }
     if (!QFileInfo::exists(buildDir + "/CMakeCache.txt")) {
         m_buildPanel->append("=== 配置 " + srcDir + " -> " + buildDir + " ===\n");
-        QStringList cfg{"-S", srcDir, "-B", buildDir,
-                        "-G", SettingsDialog::generator()};
+        QStringList cfg{"-S", srcDir, "-B", buildDir};
+        const QString gen = SettingsDialog::generator();
+        if (!gen.isEmpty()) cfg << "-G" << gen;
         for (auto& a : SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts)) cfg << a;
         QProcess c;
+        c.setProcessEnvironment(designerBuildEnv());
         c.start(cmake, cfg);
         if (!c.waitForFinished(60000) || c.exitCode() != 0) {
             QMessageBox::critical(this, "构建工程",
@@ -1348,6 +1401,7 @@ void MainWindow::onBuildProject() {
     m_buildDock->show();
     m_buildDock->raise();
     QProcess b;
+    b.setProcessEnvironment(designerBuildEnv());
     b.start(cmake, {"--build", buildDir, "-j"});
     statusBar()->showMessage("正在构建…");
     if (!b.waitForFinished(600000)) {
@@ -1374,7 +1428,11 @@ void MainWindow::onCompile() {
     QString luicPath = SettingsDialog::luicPath();
     QFileInfo luicFi(luicPath);
     if (!luicFi.exists()) {
+#ifdef Q_OS_WIN
+        luicPath = QApplication::applicationDirPath() + "/../bin/luic.exe";
+#else
         luicPath = QApplication::applicationDirPath() + "/../bin/luic";
+#endif
         luicFi.setFile(luicPath);
         if (!luicFi.exists()) {
             QMessageBox::critical(this, "编译错误", "未找到 luic：\n" + luicPath + "\n\n请先构建 luic。");

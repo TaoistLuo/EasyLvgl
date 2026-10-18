@@ -89,7 +89,12 @@
  * - LV_OS_WINDOWS
  * - LV_OS_MQX
  * - LV_OS_CUSTOM */
-#define LV_USE_OS   LV_OS_NONE
+#if defined(_WIN32)
+    /* LVGL 的 Win32 显示/输入后端要求 LV_OS_WINDOWS */
+    #define LV_USE_OS   LV_OS_WINDOWS
+#else
+    #define LV_USE_OS   LV_OS_NONE
+#endif
 
 #if LV_USE_OS == LV_OS_CUSTOM
     #define LV_OS_CUSTOM_INCLUDE <stdint.h>
@@ -946,7 +951,12 @@
  *==================*/
 
 /*Use SDL to open window on PC and handle mouse and keyboard*/
-#define LV_USE_SDL              1
+#if defined(_WIN32)
+    /*Windows 使用下方 LV_USE_WINDOWS 的 Win32 后端，不需要 SDL*/
+    #define LV_USE_SDL          0
+#else
+    #define LV_USE_SDL          1
+#endif
 #if LV_USE_SDL
     #define LV_SDL_INCLUDE_PATH     <SDL2/SDL.h>
     #define LV_SDL_RENDER_MODE      LV_DISPLAY_RENDER_MODE_DIRECT   /*LV_DISPLAY_RENDER_MODE_DIRECT is recommended for best performance*/
@@ -1011,8 +1021,12 @@
 /*Interface for TFT_eSPI*/
 #define LV_USE_TFT_ESPI         0
 
-/*Driver for evdev input devices*/
-#define LV_USE_EVDEV    1
+/*Driver for evdev input devices (Linux only; not available on Windows)*/
+#if defined(_WIN32)
+    #define LV_USE_EVDEV    0
+#else
+    #define LV_USE_EVDEV    1
+#endif
 
 /*Driver for libinput input devices*/
 #define LV_USE_LIBINPUT    0
@@ -1040,7 +1054,11 @@
 #define LV_USE_RENESAS_GLCDC    0
 
 /* LVGL Windows backend */
-#define LV_USE_WINDOWS    0
+#if defined(_WIN32)
+    #define LV_USE_WINDOWS    1
+#else
+    #define LV_USE_WINDOWS    0
+#endif
 
 /* Use OpenGL to open window on PC and handle mouse and keyboard */
 #define LV_USE_OPENGLES   0

@@ -17,8 +17,9 @@ public:
 
         m_w = new LChart(root);
         m_w->set_div_line_count(3, 5)
-              .set_point_count(6)
-              .set_pos(20, 20);
+              .set_point_count(6);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20);
 
         { lv_chart_series_t* _s = m_w->add_series(0xFF0000, LV_CHART_AXIS_PRIMARY_Y);
           m_w->set_next_value(_s, 10);

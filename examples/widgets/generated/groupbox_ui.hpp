@@ -16,8 +16,9 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LGroupBox(root);
-        m_w->set_padding(10)
-              .set_pos(20, 20)
+        m_w->set_padding(10);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(240, 160)
               .set_title("Group");
 

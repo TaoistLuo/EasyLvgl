@@ -320,6 +320,14 @@ class CodeGenerator {
                 continue;
             }
 
+            /* 对齐优先于坐标：部分控件（如 lv_keyboard）创建时自带 LV_ALIGN_BOTTOM_MID，
+             * 必须先清掉，否则 set_pos 被忽略 —— 预览可见、运行时却被顶到画布外。
+             * 与设计器 LvglRenderer 的行为保持一致。 */
+            if (prop.name == "pos") {
+                if (has_chain) { out << ";\n"; has_chain = false; }
+                out << pad << "lv_obj_set_align(m_" << node.id << "->native(), LV_ALIGN_DEFAULT);\n";
+            }
+
             if (!pdef->expand.empty()) {
                 if (has_chain) { out << ";\n"; has_chain = false; }
                 out << "\n";

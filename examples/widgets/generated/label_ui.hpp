@@ -17,8 +17,9 @@ public:
 
         m_w = new LLabel(root);
         m_w->set_color(0x2196F3)
-              .set_font_size(20)
-              .set_pos(20, 20)
+              .set_font_size(20);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(300, 40)
               .set_text("Hello LVGL++");
 

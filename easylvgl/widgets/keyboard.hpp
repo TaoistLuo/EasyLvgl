@@ -66,6 +66,9 @@ public:
     }
 
     LKeyboard& set_pos(int x, int y) {
+        /* lv_keyboard_create 默认 LV_ALIGN_BOTTOM_MID，而对齐优先于坐标：
+         * 不清掉的话 set_pos 会被忽略，键盘会被顶到父对象底部/画布外。 */
+        lv_obj_set_align(m_obj, LV_ALIGN_DEFAULT);
         lv_obj_set_pos(m_obj, x, y);
         return *this;
     }

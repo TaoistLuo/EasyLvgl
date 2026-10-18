@@ -16,8 +16,9 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LAnimImage(root);
-        m_w->set_duration(1000)
-              .set_pos(20, 20)
+        m_w->set_duration(1000);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_repeat_count(0)
               .set_size(120, 80);
 

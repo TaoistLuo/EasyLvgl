@@ -80,9 +80,7 @@ using namespace easylvgl;
 
 template <typename UI>
 static void run_ui() {
-    lv_display_t* disp = lv_sdl_window_create(UI::kScreenWidth, UI::kScreenHeight);
-    (void)disp;
-    lv_sdl_mouse_create();
+    init_desktop_display(UI::kScreenWidth, UI::kScreenHeight);
     UI ui;
     ui.setup(nullptr);
     while (true) { lv_timer_handler(); easylvgl::sleep_ms(5); }

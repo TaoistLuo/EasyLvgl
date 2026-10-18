@@ -22,28 +22,33 @@ public:
         m_w = new LGridLayout(root);
         m_w->set_column_spacing(6)
               .set_columns(2)
-              .set_padding(6)
-              .set_pos(20, 20)
+              .set_padding(6);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_row_spacing(6)
               .set_rows(2)
               .set_size(300, 200);
 
         m_c1 = new LButton(m_w->native());
+        lv_obj_set_align(m_c1->native(), LV_ALIGN_DEFAULT);
         m_c1->set_pos(0, 0)
               .set_size(80, 60)
               .set_text("1");
 
         m_c2 = new LButton(m_w->native());
+        lv_obj_set_align(m_c2->native(), LV_ALIGN_DEFAULT);
         m_c2->set_pos(0, 0)
               .set_size(80, 60)
               .set_text("2");
 
         m_c3 = new LButton(m_w->native());
+        lv_obj_set_align(m_c3->native(), LV_ALIGN_DEFAULT);
         m_c3->set_pos(0, 0)
               .set_size(80, 60)
               .set_text("3");
 
         m_c4 = new LButton(m_w->native());
+        lv_obj_set_align(m_c4->native(), LV_ALIGN_DEFAULT);
         m_c4->set_pos(0, 0)
               .set_size(80, 60)
               .set_text("4");

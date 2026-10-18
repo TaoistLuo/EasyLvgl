@@ -19,8 +19,9 @@ public:
 
         static const char* _m_w[] = {"7", "8", "9", "\n", "4", "5", "6", "\n", "1", "2", "3", NULL};
         m_w->set_map(_m_w);
-        m_w->set_one_checked(true)
-              .set_pos(20, 20)
+        m_w->set_one_checked(true);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(220, 160);
 
     }

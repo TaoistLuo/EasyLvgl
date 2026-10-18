@@ -73,11 +73,44 @@ public:
 };
 ```
 
+## Build
+
+Same source and CMake on all three platforms; the display/input backend is selected
+automatically: **native Win32 backend on Windows (no SDL2 required)**, SDL2 on Linux/macOS.
+
+**Windows (MinGW-w64)**
+
+```powershell
+cmake -S . -B build-win -G "MinGW Makefiles"
+cmake --build build-win -j 8
+.\bin\main.exe
+```
+
+Or use `powershell -ExecutionPolicy Bypass -File scripts/win/build.ps1`.
+See the [Windows build guide](docs/guides/windows_build.md).
+
+**Linux / macOS (SDL2)**
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+./bin/main
+```
+
+**Designer (Qt 5.15)**
+
+```bash
+cd tools/lvgl-designer
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/5.15.2/gcc_64 -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
 ## Documentation
 
 - [luic guide](docs/guides/luic_guild.md) — `.lui` format, options, project mode
 - [project-level design](docs/design/project-level-design.md) — components, exports, roadmap
 - [json-ui-format](docs/design/json-ui-format.md) — format specification
+- [Windows build guide](docs/guides/windows_build.md) — MinGW-w64 build & run
 
 ## License
 

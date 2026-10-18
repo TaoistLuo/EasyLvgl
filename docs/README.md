@@ -29,6 +29,7 @@ EasyLVGL = **C++ 封装库**（`easylvgl/`）+ **编译器**（`luic`）+ **可�
 | [luic_guild.md](guides/luic_guild.md) | luic 用法、`.lui` 字段、工程模式、图片资源嵌入 |
 | [coding_style.md](guides/coding_style.md) | 编码风格 |
 | [signal_handling.md](guides/signal_handling.md) | 信号处理与优雅退出 |
+| [windows_build.md](guides/windows_build.md) | Windows（MinGW-w64）构建与运行 |
 
 ## 工具链
 

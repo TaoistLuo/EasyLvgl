@@ -156,11 +156,24 @@ struct event_def_t {
 
 struct component_def_t {
     std::string class_name;
-    bool is_container = false;
+    bool is_container;
     std::vector<prop_def_t> props;
     std::vector<event_def_t> events;
     std::string ctor_prop;   // single prop passed as extra constructor arg (legacy)
     std::vector<std::string> ctor_props;  // props passed as extra constructor args, in order
+
+    /* 具默认参数的构造函数：替代 C++20 指定初始化器，兼容 GCC 7 (MinGW 7.3) 等旧编译器。
+     * class_name 由 ComponentRegistry::reg() 填充，无需在此传入。 */
+    component_def_t(bool is_container_ = false,
+                    std::vector<prop_def_t> props_ = {},
+                    std::vector<event_def_t> events_ = {},
+                    std::string ctor_prop_ = {},
+                    std::vector<std::string> ctor_props_ = {})
+        : is_container(is_container_),
+          props(std::move(props_)),
+          events(std::move(events_)),
+          ctor_prop(std::move(ctor_prop_)),
+          ctor_props(std::move(ctor_props_)) {}
 
     const prop_def_t* find_prop(const std::string& name) const {
         for (auto& p : props) {
@@ -190,15 +203,15 @@ public:
         // ===== Basic Widgets =====
 
         reg("LButton", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",     "string",   "set_text"},
                 {"size",     "int_pair", "set_size"},
                 {"pos",      "int_pair", "set_pos"},
                 {"disabled", "bool",     "set_disabled"},
                 {"theme",    "string",   "", true},
             },
-            .events = {
+            {
                 {"clicked",  "on_click"},
                 {"pressed",  "on_click"},
                 {"released", "on_click"},
@@ -206,8 +219,8 @@ public:
         });
 
         reg("LLabel", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",      "string",   "set_text"},
                 {"color",     "hex",      "set_color"},
                 {"font_size", "int",      "set_font_size"},
@@ -215,12 +228,12 @@ public:
                 {"size",      "int_pair", "set_size"},
                 {"pos",       "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LSlider", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"range",      "int_pair", "set_range"},
                 {"value",      "int",      "set_value"},
                 {"left_value", "int",      "set_left_value"},
@@ -228,33 +241,33 @@ public:
                 {"size",       "int_pair", "set_size"},
                 {"pos",        "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LCheckbox", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",    "string",   "set_text"},
                 {"checked", "bool",     "set_checked"},
                 {"size",    "int_pair", "set_size"},
                 {"pos",     "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LSwitch", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"checked",  "bool",     "set_checked"},
                 {"enabled",  "bool",     "set_enabled"},
                 {"size",     "int_pair", "set_size"},
                 {"pos",      "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
@@ -262,8 +275,8 @@ public:
         // ===== Display Widgets =====
 
         reg("LImage", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"src",       "string",   "set_src"},
                 {"rotation",  "int",      "set_rotation"},
                 {"scale",     "int",      "set_scale"},
@@ -277,14 +290,14 @@ public:
                 {"size",      "int_pair", "set_size"},
                 {"pos",       "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"clicked", "on_click"},
             }
         });
 
         reg("LArc", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"range",       "int_pair", "set_range"},
                 {"value",       "int",      "set_value"},
                 {"rotation",    "int",      "set_rotation"},
@@ -297,14 +310,14 @@ public:
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LBar", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"range",       "int_pair", "set_range"},
                 {"value",       "int",      "set_value"},
                 {"start_value", "int",      "set_start_value"},
@@ -313,34 +326,34 @@ public:
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LSpinner", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"color", "hex",      "set_color"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LLed", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"color",      "hex",      "set_color"},
                 {"brightness", "int",      "set_brightness"},
                 {"on",         "bool",     "on"},
                 {"size",       "int_pair", "set_size"},
                 {"pos",        "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LLine", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"points",   "string",   "set_points", false, false, "", "points"},
                 {"width",    "int",      "set_width"},
                 {"color",    "hex",      "set_color"},
@@ -351,28 +364,28 @@ public:
                 {"size",      "int_pair", "set_size"},
                 {"pos",       "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         // ===== Input Widgets =====
 
         reg("LRoller", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"options",           "string",   "set_options"},
                 {"selected",          "int",      "set_selected"},
                 {"visible_row_count", "int",      "set_visible_row_count"},
                 {"size",              "int_pair", "set_size"},
                 {"pos",               "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LSpinbox", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"cursor_pos", "int", "set_cursor_pos"},
                 {"digit_step_direction", "int", "set_digit_step_direction"},
                 {"range",        "int_pair", "set_range"},
@@ -383,40 +396,40 @@ public:
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LButtonMatrix", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"map",         "string",   "set_map", false, false, "", "argv"},
                 {"selected",    "int",      "set_selected"},
                 {"one_checked", "bool",     "set_one_checked"},
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_value_changed"},
             }
         });
 
         reg("LKeyboard", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"textarea", "string",   "set_textarea", false, false, "", "ref"},
                 {"mode",     "int",      "set_mode"},
                 {"popovers", "bool",     "set_popovers"},
                 {"size",     "int_pair", "set_size"},
                 {"pos",      "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LImageButton", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"state",        "int",      "set_state"},
                 {"src_released", "string",   "set_src", false, false, "LV_IMAGEBUTTON_STATE_RELEASED"},
                 {"src_pressed",  "string",   "set_src", false, false, "LV_IMAGEBUTTON_STATE_PRESSED"},
@@ -424,7 +437,7 @@ public:
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"clicked", "on_click"},
             }
         });
@@ -432,8 +445,8 @@ public:
         // ===== Data Display Widgets =====
 
         reg("LTable", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"row_count",     "int",      "set_row_count"},
                 {"column_count",  "int",      "set_column_count"},
                 {"column_widths", "string",   "set_column_width", false, false, "", "int_2arg"},
@@ -441,12 +454,12 @@ public:
                 {"size",          "int_pair", "set_size"},
                 {"pos",           "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LChart", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"type",           "int",      "set_type"},
                 {"point_count",    "int",      "set_point_count"},
                 {"div_line_count", "int_pair", "set_div_line_count"},
@@ -455,12 +468,12 @@ public:
                 {"size",           "int_pair", "set_size"},
                 {"pos",            "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LScale", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"draw_ticks_on_top", "bool", "set_draw_ticks_on_top"},
                 {"mode",             "int",      "set_mode"},
                 {"range",            "int_pair", "set_range"},
@@ -472,142 +485,143 @@ public:
                 {"size",             "int_pair", "set_size"},
                 {"pos",              "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LCalendar", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"today_date",  "int_triple", "set_today_date"},
                 {"showed_date", "int_pair",   "set_showed_date"},
                 {"size",        "int_pair",   "set_size"},
                 {"pos",         "int_pair",   "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LCanvas", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"size", "int_pair", "set_size"},
                 {"pos",  "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         // ===== Container Widgets =====
 
         reg("LList", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"items", "string",   "add_button", false, false, "", "list_items"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LTabView", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"tabs",             "string",   "add_tab", false, false, "", "lines"},
                 {"tab_bar_position", "int",      "set_tab_bar_position"},
                 {"tab_bar_size",     "int",      "set_tab_bar_size"},
                 {"size",             "int_pair", "set_size"},
                 {"pos",              "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LMenu", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"mode_header",           "int",    "set_mode_header"},
                 {"mode_root_back_button", "int",    "set_mode_root_back_button"},
                 {"active_page",           "string", "set_page", false, false, "", "ref"},
                 {"size",                  "int_pair", "set_size"},
                 {"pos",                   "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LMenuPage", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"title", "string",   "set_title"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {},
-            .ctor_prop = "title"
+            {},
+            "title"
         });
 
         reg("LTile", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"col",  "int",      ""},
                 {"row",  "int",      ""},
                 {"dir",  "int",      ""},
                 {"size", "int_pair", "set_size"},
                 {"pos",  "int_pair", "set_pos"},
             },
-            .events = {},
-            .ctor_props = {"col", "row", "dir"}
+            {},
+            "",
+            {"col", "row", "dir"}
         });
 
         reg("LMenuCont", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"size", "int_pair", "set_size"},
                 {"pos",  "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LMenuSection", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"size", "int_pair", "set_size"},
                 {"pos",  "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LTileView", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"size", "int_pair", "set_size"},
                 {"pos",  "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LWin", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"title", "string",   "add_title"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LMsgBox", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"title", "string",   "set_title"},
                 {"text",  "string",   "set_text"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         // ===== Rich Text =====
 
         reg("LSpan", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"spans",    "string",   "new_span", false, false, "", "spans"},
                 {"mode",     "int",      "set_mode"},
                 {"overflow", "int",      "set_overflow"},
@@ -615,32 +629,32 @@ public:
                 {"size",     "int_pair", "set_size"},
                 {"pos",      "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         // ===== Animation =====
 
         reg("LAnimImage", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"duration",     "int",      "set_duration"},
                 {"repeat_count", "int",      "set_repeat_count"},
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LLottie", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"src",   "string",   "set_src"},
                 {"loop",  "bool",     "set_loop"},
                 {"speed", "int",      "set_speed"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"ready", "on_complete"},
             }
         });
@@ -648,8 +662,8 @@ public:
         // ===== Layout Containers =====
 
         reg("LVBoxLayout", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"spacing",     "int",      "set_spacing"},
                 {"padding",     "int",      "set_padding"},
                 {"align_main",  "int",      "set_align_main"},
@@ -657,12 +671,12 @@ public:
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LHBoxLayout", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"spacing",     "int",      "set_spacing"},
                 {"padding",     "int",      "set_padding"},
                 {"align_main",  "int",      "set_align_main"},
@@ -670,12 +684,12 @@ public:
                 {"size",        "int_pair", "set_size"},
                 {"pos",         "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LGridLayout", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"columns",      "int",      "set_columns"},
                 {"rows",         "int",      "set_rows"},
                 {"col_spacing",  "int",      "set_column_spacing"},
@@ -684,25 +698,25 @@ public:
                 {"size",         "int_pair", "set_size"},
                 {"pos",          "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         reg("LStackedLayout", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"current_index", "int",      "set_current_index", false, true},
                 {"padding",       "int",      "set_padding"},
                 {"size",          "int_pair", "set_size"},
                 {"pos",           "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
 
         // ===== New Widgets =====
 
         reg("LComboBox", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"options",            "string",   "set_options"},
                 {"selected",           "int",      "set_selected"},
                 {"direction",          "int",      "set_direction"},
@@ -713,14 +727,14 @@ public:
                 {"size",               "int_pair", "set_size"},
                 {"pos",                "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LLineEdit", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",              "string",   "set_text"},
                 {"placeholder",       "string",   "set_placeholder"},
                 {"password_mode",     "bool",     "set_password_mode"},
@@ -733,15 +747,15 @@ public:
                 {"size",              "int_pair", "set_size"},
                 {"pos",               "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
                 {"ready",         "on_ready"},
             }
         });
 
         reg("LTextEdit", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",              "string",   "set_text"},
                 {"placeholder",       "string",   "set_placeholder"},
                 {"password_mode",     "bool",     "set_password_mode"},
@@ -754,34 +768,34 @@ public:
                 {"size",              "int_pair", "set_size"},
                 {"pos",               "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
                 {"ready",         "on_ready"},
             }
         });
 
         reg("LRadioButton", {
-            .is_container = false,
-            .props = {
+            false,
+            {
                 {"text",    "string",   "set_text"},
                 {"checked", "bool",     "set_checked"},
                 {"size",    "int_pair", "set_size"},
                 {"pos",     "int_pair", "set_pos"},
             },
-            .events = {
+            {
                 {"value_changed", "on_change"},
             }
         });
 
         reg("LGroupBox", {
-            .is_container = true,
-            .props = {
+            true,
+            {
                 {"title",   "string",   "set_title"},
                 {"padding", "int",      "set_padding"},
                 {"size",    "int_pair", "set_size"},
                 {"pos",     "int_pair", "set_pos"},
             },
-            .events = {}
+            {}
         });
     }
 

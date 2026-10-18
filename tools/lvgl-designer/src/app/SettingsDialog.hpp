@@ -44,6 +44,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QStringList>
+#include <QStandardPaths>
 
 namespace designer {
 
@@ -58,8 +59,12 @@ public:
         m_build = new QLineEdit;     m_generator = new QComboBox;
         m_extra = new QLineEdit;
 
-        m_generator->addItems({"Ninja", "Unix Makefiles", "Ninja Multi-Config"});
         m_generator->setEditable(true);
+#ifdef Q_OS_WIN
+        m_generator->addItems({"MinGW Makefiles", "Ninja", "Ninja Multi-Config", "Unix Makefiles"});
+#else
+        m_generator->addItems({"Ninja", "Unix Makefiles", "Ninja Multi-Config"});
+#endif
 
         auto* form = new QFormLayout(this);
         form->addRow("luic 路径", withBrowse(m_luic, true));
@@ -142,11 +147,26 @@ inline QString SettingsDialog::luicPath() {
     };
     for (const auto& c : candidates)
         if (QFileInfo(c).exists()) return QDir(c).absolutePath();
+#ifdef Q_OS_WIN
+    return "luic.exe";
+#else
     return "luic";
+#endif
 }
 inline QString SettingsDialog::cmakePath() { return QSettings().value("build/cmake", "cmake").toString(); }
 inline QString SettingsDialog::buildDir() { return QSettings().value("build/buildDir", QString()).toString(); }
-inline QString SettingsDialog::generator() { return QSettings().value("build/generator", "Unix Makefiles").toString(); }
+inline QString SettingsDialog::generator() {
+#ifdef Q_OS_WIN
+    QString g = QSettings().value("build/generator", "MinGW Makefiles").toString();
+    /* 旧配置可能存了 Unix Makefiles；Windows 上没有 make 时会报
+     * "execution of make failed / Make command was: -f Makefile -j"，自动回退。 */
+    if (g == "Unix Makefiles" && QStandardPaths::findExecutable("make").isEmpty())
+        g = "MinGW Makefiles";
+    return g;
+#else
+    return QSettings().value("build/generator", "Unix Makefiles").toString();
+#endif
+}
 inline QString SettingsDialog::extraArgs() { return QSettings().value("build/extraArgs", QString()).toString(); }
 
 } // namespace designer

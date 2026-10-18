@@ -50,6 +50,41 @@ btn_style.set_bg_color(0x2196F3)
 
 ---
 
+## 构建与运行
+
+三平台共用同一套源码与 CMake，窗口/输入后端按平台自动切换：**Windows 用 LVGL 原生
+Win32 后端（无需 SDL2）**，Linux/macOS 用 SDL2。
+
+### Windows（MinGW-w64）
+
+```powershell
+cmake -S . -B build-win -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+cmake --build build-win -j 8
+.\bin\main.exe
+```
+
+或使用脚本：`powershell -ExecutionPolicy Bypass -File scripts/win/build.ps1`
+
+详见 [Windows 构建指南](docs/guides/windows_build.md)。
+
+### Linux / macOS（SDL2）
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+./bin/main
+```
+
+### 设计器（Qt 5.15）
+
+```bash
+cd tools/lvgl-designer
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/5.15.2/gcc_64 -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+---
+
 ## 组件总览
 
 ### 核心组件（9 个）
@@ -216,6 +251,7 @@ lv_port_linux/
 - [coding_style.md](docs/guides/coding_style.md) - 编码规范
 - [luic_guild.md](docs/guides/luic_guild.md) - luic 编译器指南
 - [vscode_plugin_guide.md](docs/guides/vscode_plugin_guide.md) - VSCode 插件指南
+- [windows_build.md](docs/guides/windows_build.md) - Windows 构建指南
 
 ---
 

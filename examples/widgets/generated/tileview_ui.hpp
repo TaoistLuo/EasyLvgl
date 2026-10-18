@@ -20,12 +20,14 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_tv = new LTileView(root);
+        lv_obj_set_align(m_tv->native(), LV_ALIGN_DEFAULT);
         m_tv->set_pos(20, 20)
               .set_size(300, 240);
 
         m_t0 = new LTile(m_tv->native(), 0, 0, 2);
 
         m_b0 = new LButton(m_t0->native());
+        lv_obj_set_align(m_b0->native(), LV_ALIGN_DEFAULT);
         m_b0->set_pos(80, 80)
               .set_size(140, 50)
               .set_text("Tile 1");
@@ -33,6 +35,7 @@ public:
         m_t1 = new LTile(m_tv->native(), 1, 0, 1);
 
         m_b1 = new LButton(m_t1->native());
+        lv_obj_set_align(m_b1->native(), LV_ALIGN_DEFAULT);
         m_b1->set_pos(80, 80)
               .set_size(140, 50)
               .set_text("Tile 2");

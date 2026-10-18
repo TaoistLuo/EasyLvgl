@@ -39,8 +39,7 @@ using namespace easylvgl;
 
 int main(void) {
     lv_init();
-    lv_linux_disp_init();
-    lv_sdl_mouse_create();
+    init_desktop_display(800, 600);
 
     printf("=== LVGL++ All Components Demo ===\n\n");
 

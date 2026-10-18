@@ -31,6 +31,7 @@ public:
         m_w->set_cell_value(2, 0, "D");
         m_w->set_cell_value(2, 1, "E");
         m_w->set_cell_value(2, 2, "F");
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
         m_w->set_pos(20, 20)
               .set_row_count(3)
               .set_size(240, 200);

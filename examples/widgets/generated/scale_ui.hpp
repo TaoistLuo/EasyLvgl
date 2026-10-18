@@ -19,8 +19,9 @@ public:
         m_w->set_angle_range(270)
               .set_label_show(true)
               .set_major_tick_every(2)
-              .set_mode(0)
-              .set_pos(20, 20)
+              .set_mode(0);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_range(0, 100)
               .set_size(280, 160)
               .set_total_tick_count(11);

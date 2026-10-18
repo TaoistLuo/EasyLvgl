@@ -41,8 +41,7 @@ using namespace easylvgl;
 
 int main(void) {
     lv_init();
-    lv_display_t* disp = lv_sdl_window_create(800, 600); (void)disp;
-    lv_sdl_mouse_create();
+    init_desktop_display(800, 600);
 
     SignalHandler signal_handler;
 

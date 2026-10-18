@@ -16,6 +16,7 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LImageButton(root);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
         m_w->set_pos(20, 20)
               .set_size(80, 80)
               .set_src(LV_IMAGEBUTTON_STATE_PRESSED, "A:lvgl/examples/assets/caret_down.png")

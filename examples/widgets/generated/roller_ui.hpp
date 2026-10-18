@@ -16,8 +16,9 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LRoller(root);
-        m_w->set_options("Item 1\nItem 2\nItem 3\nItem 4")
-              .set_pos(20, 20)
+        m_w->set_options("Item 1\nItem 2\nItem 3\nItem 4");
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_selected(1)
               .set_size(150, 140)
               .set_visible_row_count(3);

@@ -18,18 +18,21 @@ public:
         lv_obj_t* root = parent ? parent : lv_scr_act();
 
         m_w = new LStackedLayout(root);
-        m_w->set_padding(6)
-              .set_pos(20, 20)
+        m_w->set_padding(6);
+        lv_obj_set_align(m_w->native(), LV_ALIGN_DEFAULT);
+        m_w->set_pos(20, 20)
               .set_size(300, 200);
 
         m_c1 = new LLabel(m_w->native());
+        lv_obj_set_align(m_c1->native(), LV_ALIGN_DEFAULT);
         m_c1->set_pos(0, 0)
               .set_size(260, 40)
               .set_text("Page 1");
 
         m_c2 = new LLabel(m_w->native());
-        m_c2->set_color(0x00AA00)
-              .set_pos(0, 0)
+        m_c2->set_color(0x00AA00);
+        lv_obj_set_align(m_c2->native(), LV_ALIGN_DEFAULT);
+        m_c2->set_pos(0, 0)
               .set_size(260, 40)
               .set_text("Page 2");
 
