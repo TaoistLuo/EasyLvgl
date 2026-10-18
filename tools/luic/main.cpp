@@ -115,6 +115,15 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
         return 1;
     }
 
+    /* 工程级图片资源：清单里的 resources 对所有 .lui 生效
+     * （路径相对工程清单所在目录） */
+    std::map<std::string, std::string> projectResources;
+    if (j.contains("resources") && j["resources"].is_object()) {
+        for (auto it = j["resources"].begin(); it != j["resources"].end(); ++it)
+            if (it.value().is_string())
+                projectResources[it.key()] = it.value().get<std::string>();
+    }
+
     luic::ComponentRegistry registry;
     luic::Parser parser;
 
@@ -134,6 +143,12 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
         rel_of[doc->name] = rel;
         docs.push_back(std::make_unique<luic::lui_document_t>(std::move(*doc)));
         by_name[docs.back()->name] = docs.back().get();
+    }
+
+    /* 合并工程级资源：文件自身 resources 优先 */
+    for (auto& d : docs) {
+        for (auto& kv : projectResources)
+            if (!d->resources.count(kv.first)) d->resources[kv.first] = kv.second;
     }
 
     /* 2) 校验（带组件表） */

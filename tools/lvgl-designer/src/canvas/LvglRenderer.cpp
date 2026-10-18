@@ -1444,11 +1444,12 @@ void LvglRenderer::buildTree(const LuiDocument& doc) {
 
     /* 资源别名 -> 绝对路径，供预览时按 lv_fs 路径加载 */
     m_resAbs.clear();
-    for (auto& kv : doc.resources()) {
-        QString p = QString::fromStdString(kv.second);
-        m_resAbs[kv.first] = (QDir::isAbsolutePath(p)
-                              ? p
-                              : QDir(doc.baseDir()).absoluteFilePath(p)).toStdString();
+    /* 统一用 resolveResource() 求绝对路径：文件级资源相对 .lui 目录，
+     * 工程级资源相对工程清单目录（这里再手算一次基准会算错） */
+    auto resAll = doc.allResources();
+    for (auto& kv : resAll) {
+        std::string abs = doc.resolveResource("#" + kv.first);
+        if (!abs.empty()) m_resAbs[kv.first] = abs;
     }
 
     lv_obj_t* screen = lv_scr_act();

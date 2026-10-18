@@ -203,7 +203,6 @@ struct WidgetNode {
             props.emplace("pivot", QVariant(pair0));
             props.emplace("offset", QVariant(pair0));
             props.emplace("antialias", QVariant(true));
-            props.emplace("inner_align", QVariant(0));
             props.emplace("opacity", QVariant(255));
         } else if (type == "LArc") {
             props.emplace("range", QVariant(pair100));
@@ -381,6 +380,9 @@ class LuiDocument {
     std::map<std::string, std::string> m_exports;
     /* 图片资源：别名 -> 路径（相对 .lui 所在目录），控件里用 "#别名" 引用 */
     std::map<std::string, std::string> m_resources;
+    /* 工程级资源（来自 lvglpp.project.json），只读、不写回 .lui */
+    std::map<std::string, std::string> m_projectResources;
+    QString m_projectBaseDir;   // 工程清单所在目录（工程级资源的基准）
     bool m_modified = false;
 
 public:
@@ -496,6 +498,17 @@ public:
 
     /* ---- 图片资源（qrc 式编译期嵌入） ---- */
     const std::map<std::string, std::string>& resources() const { return m_resources; }
+    const std::map<std::string, std::string>& projectResources() const { return m_projectResources; }
+    void setProjectResources(const std::map<std::string, std::string>& r, const QString& baseDir = QString()) {
+        m_projectResources = r;
+        m_projectBaseDir = baseDir;
+    }
+    /** 文件级 + 工程级资源（文件优先），供预览与补全使用 */
+    std::map<std::string, std::string> allResources() const {
+        auto m = m_projectResources;
+        for (auto& kv : m_resources) m[kv.first] = kv.second;
+        return m;
+    }
     void setResource(const std::string& name, const std::string& relPath) {
         m_resources[name] = relPath;
         m_modified = true;
@@ -509,11 +522,20 @@ public:
     /** 把 "#别名" 解析成绝对路径；普通路径原样返回；找不到资源返回空串 */
     std::string resolveResource(const std::string& src) const {
         if (src.empty() || src[0] != '#') return src;
-        auto it = m_resources.find(src.substr(1));
-        if (it == m_resources.end()) return std::string();
-        QString p = QString::fromStdString(it->second);
+        const std::string name = src.substr(1);
+        /* 文件级资源相对 .lui 目录；工程级资源相对工程清单目录 */
+        auto fit = m_resources.find(name);
+        if (fit != m_resources.end()) {
+            QString p = QString::fromStdString(fit->second);
+            if (QDir::isAbsolutePath(p)) return p.toStdString();
+            return QDir(baseDir()).absoluteFilePath(p).toStdString();
+        }
+        auto pit = m_projectResources.find(name);
+        if (pit == m_projectResources.end()) return std::string();
+        QString p = QString::fromStdString(pit->second);
         if (QDir::isAbsolutePath(p)) return p.toStdString();
-        return QDir(baseDir()).absoluteFilePath(p).toStdString();
+        const QString base = m_projectBaseDir.isEmpty() ? baseDir() : m_projectBaseDir;
+        return QDir(base).absoluteFilePath(p).toStdString();
     }
     bool isModified() const { return m_modified; }
     void markModified() { m_modified = true; }

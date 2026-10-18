@@ -80,6 +80,8 @@ public:
     void removeFromProject(const QString& path);
     void refreshProjectPanel();
     bool updateManifestFiles(const std::function<void(QJsonArray&)>& fn);
+    bool updateManifestResources(const std::string& alias, const std::string& rel);
+    std::map<std::string, std::string> m_projectResources;
 
 protected:
     void closeEvent(QCloseEvent* event) override;

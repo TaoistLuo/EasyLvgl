@@ -89,6 +89,12 @@ LImage& set_antialias(bool enable) {
 
     LImage& set_scale_x(int zoom_x) { lv_image_set_scale_x(m_obj, zoom_x); return *this; }
 
+
+    /** 图片在控件内的对齐方式（不缩放时使用） */
+    LImage& set_inner_align(int align) {
+        lv_image_set_inner_align(m_obj, static_cast<lv_image_align_t>(align));
+        return static_cast<LImage&>(*this);
+    }
 };
 
 } // namespace lvgl

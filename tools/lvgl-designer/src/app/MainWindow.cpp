@@ -74,6 +74,8 @@ bool MainWindow::openFile(const QString& path) {
         return false;
     }
 
+    m_doc.setProjectResources(m_projectResources, QFileInfo(m_projectFile).absolutePath());
+
     m_undoStack->clear();
     m_selectedId.clear();
     m_multiSelectedIds.clear();
@@ -575,7 +577,11 @@ void MainWindow::onAddImageResource() {
     if (src.isEmpty()) return;
 
     QFileInfo fi(src);
-    QString assetsDir = QDir(m_doc.baseDir()).absoluteFilePath("assets");
+    /* 工程级：复制到 <工程目录>/assets，登记进清单（而不是当前 .lui） */
+    const bool projectMode = !m_projectFile.isEmpty();
+    const QString baseDir = projectMode ? QFileInfo(m_projectFile).absolutePath()
+                                        : m_doc.baseDir();
+    QString assetsDir = QDir(baseDir).absoluteFilePath("assets");
     if (!QDir().mkpath(assetsDir)) {
         QMessageBox::warning(this, "添加图片资源", "无法创建目录：" + assetsDir);
         return;
@@ -599,8 +605,14 @@ void MainWindow::onAddImageResource() {
         if (!isalnum((unsigned char)c) && c != '_') c = '_';
     if (alias.empty() || isdigit((unsigned char)alias[0])) alias = "img_" + alias;
 
-    m_doc.setResource(alias, ("assets/" + fi.fileName()).toStdString());
-    m_doc.markModified();
+    if (projectMode) {
+        updateManifestResources(alias, ("assets/" + fi.fileName()).toStdString());
+        const QString manifest = m_projectFile;
+        loadProject(manifest);
+    } else {
+        m_doc.setResource(alias, ("assets/" + fi.fileName()).toStdString());
+        m_doc.markModified();
+    }
     updateTitle();
     statusBar()->showMessage(QString("已添加图片资源 #%1（生成代码前请运行 "
                                      "scripts/assets/convert_assets.py）")
@@ -678,6 +690,14 @@ void MainWindow::loadProject(const QString& manifest) {
     const QString entryName = root["entry"].toString();
 
     m_projectFile = manifest;
+
+    /* 工程级资源：清单 resources，应用到所有文档 */
+    m_projectResources.clear();
+    if (root.contains("resources") && root["resources"].isObject()) {
+        auto res = root["resources"].toObject();
+        for (auto it = res.begin(); it != res.end(); ++it)
+            m_projectResources[it.key().toStdString()] = it.value().toString().toStdString();
+    }
     QSettings().setValue("project/last", manifest);   // 下次启动自动打开
 
     /* 默认构建目录：工程同级 build_lvgl（不存在就建；用户自定义在工程内的保持不动） */
@@ -704,6 +724,7 @@ void MainWindow::loadProject(const QString& manifest) {
         }
         /* 只有 kind: component 的文件能作为实例插入（屏幕不是部件） */
         if (doc->isComponent()) m_projectComponents.push_back({doc->name(), path});
+        doc->setProjectResources(m_projectResources, base);
         m_componentDocs[doc->name()] = doc.get();
         if (!entryName.isEmpty() && doc->name() == entryName.toStdString())
             entryPath = path;
@@ -819,9 +840,17 @@ void MainWindow::onNewProject() {
         "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
         "    COMMENT \"luic: 生成 UI 代码\")\n\n"
-        "add_executable(%1 main.cpp)\n"
+        "# 图片资源：把工程清单里的 resources 转成 lv_image_dsc_t（qrc 式）\n"
+        "add_custom_target(assets\n"
+        "    COMMAND python3 ${LVGLPP_ROOT}/scripts/assets/convert_assets.py\n"
+        "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "    COMMENT \"转换图片资源\")\n"
+        "add_dependencies(ui assets)\n"
+        "file(GLOB ASSET_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c)\n"
+        "add_executable(%1 main.cpp ${ASSET_SOURCES})\n"
         "add_dependencies(%1 ui)\n"
         "target_include_directories(%1 PRIVATE\n"
+        "    ${CMAKE_CURRENT_SOURCE_DIR}\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
         "    ${LVGLPP_ROOT})\n"
@@ -955,6 +984,21 @@ void MainWindow::refreshProjectPanel() {
     }
     m_projectPanel->setProject(name, m_projectFile, files);
     if (!m_doc.filePath().isEmpty()) m_projectPanel->setCurrentFile(m_doc.filePath());
+}
+
+/* 在工程清单里登记图片资源（已存在则覆盖同名项） */
+bool MainWindow::updateManifestResources(const std::string& alias, const std::string& rel) {
+    if (m_projectFile.isEmpty()) return false;
+    QFile f(m_projectFile);
+    if (!f.open(QIODevice::ReadOnly)) return false;
+    auto root = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+    QJsonObject res = root["resources"].toObject();
+    res[QString::fromStdString(alias)] = QString::fromStdString(rel);
+    root["resources"] = res;
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    return true;
 }
 
 bool MainWindow::updateManifestFiles(const std::function<void(QJsonArray&)>& fn) {

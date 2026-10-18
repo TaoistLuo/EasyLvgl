@@ -103,7 +103,7 @@ def convert_one(lvgl_image_py: str, src: str, alias: str, out_dir: str,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="把 .lui 的图片资源配置编译成 LVGL C 数组")
-    ap.add_argument("lui", help=".lui 文件（读取其中的 resources）")
+    ap.add_argument("lui", help=".lui 或工程清单 lvglpp.project.json（读取其中的 resources）")
     ap.add_argument("-o", "--out", default=None, help="输出目录（默认：<lui 目录>/assets）")
     ap.add_argument("--cf", default="RGB565A8",
                     help="颜色格式：RGB565A8(默认,带透明) / RGB565 / ARGB8888 / AUTO …")
@@ -119,6 +119,8 @@ def main() -> int:
     with open(lui_path, encoding="utf-8") as f:
         doc = json.load(f)
 
+    # 工程清单（lvglpp.project.json）与 .lui 都支持：两者都有 resources，
+    # 区别只是基准目录（都用文件所在目录）与输出位置，逻辑一致
     resources = doc.get("resources") or {}
     if not resources:
         print(f"{args.lui} 没有 resources，无需转换")

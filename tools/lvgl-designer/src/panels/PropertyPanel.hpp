@@ -269,9 +269,10 @@ public:
                     /* 图片路径：给已登记的资源名做补全（"#别名"） */
                     bool srcLike = key == "src" || key.rfind("src_", 0) == 0 ||
                                    (key.size() > 4 && key.compare(key.size() - 4, 4, "_src") == 0);
-                    if (srcLike && m_doc && !m_doc->resources().empty()) {
+                    /* 资源是工程级的：要用 allResources()（文件 + 工程合并） */
+                    if (srcLike && m_doc && !m_doc->allResources().empty()) {
                         QStringList names;
-                        for (auto& kv : m_doc->resources())
+                        for (auto& kv : m_doc->allResources())
                             names << QString::fromStdString("#" + kv.first);
                         auto* completer = new QCompleter(names, field);
                         completer->setCaseSensitivity(Qt::CaseInsensitive);

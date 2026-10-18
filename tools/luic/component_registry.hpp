@@ -241,6 +241,7 @@ public:
                 {"offset",    "int_pair", "set_offset"},
                 {"opacity",   "int",      "set_opacity"},
                 {"antialias", "bool",     "set_antialias"},
+                {"inner_align","int",     "set_inner_align"},
                 {"size",      "int_pair", "set_size"},
                 {"pos",       "int_pair", "set_pos"},
             },
