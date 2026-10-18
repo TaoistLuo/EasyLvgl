@@ -177,7 +177,6 @@ void MainWindow::setupMenus() {
 
     auto* helpMenu = menuBar()->addMenu("帮助(&H)");
     helpMenu->addAction("关于(&A)", this, &MainWindow::onAbout);
-    helpMenu->addAction("关于 Qt(&Q)", this, &QApplication::aboutQt);
 }
 
 
@@ -1394,7 +1393,8 @@ void MainWindow::onAbout() {
     QMessageBox::about(this, "关于 LVGL++ Designer",
         "<h3>LVGL++ Designer</h3>"
         "<p>LVGL++ 项目的可视化 UI 设计器。</p>"
-        "<p>Version 1.0</p>");
+        "<p>Version 1.0</p>"
+        "<p>作者：吃荤小道长</p>");
 }
 
 void MainWindow::onBringToFront() {
