@@ -19,8 +19,8 @@ LVGL++ 是对 LVGL 9.2 的 Header-Only C++ 封装库，提供 RAII 内存管理�
 ## 快速开始
 
 ```cpp
-#include "lvgl++/lvgl_widgets.hpp"
-using namespace lvgl;
+#include "easylvgl/lvgl_widgets.hpp"
+using namespace easylvgl;
 
 // 按钮与链式 API
 LButton btn;
@@ -181,7 +181,7 @@ hbox.set_spacing(5)
 
 ```
 lv_port_linux/
-├── lvgl++/                     # C++ 封装库（Header-Only）
+├── easylvgl/                     # C++ 封装库（Header-Only）
 │   ├── core/                   # Layer 1：核心基础设施
 │   ├── widgets/                # Layer 2：35 个 Widget
 │   ├── layouts/                # Layer 2：5 个 Layout

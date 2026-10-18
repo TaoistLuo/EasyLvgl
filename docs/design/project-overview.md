@@ -98,7 +98,7 @@ lv_obj_del(obj);  // 可能执行不到
 ## 项目结构
 
 ```
-lvgl++/
+easylvgl/
 ├── core/
 │   ├── widget.hpp              # LWidget基类 + LWidgetCRTP<Derived>模板
 │   ├── style.hpp               # LStyle样式构建器

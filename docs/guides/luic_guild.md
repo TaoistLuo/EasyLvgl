@@ -42,7 +42,7 @@ cd build && make ui_compile
 ```cpp
 #include "my_screen_ui.hpp"
 
-class MyScreen : public lvgl::MyScreen_UI {
+class MyScreen : public easylvgl::MyScreen_UI {
 public:
     void on_btn_ok_clicked(lv_event_t* e) override {
         printf("OK clicked!\n");
@@ -274,7 +274,7 @@ public:
 用户继承这个类，override 事件函数即可：
 
 ```cpp
-class MyScreen : public lvgl::MyScreen_UI {
+class MyScreen : public easylvgl::MyScreen_UI {
     void on_btn_ok_clicked(lv_event_t* e) override {
         // 你的业务逻辑
     }

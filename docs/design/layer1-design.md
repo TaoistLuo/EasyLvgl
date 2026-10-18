@@ -17,14 +17,14 @@ Layer 1是LVGL++的基础层，提供RAII内存管理、类型安全的事件系
 ## 文件结构
 
 ```
-lvgl++/core/
+easylvgl/core/
 ├── widget.hpp          # LWidget基类 + LWidgetCRTP<Derived>模板
 ├── style.hpp           # LStyle样式构建器
 ├── event.hpp           # 事件系统
 ├── config.hpp          # ObjectConfig（Fluent API）
 └── signal_handler.hpp  # SignalHandler（Ctrl+C优雅退出）
 
-lvgl++/
+easylvgl/
 └── lvgl_core.hpp       # Layer 1统一入口（含ObjectConfig::style()延迟实现）
 ```
 
@@ -34,7 +34,7 @@ lvgl++/
 
 ### 1. LWidget基类
 
-**文件：** `lvgl++/core/widget.hpp`
+**文件：** `easylvgl/core/widget.hpp`
 
 ```cpp
 #pragma once
@@ -167,7 +167,7 @@ public:
 
 ### 2. LStyle构建器
 
-**文件：** `lvgl++/core/style.hpp`
+**文件：** `easylvgl/core/style.hpp`
 
 ```cpp
 #pragma once
@@ -261,7 +261,7 @@ pressed_style.set_bg_color(0x1976D2).apply_to(button, LV_STATE_PRESSED);
 
 ### 3. 事件系统
 
-**文件：** `lvgl++/core/event.hpp`
+**文件：** `easylvgl/core/event.hpp`
 
 ```cpp
 #pragma once
@@ -355,7 +355,7 @@ on_clicked(button, [&counter]() {
 
 ### 4. ObjectConfig（Fluent API）
 
-**文件：** `lvgl++/core/config.hpp`
+**文件：** `easylvgl/core/config.hpp`
 
 ```cpp
 #pragma once
@@ -423,7 +423,7 @@ auto container = configure(lv_obj_create(parent))
 
 ### 5. SignalHandler（信号处理）
 
-**文件：** `lvgl++/core/signal_handler.hpp`
+**文件：** `easylvgl/core/signal_handler.hpp`
 
 ```cpp
 #pragma once
@@ -452,7 +452,7 @@ public:
 **使用示例：**
 
 ```cpp
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 
 lvgl::SignalHandler signal_handler;
 while (signal_handler.is_running()) {
@@ -464,7 +464,7 @@ while (signal_handler.is_running()) {
 
 ## 统一入口头文件
 
-**文件：** `lvgl++/lvgl_core.hpp`
+**文件：** `easylvgl/lvgl_core.hpp`
 
 ```cpp
 #pragma once
@@ -533,8 +533,8 @@ lv_obj_add_style(btn, &style, 0);
 ### 完整示例
 
 ```cpp
-#include "lvgl++/lvgl_core.hpp"
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/lvgl_core.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 using namespace lvgl;
 
 int main() {

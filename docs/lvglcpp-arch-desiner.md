@@ -1038,7 +1038,7 @@ btn.set_text("Login")
 
 ```
 lv_port_linux/
-├── lvgl++/                          # C++ 封装层 (Header-Only, 零构建成本)
+├── easylvgl/                          # C++ 封装层 (Header-Only, 零构建成本)
 │   ├── core/                        # Layer 1 核心基础设施
 │   │   ├── widget.hpp               #   LWidget (RAII) + LWidgetCRTP (链式)
 │   │   ├── style.hpp                #   LStyle (Builder + RAII)

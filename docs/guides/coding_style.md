@@ -211,9 +211,9 @@ namespace Lvgl { };                  // 不应使用大驼峰
 
 ```cpp
 // ✅ 正确
-#define LVGLPP_VERSION "2.0.0"
-#define LVGLPP_MAX_WIDGETS 100
-#define LVGLPP_ENABLE_DEBUG 1
+#define EASYLVGL_VERSION "2.0.0"
+#define EASYLVGL_MAX_WIDGETS 100
+#define EASYLVGL_ENABLE_DEBUG 1
 
 // ❌ 错误
 #define version "2.0.0"              // 缺少前缀，不应小写
@@ -600,7 +600,7 @@ public:
 | 函数名 | 蛇形 | `set_text()`, `get_width()`, `bind_events()` |
 | 常量名 | 全大写 | `MAX_SIZE`, `DEFAULT_WIDTH` |
 | 命名空间 | 全小写 | `lvgl`, `internal` |
-| 宏定义 | 全大写 + 前缀 | `LVGLPP_VERSION` |
+| 宏定义 | 全大写 + 前缀 | `EASYLVGL_VERSION` |
 
 > **关于布局类名：** 早期设计使用 `LVStack`/`LHStack`，实际实现中使用更具描述性的 `LVBoxLayout`/`LHBoxLayout`。
 > 两者都遵循 `L` + PascalCase 的命名规则。

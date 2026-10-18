@@ -143,7 +143,7 @@ make luic_demo     # 编译并链接
 ```cpp
 #include "ui_generated/main_screen_ui.hpp"
 
-class MainScreen : public lvgl::MainScreen_UI {
+class MainScreen : public easylvgl::MainScreen_UI {
 public:
     void on_btn_login_clicked(lv_event_t* e) override {
         printf("Login!\n");

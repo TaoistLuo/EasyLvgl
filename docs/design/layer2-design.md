@@ -16,7 +16,7 @@ Layer 2在Layer 1的基础上，提供高层组件库，封装常用UI模式，�
 ## 文件结构
 
 ```
-lvgl++/
+easylvgl/
 ├── widgets/                    # 35个组件
 │   ├── button.hpp              # LButton
 │   ├── imagebutton.hpp         # LImageButton
@@ -71,12 +71,12 @@ lvgl++/
 
 ### 1. LButton组件
 
-**文件：** `lvgl++/widgets/button.hpp`
+**文件：** `easylvgl/widgets/button.hpp`
 
 ```cpp
 #pragma once
-#include "lvgl++/core/widget.hpp"
-#include "lvgl++/core/event.hpp"
+#include "easylvgl/core/widget.hpp"
+#include "easylvgl/core/event.hpp"
 #include "lvgl/lvgl.h"
 
 namespace lvgl {
@@ -114,7 +114,7 @@ public:
 
 ### 2. LLabel组件
 
-**文件：** `lvgl++/widgets/label.hpp`
+**文件：** `easylvgl/widgets/label.hpp`
 
 ```cpp
 class LLabel : public LWidgetCRTP<LLabel> {
@@ -136,7 +136,7 @@ public:
 
 ### 3. LSlider组件
 
-**文件：** `lvgl++/widgets/slider.hpp`
+**文件：** `easylvgl/widgets/slider.hpp`
 
 ```cpp
 class LSlider : public LWidgetCRTP<LSlider> {
@@ -162,7 +162,7 @@ public:
 
 #### LVBoxLayout - 垂直布局
 
-**文件：** `lvgl++/layouts/vbox_layout.hpp`（注意：不是`containers/vstack.hpp`）
+**文件：** `easylvgl/layouts/vbox_layout.hpp`（注意：不是`containers/vstack.hpp`）
 
 ```cpp
 class LVBoxLayout : public LWidgetCRTP<LVBoxLayout> {
@@ -186,7 +186,7 @@ public:
 
 #### LHBoxLayout - 水平布局
 
-**文件：** `lvgl++/layouts/hbox_layout.hpp`
+**文件：** `easylvgl/layouts/hbox_layout.hpp`
 
 ```cpp
 class LHBoxLayout : public LWidgetCRTP<LHBoxLayout> {
@@ -205,7 +205,7 @@ public:
 
 #### LGridLayout - 网格布局
 
-**文件：** `lvgl++/layouts/grid_layout.hpp`
+**文件：** `easylvgl/layouts/grid_layout.hpp`
 
 ```cpp
 class LGridLayout : public LWidgetCRTP<LGridLayout> {
@@ -233,7 +233,7 @@ public:
 
 #### LStackedLayout - 堆叠布局
 
-**文件：** `lvgl++/layouts/stacked_layout.hpp`
+**文件：** `easylvgl/layouts/stacked_layout.hpp`
 
 ```cpp
 class LStackedLayout : public LWidgetCRTP<LStackedLayout> {
@@ -249,7 +249,7 @@ public:
 
 ### 5. LMsgBox组件（替代Dialog）
 
-**文件：** `lvgl++/widgets/msgbox.hpp`
+**文件：** `easylvgl/widgets/msgbox.hpp`
 
 LMsgBox直接封装`lv_msgbox`，提供消息框功能：
 
@@ -288,57 +288,57 @@ public:
 
 ## 统一入口头文件
 
-**文件：** `lvgl++/lvgl_widgets.hpp`
+**文件：** `easylvgl/lvgl_widgets.hpp`
 
 ```cpp
 #pragma once
 
 // Buttons
-#include "lvgl++/widgets/button.hpp"
-#include "lvgl++/widgets/imagebutton.hpp"
-#include "lvgl++/widgets/checkbox.hpp"
-#include "lvgl++/widgets/radiobutton.hpp"
-#include "lvgl++/widgets/switch.hpp"
-#include "lvgl++/widgets/buttonmatrix.hpp"
+#include "easylvgl/widgets/button.hpp"
+#include "easylvgl/widgets/imagebutton.hpp"
+#include "easylvgl/widgets/checkbox.hpp"
+#include "easylvgl/widgets/radiobutton.hpp"
+#include "easylvgl/widgets/switch.hpp"
+#include "easylvgl/widgets/buttonmatrix.hpp"
 
 // Input
-#include "lvgl++/widgets/lineedit.hpp"
-#include "lvgl++/widgets/textedit.hpp"
-#include "lvgl++/widgets/combobox.hpp"
-#include "lvgl++/widgets/spinbox.hpp"
-#include "lvgl++/widgets/slider.hpp"
-#include "lvgl++/widgets/roller.hpp"
+#include "easylvgl/widgets/lineedit.hpp"
+#include "easylvgl/widgets/textedit.hpp"
+#include "easylvgl/widgets/combobox.hpp"
+#include "easylvgl/widgets/spinbox.hpp"
+#include "easylvgl/widgets/slider.hpp"
+#include "easylvgl/widgets/roller.hpp"
 
 // Display
-#include "lvgl++/widgets/label.hpp"
-#include "lvgl++/widgets/image.hpp"
-#include "lvgl++/widgets/bar.hpp"
-#include "lvgl++/widgets/arc.hpp"
-#include "lvgl++/widgets/spinner.hpp"
-#include "lvgl++/widgets/led.hpp"
-#include "lvgl++/widgets/line.hpp"
-#include "lvgl++/widgets/scale.hpp"
-#include "lvgl++/widgets/calendar.hpp"
-#include "lvgl++/widgets/chart.hpp"
-#include "lvgl++/widgets/table.hpp"
-#include "lvgl++/widgets/canvas.hpp"
-#include "lvgl++/widgets/span.hpp"
-#include "lvgl++/widgets/keyboard.hpp"
-#include "lvgl++/widgets/animimage.hpp"
+#include "easylvgl/widgets/label.hpp"
+#include "easylvgl/widgets/image.hpp"
+#include "easylvgl/widgets/bar.hpp"
+#include "easylvgl/widgets/arc.hpp"
+#include "easylvgl/widgets/spinner.hpp"
+#include "easylvgl/widgets/led.hpp"
+#include "easylvgl/widgets/line.hpp"
+#include "easylvgl/widgets/scale.hpp"
+#include "easylvgl/widgets/calendar.hpp"
+#include "easylvgl/widgets/chart.hpp"
+#include "easylvgl/widgets/table.hpp"
+#include "easylvgl/widgets/canvas.hpp"
+#include "easylvgl/widgets/span.hpp"
+#include "easylvgl/widgets/keyboard.hpp"
+#include "easylvgl/widgets/animimage.hpp"
 
 // Containers
-#include "lvgl++/widgets/groupbox.hpp"
-#include "lvgl++/widgets/list.hpp"
-#include "lvgl++/widgets/tabview.hpp"
-#include "lvgl++/widgets/menu.hpp"
-#include "lvgl++/widgets/tileview.hpp"
-#include "lvgl++/widgets/win.hpp"
+#include "easylvgl/widgets/groupbox.hpp"
+#include "easylvgl/widgets/list.hpp"
+#include "easylvgl/widgets/tabview.hpp"
+#include "easylvgl/widgets/menu.hpp"
+#include "easylvgl/widgets/tileview.hpp"
+#include "easylvgl/widgets/win.hpp"
 
 // Dialogs
-#include "lvgl++/widgets/msgbox.hpp"
+#include "easylvgl/widgets/msgbox.hpp"
 
 // Layouts
-#include "lvgl++/layouts/layout.hpp"
+#include "easylvgl/layouts/layout.hpp"
 ```
 
 ## 使用示例
@@ -346,7 +346,7 @@ public:
 ### 示例1：简单按钮
 
 ```cpp
-#include "lvgl++/lvgl_widgets.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
 using namespace lvgl;
 
 void create_button() {

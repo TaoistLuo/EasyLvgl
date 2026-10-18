@@ -39,7 +39,7 @@ int main() {
 LVGL++ 提供了 `SignalHandler` 工具类，用于优雅退出。
 
 ```cpp
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 
 int main() {
     lv_init();
@@ -187,8 +187,8 @@ public:
 ### 基础用法
 
 ```cpp
-#include "lvgl++/lvgl_widgets.hpp"
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 
 int main() {
     lv_init();
