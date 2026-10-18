@@ -1,5 +1,5 @@
 #include "canvas/LvglRenderer.hpp"
-#include "lvgl++/core/style.hpp"
+#include "easylvgl/core/style.hpp"
 #include <set>
 #include <cstdio>
 #include <algorithm>
@@ -549,7 +549,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     // === Section J: Text Style (generic, applied to all) ===
     if (node.props.count("text_color")) lv_obj_set_style_text_color(obj, lv_color_hex(propHex("text_color")), 0);
     if (node.props.count("text_opa")) lv_obj_set_style_text_opa(obj, propInt("text_opa"), 0);
-    if (node.props.count("text_font_size")) lv_obj_set_style_text_font(obj, ::lvgl::font_by_size(propInt("text_font_size")), 0);
+    if (node.props.count("text_font_size")) lv_obj_set_style_text_font(obj, ::easylvgl::font_by_size(propInt("text_font_size")), 0);
     if (node.props.count("text_font_size")) {
         int fs = propInt("text_font_size");
         if (fs <= 12) lv_obj_set_style_text_font(obj, &lv_font_montserrat_12, 0);

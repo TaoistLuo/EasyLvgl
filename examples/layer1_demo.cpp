@@ -1,11 +1,11 @@
-#include "lvgl++/lvgl_core.hpp"
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/lvgl_core.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 #include "lvgl/lvgl.h"
 #include "lvgl/demos/lv_demos.h"
-#include "lvgl++/core/platform.hpp"
+#include "easylvgl/core/platform.hpp"
 #include <stdio.h>
 
-using namespace lvgl;
+using namespace easylvgl;
 
 static const char *getenv_default(const char *name, const char *dflt)
 {
@@ -67,7 +67,7 @@ int main(void)
 
     while(signal_handler.is_running()) {
         lv_timer_handler();
-        lvgl::sleep_ms(5);
+        easylvgl::sleep_ms(5);
     }
 
     printf("\nCleaning up resources...\n");

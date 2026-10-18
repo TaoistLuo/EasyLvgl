@@ -1,9 +1,9 @@
-#include "lvgl++/lvgl_widgets.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
 #include "lvgl/lvgl.h"
 #include <cstdio>
-#include "lvgl++/core/platform.hpp"
+#include "easylvgl/core/platform.hpp"
 
-using namespace lvgl;
+using namespace easylvgl;
 
 int main(void) {
     lv_init();
@@ -454,7 +454,7 @@ int main(void) {
 
     while(1) {
         lv_timer_handler();
-        lvgl::sleep_ms(5);
+        easylvgl::sleep_ms(5);
     }
 
     return 0;

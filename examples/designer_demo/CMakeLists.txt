@@ -41,7 +41,7 @@ add_executable(designer_demo main.cpp)
 add_dependencies(designer_demo ui_compile)
 
 target_link_libraries(designer_demo
-    ${LVGL_SDK_DIR}/lib/liblvglcpp.a
+    ${LVGL_SDK_DIR}/lib/libeasylvgl.a
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     m pthread

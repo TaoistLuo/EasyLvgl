@@ -1,6 +1,6 @@
 #include "lvgl/lvgl.h"
 #include "lvgl/demos/lv_demos.h"
-#include "lvgl++/core/platform.hpp"
+#include "easylvgl/core/platform.hpp"
 #include <pthread.h>
 #include <time.h>
 #include <stdio.h>
@@ -40,7 +40,7 @@ static void lv_linux_disp_init(void)
 #endif
 
 // Old LObject/LStyle removed - use new LVGL++ API
-// #include "lvgl++/lvgl_widgets.hpp"
+// #include "easylvgl/lvgl_widgets.hpp"
 
 int main(void)
 {
@@ -66,7 +66,7 @@ int main(void)
     //   ./complete_demo
     while(1) {
         lv_timer_handler();
-        lvgl::sleep_ms(5);
+        easylvgl::sleep_ms(5);
     }
     return 0;
 }

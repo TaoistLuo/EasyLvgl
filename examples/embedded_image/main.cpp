@@ -7,13 +7,13 @@
  * scripts/assets/convert_assets.py 把 PNG 转成 lv_image_dsc_t 常量，
  * luic 生成 set_src(&caret) —— 最终固件里没有图片文件，也没有 lv_fs 依赖。
  */
-#include "lvgl++/lvgl_widgets.hpp"
-#include "lvgl++/core/signal_handler.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
+#include "easylvgl/core/signal_handler.hpp"
 #include "screen_ui.hpp"
-#include "lvgl++/core/platform.hpp"
+#include "easylvgl/core/platform.hpp"
 #include <cstdio>
 
-using namespace lvgl;
+using namespace easylvgl;
 
 #if LV_USE_SDL
 static void lv_linux_disp_init(void) {
@@ -40,7 +40,7 @@ int main(void) {
 
     while (signal_handler.is_running()) {
         lv_timer_handler();
-        lvgl::sleep_ms(5);
+        easylvgl::sleep_ms(5);
     }
     printf("\n退出。\n");
     return 0;

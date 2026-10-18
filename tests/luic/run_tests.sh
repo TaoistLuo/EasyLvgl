@@ -21,7 +21,7 @@ compile_output() {
 int main() { return 0; }
 EOF
 
-    g++ -std=c++17 -I"$ROOT_DIR" -I"$ROOT_DIR/lvgl" -I"$ROOT_DIR/lvgl++" -I"$ROOT_DIR/tools/luic" -c "$compile_unit" -o "$object_file"
+    g++ -std=c++17 -I"$ROOT_DIR" -I"$ROOT_DIR/lvgl" -I"$ROOT_DIR/easylvgl" -I"$ROOT_DIR/tools/luic" -c "$compile_unit" -o "$object_file"
 }
 
 run_test() {

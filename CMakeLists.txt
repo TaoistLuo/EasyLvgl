@@ -62,9 +62,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/lvgl/tests/FindLibDRM.cmake)
 find_package(Threads REQUIRED)
 
 # 平台相关的系统库：Linux 需要 libm，Windows(MinGW/MSVC) 不需要也不该链接
-set(LVGLPP_SYSTEM_LIBS Threads::Threads)
+set(EASYLVGL_SYSTEM_LIBS Threads::Threads)
 if(NOT WIN32)
-    list(APPEND LVGLPP_SYSTEM_LIBS m)
+    list(APPEND EASYLVGL_SYSTEM_LIBS m)
 endif()
 
 find_package(SDL2)
@@ -74,28 +74,28 @@ endif()
 find_package(SDL2_image)
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
 
-target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(layer1_demo examples/layer1_demo.cpp)
-target_link_libraries(layer1_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(layer1_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(layer2_demo examples/layer2_demo.cpp)
-target_link_libraries(layer2_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(layer2_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(complete_demo examples/complete_demo.cpp)
-target_link_libraries(complete_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(complete_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(components_basic_demo examples/components_basic_demo.cpp)
-target_link_libraries(components_basic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(components_basic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(components_advanced_demo examples/components_advanced_demo.cpp)
-target_link_libraries(components_advanced_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(components_advanced_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(components_containers_demo examples/components_containers_demo.cpp)
-target_link_libraries(components_containers_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(components_containers_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_executable(untested_components_demo examples/untested_components_demo.cpp)
-target_link_libraries(untested_components_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(untested_components_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 
 add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/main DEPENDS main)
 add_custom_target(run_layer1 COMMAND ${EXECUTABLE_OUTPUT_PATH}/layer1_demo DEPENDS layer1_demo)
@@ -109,14 +109,14 @@ add_custom_target(run_untested COMMAND ${EXECUTABLE_OUTPUT_PATH}/untested_compon
 # --- luic demo (end-to-end test) ---
 add_executable(luic_demo examples/luic_demo.cpp)
 add_dependencies(luic_demo ui_compile)
-target_link_libraries(luic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(luic_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 add_custom_target(run_luic_demo COMMAND ${EXECUTABLE_OUTPUT_PATH}/luic_demo DEPENDS luic_demo)
 
 # --- Per-component widget gallery examples ---
 add_executable(widgets_demo examples/widgets_demo.cpp)
 add_dependencies(widgets_demo widgets_ui_compile)
 target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/widgets/generated)
-target_link_libraries(widgets_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(widgets_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 add_custom_target(run_widgets COMMAND ${EXECUTABLE_OUTPUT_PATH}/widgets_demo DEPENDS widgets_demo)
 
 
@@ -137,7 +137,7 @@ add_custom_command(
 file(GLOB EMBED_ASSET_SRC ${EMBED_DIR}/assets/*.c)
 add_executable(embedded_image_demo examples/embedded_image/main.cpp ${EMBED_GEN} ${EMBED_ASSET_SRC})
 target_include_directories(embedded_image_demo PRIVATE ${EMBED_DIR} ${EMBED_DIR}/generated)
-target_link_libraries(embedded_image_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(embedded_image_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 add_custom_target(run_embedded_image COMMAND ${EXECUTABLE_OUTPUT_PATH}/embedded_image_demo DEPENDS embedded_image_demo)
 add_custom_target(convert_assets
     COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/assets/convert_assets.py ${EMBED_DIR}/screen.lui
@@ -145,11 +145,11 @@ add_custom_target(convert_assets
 
 # --- C++ wrapper unit tests ---
 add_executable(cpp_tests tests/cpp/test_wrappers.cpp)
-target_link_libraries(cpp_tests lvgl lvgl::thorvg ${SDL2_LIBRARIES} ${LVGLPP_SYSTEM_LIBS})
+target_link_libraries(cpp_tests lvgl lvgl::thorvg ${SDL2_LIBRARIES} ${EASYLVGL_SYSTEM_LIBS})
 add_custom_target(run_cpp_tests COMMAND ${EXECUTABLE_OUTPUT_PATH}/cpp_tests DEPENDS cpp_tests)
 
-# ── 合并为单一库 liblvglcpp.a ───────────────────────────────────────
-set(LVGLCPP_LIB "${CMAKE_BINARY_DIR}/lib/liblvglcpp.a")
+# ── 合并为单一库 libeasylvgl.a ───────────────────────────────────────
+set(LVGLCPP_LIB "${CMAKE_BINARY_DIR}/lib/libeasylvgl.a")
 
 add_custom_command(
     OUTPUT ${LVGLCPP_LIB}
@@ -162,9 +162,9 @@ add_custom_command(
         -D "AR=${CMAKE_AR}"
         -P "${CMAKE_SOURCE_DIR}/cmake/merge_libs.cmake"
     DEPENDS lvgl lvgl_demos lvgl_thorvg
-    COMMENT "Merging -> liblvglcpp.a"
+    COMMENT "Merging -> libeasylvgl.a"
 )
-add_custom_target(lvglcpp_lib ALL DEPENDS ${LVGLCPP_LIB})
+add_custom_target(easylvgl_lib ALL DEPENDS ${LVGLCPP_LIB})
 
 install(FILES ${LVGLCPP_LIB} DESTINATION lib)
 install(TARGETS luic RUNTIME DESTINATION bin)
@@ -173,7 +173,7 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/lvgl/ DESTINATION include/lvgl
         FILES_MATCHING PATTERN "*.h"
         PATTERN "demos" EXCLUDE
         PATTERN "examples" EXCLUDE)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/lvgl++/ DESTINATION include/lvgl++
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/easylvgl/ DESTINATION include/easylvgl
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 
 

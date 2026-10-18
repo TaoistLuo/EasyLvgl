@@ -814,7 +814,7 @@ void MainWindow::onNewProject() {
         {"files", QJsonArray{"ui/screens/" + screenName + ".lui"}},
     };
     /* ---- 完整工程脚手架：CMakeLists.txt + main.cpp + ui_generated 目录 ---- */
-    /* lvgl++ 仓库根：设计器可执行文件位于 <repo>/tools/lvgl-designer/build/ */
+    /* easylvgl 仓库根：设计器可执行文件位于 <repo>/tools/lvgl-designer/build/ */
     QString repoRoot = QDir(QCoreApplication::applicationDirPath())
                            .absoluteFilePath("../../..");
     repoRoot = QDir(repoRoot).absolutePath();
@@ -824,26 +824,26 @@ void MainWindow::onNewProject() {
         "project(%1 C CXX)\n\n"
         "set(CMAKE_CXX_STANDARD 17)\n"
         "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n\n"
-        "# lvgl++ 仓库位置（换机器时改这里，或用 -DLVGLPP_ROOT=... 覆盖）\n"
-        "if(NOT DEFINED LVGLPP_ROOT)\n"
-        "  set(LVGLPP_ROOT \"%2\" CACHE PATH \"lvgl++ 仓库根目录\")\n"
+        "# easylvgl 仓库位置（换机器时改这里，或用 -DEASYLVGL_ROOT=... 覆盖）\n"
+        "if(NOT DEFINED EASYLVGL_ROOT)\n"
+        "  set(EASYLVGL_ROOT \"%2\" CACHE PATH \"easylvgl 仓库根目录\")\n"
         "endif()\n\n"
-        "add_subdirectory(${LVGLPP_ROOT} ${CMAKE_BINARY_DIR}/lvglpp EXCLUDE_FROM_ALL)\n\n"
+        "add_subdirectory(${EASYLVGL_ROOT} ${CMAKE_BINARY_DIR}/lvglpp EXCLUDE_FROM_ALL)\n\n"
         "# .lui -> *_ui.hpp（改界面后重新编译会自动重生成）\n"
         "file(GLOB LUI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens/*.lui\n"
         "                    ${CMAKE_CURRENT_SOURCE_DIR}/ui/components/*.lui)\n"
         "set(UI_HEADERS \"\")\n"
         "file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated)\n"
         "add_custom_target(ui ALL\n"
-        "    COMMAND ${LVGLPP_ROOT}/bin/luic${CMAKE_EXECUTABLE_SUFFIX} --project\n"
+        "    COMMAND ${EASYLVGL_ROOT}/bin/luic${CMAKE_EXECUTABLE_SUFFIX} --project\n"
         "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
         "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
         "    COMMENT \"luic: 生成 UI 代码\")\n\n"
         "# 图片资源：把工程清单里的 resources 转成 lv_image_dsc_t（qrc 式）\n"
-        "find_program(LVGLPP_PYTHON NAMES python3 python)\n"
+        "find_program(EASYLVGL_PYTHON NAMES python3 python)\n"
         "add_custom_target(assets\n"
-        "    COMMAND ${LVGLPP_PYTHON} ${LVGLPP_ROOT}/scripts/assets/convert_assets.py\n"
+        "    COMMAND ${EASYLVGL_PYTHON} ${EASYLVGL_ROOT}/scripts/assets/convert_assets.py\n"
         "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
         "    COMMENT \"转换图片资源\")\n"
         "add_dependencies(ui assets)\n"
@@ -854,9 +854,9 @@ void MainWindow::onNewProject() {
         "    ${CMAKE_CURRENT_SOURCE_DIR}\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
-        "    ${LVGLPP_ROOT})\n"
-        "# SDL2：优先用 lvgl++ 仓库自带的查找模块\n"
-        "list(APPEND CMAKE_MODULE_PATH \"${LVGLPP_ROOT}/cmake\" \"${LVGLPP_ROOT}/lvgl\")\n"
+        "    ${EASYLVGL_ROOT})\n"
+        "# SDL2：优先用 easylvgl 仓库自带的查找模块\n"
+        "list(APPEND CMAKE_MODULE_PATH \"${EASYLVGL_ROOT}/cmake\" \"${EASYLVGL_ROOT}/lvgl\")\n"
         "find_package(SDL2)\n"
         "find_package(SDL2_image)\n"
         "if(NOT SDL2_FOUND)\n"
@@ -870,13 +870,13 @@ void MainWindow::onNewProject() {
         if (f.open(QIODevice::WriteOnly)) f.write(cmakeLists.toUtf8());
     }
     QString mainCpp = QString(
-        "#include \"lvgl++/lvgl_widgets.hpp\"\n"
-        "#include \"lvgl++/core/signal_handler.hpp\"\n"
+        "#include \"easylvgl/lvgl_widgets.hpp\"\n"
+        "#include \"easylvgl/core/signal_handler.hpp\"\n"
         "#include \"%1_ui.hpp\"\n"
         "#include <unistd.h>\n\n"
-        "using namespace lvgl;   // 生成的界面类在 namespace lvgl 里\n\n"
+        "using namespace easylvgl;   // 生成的界面类在 namespace lvgl 里\n\n"
         "// 入口：由 lvglpp.project.json 的 entry 指定屏幕\n"
-        "class App : public lvgl::%1_UI {\n"
+        "class App : public easylvgl::%1_UI {\n"
         "public:\n"
         "    // 在这里 override on_<id>_<event>(lv_event_t*) 处理交互\n"
         "};\n\n"
@@ -884,7 +884,7 @@ void MainWindow::onNewProject() {
         "    lv_init();\n"
         "    lv_sdl_window_create(%1_UI::kScreenWidth, %1_UI::kScreenHeight);\n"
         "    lv_sdl_mouse_create();\n"
-        "    lvgl::SignalHandler signal_handler;\n"
+        "    easylvgl::SignalHandler signal_handler;\n"
         "    App app;\n"
         "    app.setup();\n"
         "    app.bind_events();\n"

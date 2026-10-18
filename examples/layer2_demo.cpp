@@ -1,10 +1,10 @@
-#include "lvgl++/lvgl_widgets.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
 #include "lvgl/lvgl.h"
 #include "lvgl/demos/lv_demos.h"
-#include "lvgl++/core/platform.hpp"
+#include "easylvgl/core/platform.hpp"
 #include <stdio.h>
 
-using namespace lvgl;
+using namespace easylvgl;
 
 static const char *getenv_default(const char *name, const char *dflt)
 {
@@ -118,7 +118,7 @@ int main(void)
 
     while(1) {
         lv_timer_handler();
-        lvgl::sleep_ms(5);
+        easylvgl::sleep_ms(5);
     }
     
     return 0;

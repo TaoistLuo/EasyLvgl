@@ -1,9 +1,9 @@
 #include "lvgl/lvgl.h"
-#include "lvgl++/lvgl_widgets.hpp"
+#include "easylvgl/lvgl_widgets.hpp"
 #include <cstdio>
 #include <string>
 
-using namespace lvgl;
+using namespace easylvgl;
 
 static int g_pass = 0;
 static int g_fail = 0;

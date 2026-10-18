@@ -18,7 +18,7 @@ set(LV_USE_THORVG_INTERNAL OFF CACHE BOOL "Disable ThorVG" FORCE)
 add_subdirectory(${LVGL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/lvgl_build)
 
 set(LUIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../luic")
-set(LVGLPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lvgl++")
+set(EASYLVGL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../easylvgl")
 
 add_executable(lvgl-designer
     src/main.cpp
@@ -47,7 +47,7 @@ target_include_directories(lvgl-designer PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${LUIC_DIR}"
     "${LUIC_DIR}/.."
-    "${LVGLPP_DIR}"
+    "${EASYLVGL_DIR}"
     "${LVGL_INCLUDE_DIR}"
     "${LVGL_INCLUDE_DIR}/src"
     "${LVGL_INCLUDE_DIR}/.."
