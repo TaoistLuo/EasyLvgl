@@ -56,6 +56,20 @@ public:
             validate_node(child, errors);
         }
 
+        /* 图片资源引用必须先在 resources 里声明，否则生成代码里会出现未定义符号 */
+        for (auto* n : doc.all_nodes()) {
+            for (auto& p : n->props) {
+                bool src_like = p.name == "src" ||
+                                (p.name.size() > 4 && p.name.compare(p.name.size() - 4, 4, "_src") == 0) ||
+                                p.name.rfind("src_", 0) == 0;
+                if (!src_like || p.str_val.empty() || p.str_val[0] != '#') continue;
+                std::string name = p.str_val.substr(1);
+                if (!doc.resources.count(name))
+                    errors.push_back(n->id + ": 图片资源 '#" + name +
+                                     "' 未在 resources 中声明");
+            }
+        }
+
         return errors;
     }
 

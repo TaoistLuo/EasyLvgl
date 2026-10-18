@@ -113,6 +113,8 @@ void MainWindow::setupMenus() {
     editMenu->addAction("删除(&D)", this, &MainWindow::onDelete, QKeySequence::Delete);
     editMenu->addSeparator();
     editMenu->addAction("全选(&A)", this, &MainWindow::onSelectAll, QKeySequence::SelectAll);
+    editMenu->addSeparator();
+    editMenu->addAction("添加图片资源(&I)...", this, &MainWindow::onAddImageResource);
 
     auto* viewMenu = menuBar()->addMenu("视图(&V)");
     m_compDock->toggleViewAction()->setText("组件(&C)");
@@ -311,6 +313,46 @@ void MainWindow::setupConnections() {
     });
 
     connect(m_lvglWidget, &SDL2Widget::customContextMenuRequested, this, &MainWindow::onContextMenu);
+}
+
+/* 把图片复制进工程 assets/ 并登记到 .lui 的 resources，控件里即可用 "#别名" 引用。
+ * 编译期由 scripts/assets/convert_assets.py 转成 lv_image_dsc_t，等价 Qt 的 qrc。 */
+void MainWindow::onAddImageResource() {
+    QString src = QFileDialog::getOpenFileName(this, "添加图片资源", m_doc.baseDir(),
+                                               "图片 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*)");
+    if (src.isEmpty()) return;
+
+    QFileInfo fi(src);
+    QString assetsDir = QDir(m_doc.baseDir()).absoluteFilePath("assets");
+    if (!QDir().mkpath(assetsDir)) {
+        QMessageBox::warning(this, "添加图片资源", "无法创建目录：" + assetsDir);
+        return;
+    }
+    QString dst = QDir(assetsDir).absoluteFilePath(fi.fileName());
+    if (QFileInfo(dst).absoluteFilePath() != fi.absoluteFilePath()) {
+        if (QFileInfo::exists(dst) &&
+            QMessageBox::question(this, "添加图片资源",
+                                  "assets/" + fi.fileName() + " 已存在，覆盖？") != QMessageBox::Yes)
+            return;
+        QFile::remove(dst);
+        if (!QFile::copy(src, dst)) {
+            QMessageBox::warning(this, "添加图片资源", "复制失败：" + dst);
+            return;
+        }
+    }
+
+    /* 资源名必须是合法的 C 标识符（它同时是生成代码里的变量名） */
+    std::string alias = fi.baseName().toStdString();
+    for (auto& c : alias)
+        if (!isalnum((unsigned char)c) && c != '_') c = '_';
+    if (alias.empty() || isdigit((unsigned char)alias[0])) alias = "img_" + alias;
+
+    m_doc.setResource(alias, ("assets/" + fi.fileName()).toStdString());
+    m_doc.markModified();
+    updateTitle();
+    statusBar()->showMessage(QString("已添加图片资源 #%1（生成代码前请运行 "
+                                     "scripts/assets/convert_assets.py）")
+                             .arg(QString::fromStdString(alias)), 8000);
 }
 
 void MainWindow::updateTitle() {

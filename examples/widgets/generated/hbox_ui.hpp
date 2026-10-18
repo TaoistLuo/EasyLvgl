@@ -23,6 +23,11 @@ public:
               .set_pos(20, 20)
               .set_size(340, 80)
               .set_spacing(8);
+        {
+            LStyle st;
+            st.set_padding(8);
+            st.apply_to(m_w->native());
+        }
 
         m_c1 = new LButton(m_w->native());
         m_c1->set_pos(0, 0)

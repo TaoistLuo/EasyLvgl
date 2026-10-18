@@ -125,12 +125,19 @@
   "version": "1.0",           // 格式版本（必需）
   "name": "MainScreen",       // 屏幕名称，用于生成类名（必需）
   "size": [800, 480],         // 屏幕尺寸 [宽, 高]（可选）
+  "resources": {               // 图片资源（可选）：别名 → 路径，相对 .lui 目录
+    "caret": "assets/caret_down.png"
+  },
   "children": [ ... ]         // 子组件列表（必需）
 }
 ```
 
 > **注意：** 与早期设计不同，当前格式不包含 `data`、`handlers`、`styles`、`theme` 字段。
 > 数据绑定功能尚未实现，事件绑定在组件对象的 `events` 字段中。
+>
+> `resources` 中的图片用 `"src": "#别名"` 引用，属于**编译期嵌入**（等价 Qt 的 qrc）：
+> 由 `scripts/assets/convert_assets.py` 转成 `lv_image_dsc_t` 常量，生成代码里是
+> `set_src(&别名)`。以 `A:` 开头的路径则仍是 lv_fs 运行时读取。
 
 ### 2. 组件对象
 

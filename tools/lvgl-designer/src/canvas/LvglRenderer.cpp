@@ -367,6 +367,14 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         return node.propBool(key, def);
     };
 
+    /* "#别名" 解析成设计器预览用的 lv_fs 路径；其它值原样返回 */
+    auto resolveSrc = [&](const std::string& s) -> std::string {
+        if (s.empty() || s[0] != '#') return s;
+        auto it = m_resAbs.find(s.substr(1));
+        if (it == m_resAbs.end()) return std::string();
+        return "A:" + it->second;
+    };
+
     auto propHex = [&](const std::string& key, uint32_t def = 0) -> uint32_t {
         auto it = node.props.find(key);
         if (it == node.props.end()) return def;
@@ -435,7 +443,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
     if (node.props.count("bg_grad_dir")) lv_obj_set_style_bg_grad_dir(obj, (lv_grad_dir_t)propInt("bg_grad_dir"), 0);
     if (node.props.count("bg_main_stop")) lv_obj_set_style_bg_main_stop(obj, propInt("bg_main_stop"), 0);
     if (node.props.count("bg_grad_stop")) lv_obj_set_style_bg_grad_stop(obj, propInt("bg_grad_stop"), 0);
-    if (node.props.count("bg_image_src")) { std::string s = propStr("bg_image_src"); if (!s.empty()) lv_obj_set_style_bg_image_src(obj, intern(s), 0); }
+    if (node.props.count("bg_image_src")) { std::string s = resolveSrc(propStr("bg_image_src")); if (!s.empty()) lv_obj_set_style_bg_image_src(obj, intern(s), 0); }
     if (node.props.count("bg_image_tiled")) lv_obj_set_style_bg_image_tiled(obj, propBool("bg_image_tiled"), 0);
     if (node.props.count("bg_image_opa")) lv_obj_set_style_bg_image_opa(obj, propInt("bg_image_opa"), 0);
     if (node.props.count("bg_image_recolor")) lv_obj_set_style_bg_image_recolor(obj, lv_color_hex(propHex("bg_image_recolor")), 0);
@@ -444,7 +452,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         lv_obj_set_style_bg_image_tiled(obj, true, 0);
     }
     if (node.props.count("bg_image_src")) {
-        std::string src = propStr("bg_image_src");
+        std::string src = resolveSrc(propStr("bg_image_src"));
         if (!src.empty()) {
             lv_image_header_t hdr;
             if (lv_image_decoder_get_info(src.c_str(), &hdr) == LV_RES_OK) {
@@ -701,7 +709,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         }
     } else if (node.type == "LImage") {
         if (node.props.count("src")) {
-            std::string src = propStr("src");
+            std::string src = resolveSrc(propStr("src"));
             if (!src.empty()) lv_image_set_src(obj, intern(src));
         }
         if (node.props.count("rotation")) lv_image_set_rotation(obj, propInt("rotation"));
@@ -995,7 +1003,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         }
         auto setSrc = [&](const char* key, lv_imagebutton_state_t st) {
             if (!node.props.count(key)) return;
-            std::string s = propStr(key);
+            std::string s = resolveSrc(propStr(key));
             if (!s.empty()) lv_imagebutton_set_src(obj, st, nullptr, intern(s), nullptr);
         };
         setSrc("src_released", LV_IMAGEBUTTON_STATE_RELEASED);
@@ -1300,6 +1308,15 @@ void LvglRenderer::pollEvents() {
 
 void LvglRenderer::buildTree(const LuiDocument& doc) {
     clear();
+
+    /* 资源别名 -> 绝对路径，供预览时按 lv_fs 路径加载 */
+    m_resAbs.clear();
+    for (auto& kv : doc.resources()) {
+        QString p = QString::fromStdString(kv.second);
+        m_resAbs[kv.first] = (QDir::isAbsolutePath(p)
+                              ? p
+                              : QDir(doc.baseDir()).absoluteFilePath(p)).toStdString();
+    }
 
     lv_obj_t* screen = lv_scr_act();
 

@@ -36,6 +36,12 @@ public:
             doc.height = j["size"][1].get<int>();
         }
 
+        if (j.contains("resources") && j["resources"].is_object()) {
+            for (auto it = j["resources"].begin(); it != j["resources"].end(); ++it) {
+                if (it.value().is_string()) doc.resources[it.key()] = it.value().get<std::string>();
+            }
+        }
+
         if (j.contains("children") && j["children"].is_array()) {
             for (auto& child : j["children"]) {
                 auto node = parse_node(child);

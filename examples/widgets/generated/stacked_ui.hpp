@@ -21,6 +21,11 @@ public:
         m_w->set_padding(6)
               .set_pos(20, 20)
               .set_size(300, 200);
+        {
+            LStyle st;
+            st.set_padding(6);
+            st.apply_to(m_w->native());
+        }
 
         m_c1 = new LLabel(m_w->native());
         m_c1->set_pos(0, 0)
@@ -32,6 +37,11 @@ public:
               .set_pos(0, 0)
               .set_size(260, 40)
               .set_text("Page 2");
+        {
+            LStyle st;
+            st.set_color(0x00AA00);
+            st.apply_to(m_c2->native());
+        }
 
         m_w->set_current_index(1);
 

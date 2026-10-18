@@ -8,6 +8,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
+#include <QDir>
+#include <QFileInfo>
 #include <QPointF>
 #include <QSizeF>
 #include "model/ComponentSchema.hpp"
@@ -373,6 +375,8 @@ class LuiDocument {
     int m_height = 480;
     std::vector<WidgetNode> m_children;
     QString m_filePath;
+    /* 图片资源：别名 -> 路径（相对 .lui 所在目录），控件里用 "#别名" 引用 */
+    std::map<std::string, std::string> m_resources;
     bool m_modified = false;
 
 public:
@@ -394,6 +398,13 @@ public:
             auto arr = root["size"].toArray();
             m_width = arr[0].toInt(800);
             m_height = arr[1].toInt(480);
+        }
+
+        m_resources.clear();
+        if (root.contains("resources") && root["resources"].isObject()) {
+            auto res = root["resources"].toObject();
+            for (auto it = res.begin(); it != res.end(); ++it)
+                m_resources[it.key().toStdString()] = it.value().toString().toStdString();
         }
 
         m_children.clear();
@@ -420,6 +431,13 @@ public:
         root["name"] = QString::fromStdString(m_name);
         root["size"] = QJsonArray{m_width, m_height};
 
+        if (!m_resources.empty()) {
+            QJsonObject res;
+            for (auto& kv : m_resources)
+                res[QString::fromStdString(kv.first)] = QString::fromStdString(kv.second);
+            root["resources"] = res;
+        }
+
         QJsonArray children;
         for (auto& child : m_children) {
             children.append(serializeNode(child));
@@ -439,6 +457,28 @@ public:
     int height() const { return m_height; }
     void setScreenSize(int w, int h) { m_width = w; m_height = h; m_modified = true; }
     const QString& filePath() const { return m_filePath; }
+
+    /* ---- 图片资源（qrc 式编译期嵌入） ---- */
+    const std::map<std::string, std::string>& resources() const { return m_resources; }
+    void setResource(const std::string& name, const std::string& relPath) {
+        m_resources[name] = relPath;
+        m_modified = true;
+    }
+    bool hasResource(const std::string& name) const { return m_resources.count(name) > 0; }
+    /** .lui 所在目录；未保存时用当前工作目录 */
+    QString baseDir() const {
+        if (m_filePath.isEmpty()) return QDir::currentPath();
+        return QFileInfo(m_filePath).absolutePath();
+    }
+    /** 把 "#别名" 解析成绝对路径；普通路径原样返回；找不到资源返回空串 */
+    std::string resolveResource(const std::string& src) const {
+        if (src.empty() || src[0] != '#') return src;
+        auto it = m_resources.find(src.substr(1));
+        if (it == m_resources.end()) return std::string();
+        QString p = QString::fromStdString(it->second);
+        if (QDir::isAbsolutePath(p)) return p.toStdString();
+        return QDir(baseDir()).absoluteFilePath(p).toStdString();
+    }
     bool isModified() const { return m_modified; }
     void markModified() { m_modified = true; }
 

@@ -73,6 +73,7 @@ private:
     void onCopy();
     void onPaste();
     void onSelectAll();
+    void onAddImageResource();
     void onDelete();
     void onCanvasSize();
     void onCompile();

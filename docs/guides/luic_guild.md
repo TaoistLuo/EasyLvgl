@@ -80,6 +80,7 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | version | string | 是 | 格式版本，当前 "1.0" |
 | name | string | 是 | 屏幕名称，用于生成类名（如 MainScreen → MainScreen_UI） |
 | size | [int, int] | 否 | 屏幕尺寸 [宽, 高] |
+| resources | object | 否 | 图片资源表：别名 → 路径（相对 .lui 所在目录），见下节 |
 | children | array | 是 | 子组件列表 |
 
 ### 组件对象
@@ -91,6 +92,68 @@ luic <input.lui> [-o output.hpp] [--verbose]
 | props | object | 否 | 属性键值对 |
 | events | array | 否 | 事件列表（如 ["clicked"]） |
 | children | array | 否 | 子组件（仅容器组件） |
+
+### 图片资源（qrc 式编译期嵌入）
+
+等同于 Qt 的 `.qrc`：图片在**编译期**转成 `lv_image_dsc_t` 常量数组，运行时不再
+读文件，也不需要 `lv_fs`。
+
+```json
+{
+    "name": "EmbeddedImage",
+    "size": [300, 160],
+    "resources": {
+        "caret": "assets/caret_down.png"
+    },
+    "children": [
+        { "type": "LImage", "id": "logo",
+          "props": { "pos": [40, 60], "size": [80, 60], "src": "#caret" } }
+    ]
+}
+```
+
+三步：
+
+1. **声明并引用**：`resources` 里给图片起别名，控件属性写 `"#别名"`。
+   别名必须是合法的 C 标识符（它同时是生成代码里的变量名）。
+2. **转成 C 数组**（改图后执行一次）：
+
+   ```bash
+   pip3 install pypng lz4          # 官方转换器的依赖
+   python3 scripts/assets/convert_assets.py path/to/screen.lui
+   ```
+
+   生成 `assets/<别名>.c`（`lv_image_dsc_t` 常量）和 `assets/lvgl_assets.h`
+   （所有资源的声明）。颜色格式默认 `RGB565A8`（16 位色 + 透明，省空间）；
+   需要和设计器预览逐像素一致时用 `--cf ARGB8888`。
+
+3. **编译**：把 `assets/*.c` 加进目标，并让 luic 生成正确的 include：
+
+   ```cmake
+   add_executable(app main.cpp ${LUI_GENERATED} ${ASSET_SOURCES})
+   target_include_directories(app PRIVATE path/to)   # 为了 #include "assets/lvgl_assets.h"
+   add_custom_command(OUTPUT ${LUI_GENERATED}
+       COMMAND luic screen.lui -o screen_ui.hpp --assets-include "assets/lvgl_assets.h"
+       DEPENDS screen.lui)
+   ```
+
+生成的代码：
+
+```cpp
+#include "assets/lvgl_assets.h"
+...
+m_logo = new LImage(root);
+m_logo->set_src(&caret);          // 指向固件里的常量数组
+```
+
+完整可运行示例见 `examples/embedded_image/`（`make embedded_image_demo`，
+改图后 `make convert_assets`）。
+
+> 注意：`assets/*.c` 是 C99 聚合初始化，必须按 C 编译（CMake 对 `.c` 默认如此），
+> 不要塞进 C++ 源文件。
+>
+> `"#别名"` 与 `A:` 开头的 lv_fs 路径可以共存：前者编译期嵌入，后者运行时读文件。
+> 引用了未在 `resources` 里声明的别名，luic 会直接报错。
 
 ### 支持的组件
 

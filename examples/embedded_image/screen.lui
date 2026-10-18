@@ -1,0 +1,40 @@
+{
+    "version": "1.0",
+    "name": "EmbeddedImage",
+    "size": [300, 160],
+    "resources": {
+        "caret": "assets/caret_down.png"
+    },
+    "children": [
+        {
+            "type": "LLabel",
+            "id": "title",
+            "props": {
+                "pos": [20, 16],
+                "size": [260, 24],
+                "text": "Embedded image (like qrc)",
+                "color": "0x000000",
+                "font_size": 14
+            }
+        },
+        {
+            "type": "LImage",
+            "id": "logo",
+            "props": {
+                "pos": [40, 60],
+                "size": [80, 60],
+                "src": "#caret",
+                "scale": 512
+            }
+        },
+        {
+            "type": "LImage",
+            "id": "logo_raw",
+            "props": {
+                "pos": [160, 60],
+                "size": [40, 30],
+                "src": "#caret"
+            }
+        }
+    ]
+}

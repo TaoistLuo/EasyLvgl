@@ -13,6 +13,8 @@ void print_usage() {
     printf("用法：luic <输入.lui> [-o 输出.hpp] [--verbose]\n");
     printf("\n选项：\n");
     printf("  -o <文件>    输出文件路径（默认 <输入>_ui.hpp）\n");
+    printf("  --assets-include <路径>  嵌入图片资源头文件的 include 路径\n");
+    printf("                 （默认 assets/lvgl_assets.h，由 scripts/assets/convert_assets.py 生成）\n");
     printf("  --verbose    打印详细信息\n");
     printf("  --help       显示本帮助\n");
 }
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]) {
 
     std::string input_file;
     std::string output_file;
+    std::string assets_include;
     bool verbose = false;
 
     for (int i = 1; i < argc; i++) {
@@ -66,6 +69,8 @@ int main(int argc, char* argv[]) {
             verbose = true;
         } else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = argv[++i];
+        } else if (strcmp(argv[i], "--assets-include") == 0 && i + 1 < argc) {
+            assets_include = argv[++i];
         } else if (input_file.empty()) {
             input_file = argv[i];
         }
@@ -107,6 +112,7 @@ int main(int argc, char* argv[]) {
     }
 
     luic::CodeGenerator codegen(registry);
+    if (!assets_include.empty()) codegen.setAssetsInclude(assets_include);
     std::string code = codegen.generate(*doc);
 
     auto slash = output_file.rfind('/');

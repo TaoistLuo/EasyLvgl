@@ -22,6 +22,8 @@ class LvglRenderer {
     std::map<std::string, lv_obj_t*> m_objects;
     std::map<lv_obj_t*, std::string> m_idMap;
     std::map<std::string, std::string> m_types;
+    /* "#别名" -> 预览用绝对路径（编译期嵌入由 luic 负责，设计器只做预览） */
+    std::map<std::string, std::string> m_resAbs;
     std::function<void(const std::string&)> m_onClick;
     std::function<void(const std::string& id, int x, int y, int w, int h)> m_onMoved;
     lv_obj_t* m_selectedObj = nullptr;

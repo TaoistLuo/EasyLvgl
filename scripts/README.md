@@ -45,6 +45,21 @@ scripts/
 
 ---
 
+## 2.5 图片资源转换（assets/）
+
+`assets/convert_assets.py` 把 `.lui` 里 `resources` 声明的图片转成 LVGL 的
+`lv_image_dsc_t` 常量数组（等价 Qt 的 qrc），并生成 `lvgl_assets.h`：
+
+```bash
+pip3 install pypng lz4
+python3 scripts/assets/convert_assets.py examples/embedded_image/screen.lui
+python3 scripts/assets/convert_assets.py foo.lui --cf ARGB8888 --compress RLE
+```
+
+- 控件里写 `"src": "#别名"`，luic 生成 `set_src(&别名)`，运行时零文件依赖
+- 默认 `RGB565A8`（省空间）；`ARGB8888` 与设计器预览逐像素一致
+- 生成的 `.c` 要用 C 编译器编译（CMake 对 `.c` 默认就是 C）
+
 ## 3. 坐标标定（关键）
 
 Linux 窗口是 **1400×900**，但 WSLg 把它缩放成 Windows 窗口客户区 **1180×797**

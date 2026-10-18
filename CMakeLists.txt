@@ -108,6 +108,30 @@ target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/wid
 target_link_libraries(widgets_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
 add_custom_target(run_widgets COMMAND ${EXECUTABLE_OUTPUT_PATH}/widgets_demo DEPENDS widgets_demo)
 
+
+# --- Embedded image demo (qrc-style resource embedding) ---
+# screen.lui 用 "src": "#caret" 引用 resources 里声明的图片。
+# assets/*.c 是 scripts/assets/convert_assets.py 生成的 lv_image_dsc_t，
+# 已提交进仓库，所以默认构建不需要 Python；改动图片后执行 make convert_assets。
+set(EMBED_DIR ${CMAKE_SOURCE_DIR}/examples/embedded_image)
+set(EMBED_GEN ${EMBED_DIR}/generated/screen_ui.hpp)
+add_custom_command(
+    OUTPUT ${EMBED_GEN}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EMBED_DIR}/generated
+    COMMAND ${PROJECT_SOURCE_DIR}/bin/luic ${EMBED_DIR}/screen.lui -o ${EMBED_GEN}
+            --assets-include "assets/lvgl_assets.h"
+    DEPENDS ${EMBED_DIR}/screen.lui luic
+    COMMENT "luic: embedded_image/screen.lui -> generated/screen_ui.hpp"
+)
+file(GLOB EMBED_ASSET_SRC ${EMBED_DIR}/assets/*.c)
+add_executable(embedded_image_demo examples/embedded_image/main.cpp ${EMBED_GEN} ${EMBED_ASSET_SRC})
+target_include_directories(embedded_image_demo PRIVATE ${EMBED_DIR} ${EMBED_DIR}/generated)
+target_link_libraries(embedded_image_demo lvgl lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)
+add_custom_target(run_embedded_image COMMAND ${EXECUTABLE_OUTPUT_PATH}/embedded_image_demo DEPENDS embedded_image_demo)
+add_custom_target(convert_assets
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/assets/convert_assets.py ${EMBED_DIR}/screen.lui
+    COMMENT "把 .lui 里声明的图片资源转换成 LVGL C 数组")
+
 # --- C++ wrapper unit tests ---
 add_executable(cpp_tests tests/cpp/test_wrappers.cpp)
 target_link_libraries(cpp_tests lvgl lvgl::thorvg ${SDL2_LIBRARIES} m pthread)

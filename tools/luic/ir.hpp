@@ -29,6 +29,9 @@ struct lui_document_t {
     std::string name;
     int width = 800;
     int height = 480;
+    /* 图片资源：别名 -> 路径（相对 .lui 所在目录）。控件里用 "#别名" 引用，
+     * 生成代码时变成编译期嵌入的 lv_image_dsc_t 指针。 */
+    std::map<std::string, std::string> resources;
     std::vector<widget_node_t> children;
 
     void collect_all_nodes(const std::vector<widget_node_t>& nodes,

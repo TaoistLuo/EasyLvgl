@@ -23,6 +23,12 @@ public:
         m_w->set_pos(20, 20)
               .set_size(260, 80)
               .set_width(3);
+        {
+            LStyle st;
+            st.set_color(0xFF9800);
+            st.set_width(3);
+            st.apply_to(m_w->native());
+        }
 
     }
 

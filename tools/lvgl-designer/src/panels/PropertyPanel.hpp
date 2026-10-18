@@ -12,6 +12,7 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QCompleter>
 #include <QSignalBlocker>
 #include <map>
 #include <set>
@@ -260,6 +261,18 @@ public:
                     glayout->addRow(qkey, field);
                 } else {
                     auto* field = new QLineEdit(val.toString());
+                    /* 图片路径：给已登记的资源名做补全（"#别名"） */
+                    bool srcLike = key == "src" || key.rfind("src_", 0) == 0 ||
+                                   (key.size() > 4 && key.compare(key.size() - 4, 4, "_src") == 0);
+                    if (srcLike && m_doc && !m_doc->resources().empty()) {
+                        QStringList names;
+                        for (auto& kv : m_doc->resources())
+                            names << QString::fromStdString("#" + kv.first);
+                        auto* completer = new QCompleter(names, field);
+                        completer->setCaseSensitivity(Qt::CaseInsensitive);
+                        completer->setCompletionMode(QCompleter::PopupCompletion);
+                        field->setCompleter(completer);
+                    }
                     connect(field, &QLineEdit::editingFinished, [this, field, key, prop]() {
                         QVariant newVal = (prop.type == "int") ? QVariant(field->text().toInt()) : QVariant(field->text());
                         writeProp(key, newVal);
