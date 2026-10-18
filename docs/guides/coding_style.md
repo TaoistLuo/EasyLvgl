@@ -1,8 +1,10 @@
-# LVGL++ 编码规范
+# EasyLVGL 编码规范
+
+> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
 
 ## 概述
 
-本文档定义了 LVGL++ 项目的 C++ 编码规范，确保代码风格统一、可读性强、易于维护。
+本文档定义了 EasyLVGL 项目的 C++ 编码规范，确保代码风格统一、可读性强、易于维护。
 
 ---
 
@@ -321,7 +323,7 @@ btn.set_text("Very Long Text Here").set_size(100, 50).primary().secondary().on_c
 /**
  * @file button.hpp
  * @brief Button component implementation
- * @author LVGL++ Team
+ * @author EasyLVGL Team
  * @date 2026-03-15
  */
 ```

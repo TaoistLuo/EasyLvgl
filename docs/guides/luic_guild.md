@@ -1,6 +1,8 @@
 # luic 编译器使用指南
 
-luic 是 LVGL++ 的 UI 编译器（C++ 实现），将 .lui 文件（JSON 格式）编译为 C++ 代码。
+> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
+
+luic 是 EasyLVGL 的 UI 编译器（C++ 实现），将 .lui 文件（JSON 格式）编译为 C++ 代码。
 
 ## 快速开始
 

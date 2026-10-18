@@ -1,8 +1,10 @@
 # 信号处理与优雅退出
 
+> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
+
 ## 📋 概述
 
-本文档说明 LVGL++ 如何处理 Ctrl+C (SIGINT) 信号，以及如何实现优雅退出。
+本文档说明 EasyLVGL 如何处理 Ctrl+C (SIGINT) 信号，以及如何实现优雅退出。
 
 ---
 
@@ -36,7 +38,7 @@ int main() {
 
 ### 使用 SignalHandler 类
 
-LVGL++ 提供了 `SignalHandler` 工具类，用于优雅退出。
+EasyLVGL 提供了 `SignalHandler` 工具类，用于优雅退出。
 
 ```cpp
 #include "easylvgl/core/signal_handler.hpp"
@@ -305,7 +307,7 @@ printf("Cleaning up resources...\n");
 
 ### 析构函数改进
 
-LVGL++ 的 `LWidget` 析构函数使用同步删除：
+EasyLVGL 的 `LWidget` 析构函数使用同步删除：
 
 ```cpp
 virtual ~LWidget() {
@@ -325,7 +327,7 @@ virtual ~LWidget() {
 
 ## 📚 相关文档
 
-- [LVGL++ 编码规范](coding_style.md)
+- [EasyLVGL 编码规范](coding_style.md)
 - [luic 编译器指南](luic_guild.md)
 ---
 

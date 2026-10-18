@@ -1,8 +1,8 @@
-# LVGL++ Designer VSCode 插件指南
+# EasyLVGL Designer VSCode 插件指南
 
 ## 概述
 
-LVGL++ Designer 是一个 VSCode 插件，提供可视化编辑 .lui 文件的能力。
+EasyLVGL Designer 是一个 VSCode 插件，提供可视化编辑 .lui 文件的能力。
 拖拽组件到画布，编辑属性，保存后自动生成 C++ 代码。
 
 > **注意：** 除了 VSCode 插件，你也可以使用 Qt 桌面设计器来编辑 .lui 文件：
@@ -60,7 +60,7 @@ vsce package
 
 1. 用 VSCode 打开 `vscode-lvgl-designer` 目录
 2. 按 `F5` 启动 Extension Development Host
-3. 在新窗口中打开你的 LVGL++ 项目
+3. 在新窗口中打开你的 EasyLVGL 项目
 4. 打开任意 `.lui` 文件，自动启动可视化编辑器
 
 ### 方式 2：从 .vsix 文件安装
@@ -92,7 +92,7 @@ xcopy vscode-lvgl-designer %USERPROFILE%\.vscode\extensions\lvgl-designer /E /I
 
 ### 1. 创建新界面
 
-- 命令面板（Ctrl+Shift+P）→ "LVGL++: New Screen"
+- 命令面板（Ctrl+Shift+P）→ "EasyLVGL: New Screen"
 - 输入屏幕名称（如 MainScreen）
 - 自动创建 `ui/mainscreen.lui` 并打开编辑器
 
@@ -180,11 +180,11 @@ public:
 ### 插件未加载
 - 确认 VSCode 版本 >= 1.80
 - 确认 `npm run compile` 无错误
-- 查看 VSCode 输出面板（Output → LVGL++ Designer）
+- 查看 VSCode 输出面板（Output → EasyLVGL Designer）
 
 ### .lui 文件未打开编辑器
 - 确认文件扩展名是 `.lui`
-- 右键文件 → "Open With..." → 选择 "LVGL++ Designer"
+- 右键文件 → "Open With..." → 选择 "EasyLVGL Designer"
 
 ### 编译失败
 - 确认 `tools/luic/bin/luic` 存在且可执行

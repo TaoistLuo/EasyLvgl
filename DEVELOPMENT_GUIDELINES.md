@@ -1,4 +1,4 @@
-# LVGL++ Designer 开发准则
+# EasyLVGL Designer 开发准则
 
 ## 核心原则
 

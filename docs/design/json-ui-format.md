@@ -1,4 +1,6 @@
-# LVGL++ JSON UI 格式设计（.lui）
+# EasyLVGL JSON UI 格式设计（.lui）
+
+> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
 
 **版本：** 2.0.0  
 **日期：** 2026-03-15  
@@ -29,7 +31,7 @@
       "type": "LLabel",
       "id": "title",
       "props": {
-        "text": "Welcome to LVGL++",
+        "text": "Welcome to EasyLVGL",
         "color": "0x2196F3",
         "font_size": 24
       }
@@ -322,5 +324,5 @@
 
 ---
 
-**设计者：** LVGL++ Team  
+**设计者：** EasyLVGL Team  
 **最后更新：** 2026-03-15

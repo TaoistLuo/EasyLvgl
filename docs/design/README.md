@@ -1,41 +1,12 @@
-# LVGL++ 设计文档
+# 设计文档
 
-本目录包含 LVGL++ 项目的架构设计和组件设计文档。
+| 文档 | 说明 |
+|---|---|
+| [project-overview.md](project-overview.md) | 目标、三层架构、设计原则 |
+| [architecture-design.md](architecture-design.md) | 整体架构与数据流 |
+| [layer1-design.md](layer1-design.md) | 核心层（LWidget / LStyle / 事件） |
+| [layer2-design.md](layer2-design.md) | 组件层（35 Widget + 4 布局） |
+| [json-ui-format.md](json-ui-format.md) | `.lui` 格式规范 |
+| [project-level-design.md](project-level-design.md) | 工程级设计（组件化 / 工程管理 / 实施状态） |
 
-## 📚 文档导航
-
-### 1. [项目概述](./project-overview.md)
-- 项目目标和核心问题
-- 三层架构设计
-- 设计原则和参考框架
-- 项目结构
-
-### 2. [架构设计](./architecture-design.md)
-- 整体架构说明
-- Layer 1/2/3 详细介绍
-- 性能考虑和兼容性策略
-
-### 3. [Layer 1 设计](./layer1-design.md)
-- LWidget / LWidgetCRTP 基类
-- LStyle 构建器
-- 事件系统
-- ObjectConfig（Fluent API）
-- SignalHandler
-
-### 4. [Layer 2 设计](./layer2-design.md)
-- 35 个 Widget 组件设计
-- 4 个布局器（VBox/HBox/Grid/Stacked）设计
-- 统一封装模式
-- 组件使用示例
-
-### 5. [JSON UI 格式](./json-ui-format.md)
-- .lui 文件格式规范
-- 组件类型和属性定义
-
-### 6. [工程级设计](./project-level-design.md)
-- **第一部分（已实现）**：43 个组件、3112 项属性、.lui 完整格式、图片资源嵌入（qrc 式）、luic、设计器、工具链与验证、已知限制
-- **第二部分（规划）**：文件 = 部件、屏幕是特例；`kind` / `exports` / `@Name` 实例；工程清单与 luic 工程模式；设计器工程化（新建组件、递归预览、参数编辑、在属性上设置导出）
-
----
-
-**最后更新：** 2026-10-18
+> 已删除：`lvglcpp-arch-desiner.md`（早期架构草稿，内容已并入 architecture-design 与 layer1/layer2）。
