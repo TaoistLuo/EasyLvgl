@@ -1,6 +1,6 @@
 #include "lvgl/lvgl.h"
 #include "lvgl/demos/lv_demos.h"
-#include <unistd.h>
+#include "lvgl++/core/platform.hpp"
 #include <pthread.h>
 #include <time.h>
 #include <stdio.h>
@@ -66,7 +66,7 @@ int main(void)
     //   ./complete_demo
     while(1) {
         lv_timer_handler();
-        usleep(5000);
+        lvgl::sleep_ms(5);
     }
     return 0;
 }

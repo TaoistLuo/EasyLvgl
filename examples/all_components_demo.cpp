@@ -1,7 +1,7 @@
 #include "lvgl++/lvgl_widgets.hpp"
 #include "lvgl/lvgl.h"
 #include <cstdio>
-#include <unistd.h>
+#include "lvgl++/core/platform.hpp"
 
 using namespace lvgl;
 
@@ -454,7 +454,7 @@ int main(void) {
 
     while(1) {
         lv_timer_handler();
-        usleep(5000);
+        lvgl::sleep_ms(5);
     }
 
     return 0;

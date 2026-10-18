@@ -2,7 +2,7 @@
 #include "lvgl++/core/signal_handler.hpp"
 #include <cstdio>
 #include <cstring>
-#include <unistd.h>
+#include "lvgl++/core/platform.hpp"
 
 // luic-generated UI for each component (examples/widgets/*.lui)
 #include "animimage_ui.hpp"
@@ -53,7 +53,7 @@ static void run_ui() {
     lv_sdl_mouse_create();
     UI ui;
     ui.setup(nullptr);
-    while (true) { lv_timer_handler(); usleep(5000); }
+    while (true) { lv_timer_handler(); lvgl::sleep_ms(5); }
 }
 
 int main(int argc, char** argv) {

@@ -96,11 +96,17 @@ inline QString SettingsDialog::luicPath() {
     if (!stored.isEmpty() && QFileInfo(stored).exists()) return stored;
 
     const QString appDir = QCoreApplication::applicationDirPath();
+    const QString exe =          // Windows 下可执行文件带 .exe
+#ifdef Q_OS_WIN
+        ".exe";
+#else
+        "";
+#endif
     const QStringList candidates = {
-        appDir + "/../../bin/luic",     // <repo>/tools/lvgl-designer/bin/luic（就地构建）
-        appDir + "/../../../bin/luic",  // <repo>/bin/luic（build 目录在 tools/lvgl-designer/build）
-        appDir + "/luic",
-        appDir + "/../bin/luic",
+        appDir + "/../../bin/luic" + exe,     // <repo>/tools/lvgl-designer/bin/luic
+        appDir + "/../../../bin/luic" + exe,  // <repo>/bin/luic
+        appDir + "/luic" + exe,
+        appDir + "/../bin/luic" + exe,
     };
     for (const auto& c : candidates)
         if (QFileInfo(c).exists()) return QDir(c).absolutePath();

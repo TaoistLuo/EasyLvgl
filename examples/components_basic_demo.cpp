@@ -1,7 +1,7 @@
 #include "lvgl/lvgl.h"
 #include "lvgl++/lvgl_widgets.hpp"
 #include "lvgl++/core/signal_handler.hpp"
-#include <unistd.h>
+#include "lvgl++/core/platform.hpp"
 #include <cstdio>
 
 using namespace lvgl;
@@ -100,7 +100,7 @@ int main(void) {
 
     while(signal_handler.is_running()) {
         lv_timer_handler();
-        usleep(5000);
+        lvgl::sleep_ms(5);
     }
 
     printf("\nCleaning up resources...\n");
