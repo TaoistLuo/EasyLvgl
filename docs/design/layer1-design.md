@@ -456,7 +456,7 @@ public:
 ```cpp
 #include "easylvgl/core/signal_handler.hpp"
 
-lvgl::SignalHandler signal_handler;
+easylvgl::SignalHandler signal_handler;
 while (signal_handler.is_running()) {
     lv_timer_handler();
     usleep(5000);
