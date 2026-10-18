@@ -1,21 +1,42 @@
+/**************************************************************************************************
+ * @file        style.hpp
+ * @brief       样式构建器（LStyle）
+ * @details     EasyLVGL —— 让 LVGL 开发像 Qt 一样简单：C++ 封装 + 可视化设计器 + 代码生成。
+ *
+ * @author      taoist.luo
+ * @version     1.0.0
+ * @date        2026-10-18
+ *
+ * Copyright (c) 2026 taoist.luo (https://github.com/TaoistLuo/EasyLVGL)
+ *
+ * MIT License
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *************************************************************************************************/
+
 #pragma once
-
-/**
- * @file style.hpp
- * @brief 样式构建器，提供链式API设置样式
- * @version 2.0.0
- * @date 2026-03-15
- * 
- * Style类自动管理lv_style_t生命周期，支持链式调用。
- */
-
 #include "lvgl/lvgl.h"
 
 namespace easylvgl {
 
 /**
  * @class LStyle
- * @brief 样式构建器
  * 
  * 提供链式API设置LVGL样式属性，自动管理样式生命周期。
  * 
@@ -30,7 +51,6 @@ namespace easylvgl {
  */
 
 /**
- * @brief 按像素字号取已编译的 Montserrat 字体（lv_conf.h 里启用的那批）
  * @param px 字号，未精确命中时回退到最近的可用字号
  */
 inline const lv_font_t* font_by_size(int px) {
@@ -81,7 +101,6 @@ inline const lv_font_t* font_by_size(int px) {
 namespace detail {
 
 /**
- * @brief LStyle::apply_to() 逐条复制时使用的属性表
  *
  * lv_obj_add_style() 只保存指针、不复制内容；LStyle 常常是栈上的临时对象
  * （生成代码里就是 `{ LStyle st; ...; st.apply_to(obj); }`），样式对象析构后
@@ -181,14 +200,12 @@ private:
     
 public:
     /**
-     * @brief 构造函数，初始化样式
      */
     LStyle() : m_initialized(true) {
         lv_style_init(&m_style);
     }
     
     /**
-     * @brief 析构函数，重置样式
      */
     ~LStyle() {
         if (m_initialized) {
@@ -201,7 +218,6 @@ public:
     LStyle& operator=(const LStyle&) = delete;
     
     /**
-     * @brief 移动构造函数
      * @param other 被移动的对象
      */
     LStyle(LStyle&& other) noexcept 
@@ -210,7 +226,6 @@ public:
     }
     
     /**
-     * @brief 移动赋值运算符
      * @param other 被移动的对象
      * @return LStyle& 当前对象引用
      */
@@ -227,7 +242,6 @@ public:
     }
     
     /**
-     * @brief 设置背景颜色
      * @param hex 十六进制颜色值（如0xFF0000表示红色）
      * @return LStyle& 当前对象引用，支持链式调用
      */
@@ -237,7 +251,6 @@ public:
     }
     
     /**
-     * @brief 设置背景不透明度
      * @param opa 不透明度（0-255，255为完全不透明）
      * @return LStyle& 当前对象引用
      */
@@ -247,7 +260,6 @@ public:
     }
     
     /**
-     * @brief 设置边框
      * @param width 边框宽度（像素）
      * @param color 边框颜色（十六进制）
      * @return LStyle& 当前对象引用
@@ -259,7 +271,6 @@ public:
     }
     
     /**
-     * @brief 设置边框宽度
      * @param width 边框宽度（像素）
      * @return LStyle& 当前对象引用
      */
@@ -269,7 +280,6 @@ public:
     }
     
     /**
-     * @brief 设置边框颜色
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
@@ -279,7 +289,6 @@ public:
     }
     
     /**
-     * @brief 设置圆角半径
      * @param r 半径值（像素）
      * @return LStyle& 当前对象引用
      */
@@ -289,7 +298,6 @@ public:
     }
     
     /**
-     * @brief 设置所有方向的内边距
      * @param pad 内边距值（像素）
      * @return LStyle& 当前对象引用
      */
@@ -299,7 +307,6 @@ public:
     }
     
     /**
-     * @brief 设置顶部内边距
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
@@ -309,7 +316,6 @@ public:
     }
     
     /**
-     * @brief 设置底部内边距
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
@@ -319,7 +325,6 @@ public:
     }
     
     /**
-     * @brief 设置左侧内边距
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
@@ -329,7 +334,6 @@ public:
     }
     
     /**
-     * @brief 设置右侧内边距
      * @param pad 内边距值
      * @return LStyle& 当前对象引用
      */
@@ -339,7 +343,6 @@ public:
     }
     
     /**
-     * @brief 设置文本颜色
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
@@ -349,7 +352,6 @@ public:
     }
     
     /**
-     * @brief 设置文本字体
      * @param font 字体指针
      * @return LStyle& 当前对象引用
      */
@@ -359,7 +361,6 @@ public:
     }
     
     /**
-     * @brief 设置阴影宽度
      * @param width 阴影宽度（像素）
      * @return LStyle& 当前对象引用
      */
@@ -369,7 +370,6 @@ public:
     }
     
     /**
-     * @brief 设置阴影颜色
      * @param hex 十六进制颜色值
      * @return LStyle& 当前对象引用
      */
@@ -379,7 +379,6 @@ public:
     }
     
     /**
-     * @brief 设置阴影X偏移
      * @param offset X偏移量（像素）
      * @return LStyle& 当前对象引用
      */
@@ -389,7 +388,6 @@ public:
     }
     
     /**
-     * @brief 设置阴影Y偏移
      * @param offset Y偏移量（像素）
      * @return LStyle& 当前对象引用
      */
@@ -399,7 +397,6 @@ public:
     }
     
     /**
-     * @brief 应用样式到对象
      * @param obj 目标对象
      * @param selector 样式选择器（默认0表示所有状态）
      * 
@@ -485,7 +482,6 @@ public:
     LStyle& set_text_font_size(int px) { lv_style_set_text_font(&m_style, font_by_size(px)); return *this; }
 
     /**
-     * @brief 把样式应用到对象
      *
      * 注意：lv_obj_add_style() 只保存指针，不复制。LStyle 通常是栈上的临时对象
      * （生成代码里就是 `{ LStyle st; ...; st.apply_to(obj); }`），直接传 &m_style
@@ -503,7 +499,6 @@ public:
     }
     
     /**
-     * @brief 获取原生样式指针
      * @return lv_style_t* 原生样式指针
      * 
      * 用于与原生LVGL API交互。
@@ -511,7 +506,6 @@ public:
     lv_style_t* native() { return &m_style; }
     
     /**
-     * @brief 获取原生样式指针（const版本）
      * @return const lv_style_t* 原生样式指针
      */
     const lv_style_t* native() const { return &m_style; }

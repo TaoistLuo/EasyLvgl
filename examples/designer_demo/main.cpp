@@ -1,15 +1,34 @@
-/**
- * @file main.cpp
- * @brief Designer Demo — 使用 luic 编译产物 (dashboard_ui.hpp) 的示例
+/**************************************************************************************************
+ * @file        main.cpp
+ * @brief       示例程序
+ * @details     EasyLVGL —— 让 LVGL 开发像 Qt 一样简单：C++ 封装 + 可视化设计器 + 代码生成。
  *
- * 本示例演示完整的工作流：
- *   1. 设计器创建 ui/dashboard.lui (JSON 格式的 UI 定义)
- *   2. luic 编译器将 .lui 转换为 ui_generated/dashboard_ui.hpp
- *   3. 本文件子类化 Dashboard_UI，重写事件处理器，添加业务逻辑
+ * @author      taoist.luo
+ * @version     1.0.0
+ * @date        2026-10-18
  *
- * 编译: cd build && cmake .. && make -j$(nproc) designer_demo
- * 运行: bin/designer_demo
- */
+ * Copyright (c) 2026 taoist.luo (https://github.com/TaoistLuo/EasyLVGL)
+ *
+ * MIT License
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *************************************************************************************************/
 
 #include "easylvgl/lvgl_widgets.hpp"
 #include "easylvgl/core/signal_handler.hpp"

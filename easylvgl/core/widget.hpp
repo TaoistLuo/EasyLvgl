@@ -1,15 +1,36 @@
+/**************************************************************************************************
+ * @file        widget.hpp
+ * @brief       组件基类（LWidget / LWidgetCRTP）
+ * @details     EasyLVGL —— 让 LVGL 开发像 Qt 一样简单：C++ 封装 + 可视化设计器 + 代码生成。
+ *
+ * @author      taoist.luo
+ * @version     1.0.0
+ * @date        2026-10-18
+ *
+ * Copyright (c) 2026 taoist.luo (https://github.com/TaoistLuo/EasyLVGL)
+ *
+ * MIT License
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *************************************************************************************************/
+
 #pragma once
-
-/**
- * @file widget.hpp
- * @brief Widget基类，提供RAII内存管理
- * @version 1.0.0
- * @date 2026-03-15
- * 
- * LWidget是所有LVGL对象的C++包装基类，自动管理对象生命周期。
- * 使用移动语义避免拷贝，禁止拷贝构造防止双重释放。
- */
-
 #include "lvgl/lvgl.h"
 #include <utility>
 
@@ -45,7 +66,6 @@ class LWidgetCRTP;
 
 /**
  * @class LWidget
- * @brief LVGL对象的RAII包装基类
  * 
  * 提供自动内存管理、移动语义和类型安全的基础设施。
  * 
@@ -61,7 +81,6 @@ protected:
     
 public:
     /**
-     * @brief 构造函数
      * @param obj 原生LVGL对象指针
      * 
      * 获取对象的所有权，析构时自动释放。
@@ -69,7 +88,6 @@ public:
     explicit LWidget(lv_obj_t* obj) : m_obj(obj) {}
     
     /**
-     * @brief 移动构造函数
      * @param other 被移动的对象
      * 
      * 转移对象所有权，原对象不再管理该LVGL对象。
@@ -79,7 +97,6 @@ public:
     }
     
     /**
-     * @brief 移动赋值运算符
      * @param other 被移动的对象
      * @return LWidget& 当前对象引用
      * 
@@ -101,7 +118,6 @@ public:
     LWidget& operator=(const LWidget&) = delete;
     
     /**
-     * @brief 析构函数，自动释放LVGL对象
      * 
      * 使用lv_obj_delete同步删除，避免Ctrl+C时崩溃。
      * 同步删除不依赖事件循环，可以安全地在程序退出时调用。
@@ -114,7 +130,6 @@ public:
     }
     
     /**
-     * @brief 获取原生LVGL对象指针
      * @return lv_obj_t* 原生指针
      * 
      * 用于与原生LVGL API交互。
@@ -122,7 +137,6 @@ public:
     lv_obj_t* native() { return m_obj; }
     
     /**
-     * @brief 获取原生LVGL对象指针（const版本）
      * @return const lv_obj_t* 原生指针
      */
     const lv_obj_t* native() const { return m_obj; }

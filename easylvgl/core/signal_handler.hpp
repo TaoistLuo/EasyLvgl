@@ -1,15 +1,36 @@
+/**************************************************************************************************
+ * @file        signal_handler.hpp
+ * @brief       信号处理与优雅退出
+ * @details     EasyLVGL —— 让 LVGL 开发像 Qt 一样简单：C++ 封装 + 可视化设计器 + 代码生成。
+ *
+ * @author      taoist.luo
+ * @version     1.0.0
+ * @date        2026-10-18
+ *
+ * Copyright (c) 2026 taoist.luo (https://github.com/TaoistLuo/EasyLVGL)
+ *
+ * MIT License
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *************************************************************************************************/
+
 #pragma once
-
-/**
- * @file signal_handler.hpp
- * @brief 信号处理工具，用于优雅退出
- * @version 1.0.0
- * @date 2026-03-15
- * 
- * 提供信号处理功能，确保程序在接收到 SIGINT/SIGTERM 时优雅退出。
- * 避免 Ctrl+C 导致的崩溃问题。
- */
-
 #include <signal.h>
 #include <atomic>
 #include <cstdio>
@@ -18,7 +39,6 @@ namespace easylvgl {
 
 /**
  * @class SignalHandler
- * @brief 信号处理器，用于优雅退出
  * 
  * 使用方法：
  * @code
@@ -45,7 +65,6 @@ private:
     
 public:
     /**
-     * @brief 构造函数，注册信号处理器
      * 
      * 自动注册 SIGINT 和 SIGTERM 信号处理器。
      */
@@ -56,7 +75,6 @@ public:
     }
     
     /**
-     * @brief 检查程序是否应该继续运行
      * @return bool true = 继续运行，false = 应该退出
      */
     bool is_running() const {
@@ -64,7 +82,6 @@ public:
     }
     
     /**
-     * @brief 请求程序退出
      */
     void request_exit() {
         get_running_flag().store(false);
