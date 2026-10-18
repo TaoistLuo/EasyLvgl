@@ -440,7 +440,8 @@ public:
         QJsonObject root;
         root["version"] = QString::fromStdString(m_version);
         root["name"] = QString::fromStdString(m_name);
-        root["size"] = QJsonArray{m_width, m_height};
+        /* 组件没有屏幕语义：不能写 size，否则 luic 会报 "component must not declare size" */
+        if (m_kind == "screen") root["size"] = QJsonArray{m_width, m_height};
         if (m_kind != "screen") root["kind"] = QString::fromStdString(m_kind);
         if (!m_exports.empty()) {
             QJsonObject ex;

@@ -10,6 +10,8 @@
 #include <QHBoxLayout>
 #include <QCoreApplication>
 #include <QFileInfo>
+#include <QDir>
+#include <QStringList>
 
 namespace designer {
 
@@ -89,9 +91,20 @@ private:
 };
 
 inline QString SettingsDialog::luicPath() {
-    QString def = QCoreApplication::applicationDirPath() + "/luic";
-    if (!QFileInfo::exists(def)) def = QCoreApplication::applicationDirPath() + "/../bin/luic";
-    return QSettings().value("build/luic", def).toString();
+    /* 依次尝试：配置值（必须真实存在）→ 从设计器位置向上找仓库 bin/luic → PATH */
+    const QString stored = QSettings().value("build/luic").toString();
+    if (!stored.isEmpty() && QFileInfo(stored).exists()) return stored;
+
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QStringList candidates = {
+        appDir + "/../../bin/luic",     // <repo>/tools/lvgl-designer/bin/luic（就地构建）
+        appDir + "/../../../bin/luic",  // <repo>/bin/luic（build 目录在 tools/lvgl-designer/build）
+        appDir + "/luic",
+        appDir + "/../bin/luic",
+    };
+    for (const auto& c : candidates)
+        if (QFileInfo(c).exists()) return QDir(c).absolutePath();
+    return "luic";
 }
 inline QString SettingsDialog::cmakePath() { return QSettings().value("build/cmake", "cmake").toString(); }
 inline QString SettingsDialog::buildDir() { return QSettings().value("build/buildDir", QString()).toString(); }

@@ -28,6 +28,7 @@
 #include "panels/TreePanel.hpp"
 #include "panels/ProjectPanel.hpp"
 #include "app/SettingsDialog.hpp"
+#include "panels/OutputPanel.hpp"
 
 namespace designer {
 
@@ -41,6 +42,11 @@ class MainWindow : public QMainWindow {
     PropertyPanel* m_propPanel;
     TreePanel* m_treePanel;
     ProjectPanel* m_projectPanel;
+    OutputPanel* m_buildPanel;   // 编译/构建输出
+    OutputPanel* m_runPanel;     // 运行输出
+    QDockWidget* m_buildDock;
+    QDockWidget* m_runDock;
+    QProcess* m_runProc = nullptr;
     QUndoStack* m_undoStack;
     std::string m_selectedId;
     std::vector<std::string> m_multiSelectedIds;
@@ -110,6 +116,7 @@ private:
     void onOpenProject();
     void onSettings();
     void onBuildProject();
+    void onRunProject();
     void onApplyLayoutVBox();
     void onApplyLayoutHBox();
     void onApplyLayoutGrid();

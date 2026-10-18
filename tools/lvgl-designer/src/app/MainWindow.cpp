@@ -8,8 +8,10 @@
 #include <QTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSettings>
 #include <QInputDialog>
 #include <QRegularExpression>
 #include <algorithm>
@@ -36,6 +38,13 @@ MainWindow::MainWindow(QWidget* parent)
     setupMenus();
     setupToolbar();
     setupConnections();
+
+    /* 恢复上次打开的工程（命令行带参数时会被覆盖） */
+    {
+        const QString last = QSettings().value("project/last").toString();
+        if (!last.isEmpty() && QFileInfo::exists(last))
+            QTimer::singleShot(0, this, [this, last] { loadProject(last); });
+    }
 
     m_propPanel->setDocument(&m_doc);
     m_propPanel->setUndoStack(m_undoStack);
@@ -130,6 +139,8 @@ void MainWindow::setupMenus() {
     m_compDock->toggleViewAction()->setText("组件(&C)");
     viewMenu->addAction(m_compDock->toggleViewAction());
     viewMenu->addAction(m_projectDock->toggleViewAction());
+    viewMenu->addAction(m_buildDock->toggleViewAction());
+    viewMenu->addAction(m_runDock->toggleViewAction());
     m_treeDock->toggleViewAction()->setText("组件树(&T)");
     viewMenu->addAction(m_treeDock->toggleViewAction());
     m_propDock->toggleViewAction()->setText("属性(&P)");
@@ -145,6 +156,7 @@ void MainWindow::setupMenus() {
     auto* buildMenu = menuBar()->addMenu("构建(&B)");
     buildMenu->addAction("编译 .lui(&C)", this, &MainWindow::onCompile, QKeySequence("F5"));
     buildMenu->addAction("构建工程(&B)", this, &MainWindow::onBuildProject, QKeySequence("Ctrl+B"));
+    buildMenu->addAction("运行(&R)", this, &MainWindow::onRunProject, QKeySequence("Ctrl+R"));
     buildMenu->addAction("设置(&S)...", this, &MainWindow::onSettings);
 
     auto* helpMenu = menuBar()->addMenu("帮助(&H)");
@@ -160,6 +172,8 @@ void MainWindow::setupToolbar() {
     toolbar->addAction("保存", this, &MainWindow::onSave);
     toolbar->addSeparator();
     toolbar->addAction("编译", this, &MainWindow::onCompile);
+    toolbar->addAction("构建", this, &MainWindow::onBuildProject);
+    toolbar->addAction("运行", this, &MainWindow::onRunProject);
     toolbar->addSeparator();
     toolbar->addAction("剪切", this, &MainWindow::onCut);
     toolbar->addAction("复制", this, &MainWindow::onCopy);
@@ -188,6 +202,24 @@ void MainWindow::setupDocks() {
     m_projectDock->setWidget(m_projectPanel);
     m_projectDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, m_projectDock);
+
+    m_buildDock = new QDockWidget("编译输出", this);
+    m_buildPanel = new OutputPanel(this);
+    m_buildDock->setWidget(m_buildPanel);
+    m_buildDock->setFeatures(QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_buildDock);
+
+    m_runDock = new QDockWidget("运行输出", this);
+    m_runPanel = new OutputPanel(this);
+    m_runDock->setWidget(m_runPanel);
+    m_runDock->setFeatures(QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_runDock);
+    tabifyDockWidget(m_buildDock, m_runDock);
+    m_runDock->hide();
+    /* 输出区默认高度 200px；与画布之间的分隔条可拖动调整 */
+    m_buildPanel->setMinimumHeight(60);
+    m_runPanel->setMinimumHeight(60);
+    resizeDocks({m_buildDock, m_runDock}, {200, 200}, Qt::Vertical);
     tabifyDockWidget(m_compDock, m_projectDock);
 
     m_treeDock = new QDockWidget("组件树", this);
@@ -459,6 +491,17 @@ void MainWindow::loadProject(const QString& manifest) {
     const QString entryName = root["entry"].toString();
 
     m_projectFile = manifest;
+    QSettings().setValue("project/last", manifest);   // 下次启动自动打开
+
+    /* 默认构建目录：工程同级 build_lvgl（不存在就建；用户自定义在工程内的保持不动） */
+    {
+        const QString projDir = QFileInfo(manifest).absolutePath();
+        const QString defBuild = QDir(projDir).absoluteFilePath("build_lvgl");
+        const QString cur = QSettings().value("build/buildDir").toString();
+        if (cur.isEmpty() || QFileInfo(cur).absolutePath() != projDir)
+            QSettings().setValue("build/buildDir", defBuild);
+        QDir().mkpath(defBuild);
+    }
     m_projectDocs.clear();
     m_componentDocs.clear();
     m_projectComponents.clear();
@@ -563,6 +606,81 @@ void MainWindow::onNewProject() {
         {"entry", screenName},
         {"files", QJsonArray{"ui/screens/" + screenName + ".lui"}},
     };
+    /* ---- 完整工程脚手架：CMakeLists.txt + main.cpp + ui_generated 目录 ---- */
+    /* lvgl++ 仓库根：设计器可执行文件位于 <repo>/tools/lvgl-designer/build/ */
+    QString repoRoot = QDir(QCoreApplication::applicationDirPath())
+                           .absoluteFilePath("../../..");
+    repoRoot = QDir(repoRoot).absolutePath();
+
+    QString cmakeLists = QString(
+        "cmake_minimum_required(VERSION 3.16)\n"
+        "project(%1 C CXX)\n\n"
+        "set(CMAKE_CXX_STANDARD 17)\n"
+        "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n\n"
+        "# lvgl++ 仓库位置（换机器时改这里，或用 -DLVGLPP_ROOT=... 覆盖）\n"
+        "if(NOT DEFINED LVGLPP_ROOT)\n"
+        "  set(LVGLPP_ROOT \"%2\" CACHE PATH \"lvgl++ 仓库根目录\")\n"
+        "endif()\n\n"
+        "add_subdirectory(${LVGLPP_ROOT} ${CMAKE_BINARY_DIR}/lvglpp EXCLUDE_FROM_ALL)\n\n"
+        "# .lui -> *_ui.hpp（改界面后重新编译会自动重生成）\n"
+        "file(GLOB LUI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens/*.lui\n"
+        "                    ${CMAKE_CURRENT_SOURCE_DIR}/ui/components/*.lui)\n"
+        "set(UI_HEADERS \"\")\n"
+        "file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated)\n"
+        "add_custom_target(ui ALL\n"
+        "    COMMAND ${LVGLPP_ROOT}/bin/luic --project ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
+        "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "    COMMENT \"luic: 生成 UI 代码\")\n\n"
+        "add_executable(%1 main.cpp)\n"
+        "add_dependencies(%1 ui)\n"
+        "target_include_directories(%1 PRIVATE\n"
+        "    ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
+        "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
+        "    ${LVGLPP_ROOT})\n"
+        "# SDL2：优先用 lvgl++ 仓库自带的查找模块\n"
+        "list(APPEND CMAKE_MODULE_PATH \"${LVGLPP_ROOT}/cmake\" \"${LVGLPP_ROOT}/lvgl\")\n"
+        "find_package(SDL2)\n"
+        "find_package(SDL2_image)\n"
+        "if(NOT SDL2_FOUND)\n"
+        "  message(FATAL_ERROR \"未找到 SDL2：请安装 libsdl2-dev / SDL2（Windows 用 vcpkg 或官方开发包）\")\n"
+        "endif()\n"
+        "target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
+        "    ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)\n"
+    ).arg(name).arg(repoRoot);
+    {
+        QFile f(dir + "/CMakeLists.txt");
+        if (f.open(QIODevice::WriteOnly)) f.write(cmakeLists.toUtf8());
+    }
+    QString mainCpp = QString(
+        "#include \"lvgl++/lvgl_widgets.hpp\"\n"
+        "#include \"lvgl++/core/signal_handler.hpp\"\n"
+        "#include \"%1_ui.hpp\"\n"
+        "#include <unistd.h>\n\n"
+        "using namespace lvgl;   // 生成的界面类在 namespace lvgl 里\n\n"
+        "// 入口：由 lvglpp.project.json 的 entry 指定屏幕\n"
+        "class App : public lvgl::%1_UI {\n"
+        "public:\n"
+        "    // 在这里 override on_<id>_<event>(lv_event_t*) 处理交互\n"
+        "};\n\n"
+        "int main() {\n"
+        "    lv_init();\n"
+        "    lv_sdl_window_create(%1_UI::kScreenWidth, %1_UI::kScreenHeight);\n"
+        "    lv_sdl_mouse_create();\n"
+        "    lvgl::SignalHandler signal_handler;\n"
+        "    App app;\n"
+        "    app.setup();\n"
+        "    app.bind_events();\n"
+        "    while (signal_handler.is_running()) { lv_timer_handler(); usleep(5000); }\n"
+        "    return 0;\n"
+        "}\n"
+    ).arg(screenName);
+    {
+        QFile f(dir + "/main.cpp");
+        if (f.open(QIODevice::WriteOnly)) f.write(mainCpp.toUtf8());
+    }
+    QDir().mkpath(dir + "/ui_generated");
+
     const QString manifestPath = dir + "/lvglpp.project.json";
     QFile f(manifestPath);
     if (!f.open(QIODevice::WriteOnly)) {
@@ -866,6 +984,45 @@ void MainWindow::onCanvasSize() {
     updateStatusBar();
 }
 
+/* 运行：启动构建产物，stdout/stderr 进输出面板 */
+void MainWindow::onRunProject() {
+    const QString buildDir = SettingsDialog::buildDir();
+    if (buildDir.isEmpty() || m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "运行", "请先打开工程并在「设置」里配置构建目录。");
+        return;
+    }
+    QFile mf(m_projectFile);
+    QString name = QFileInfo(m_projectFile).completeBaseName();
+    if (mf.open(QIODevice::ReadOnly)) {
+        auto j = QJsonDocument::fromJson(mf.readAll()).object();
+        if (!j["name"].toString().isEmpty()) name = j["name"].toString();
+    }
+    QStringList cands{buildDir + "/" + name, buildDir + "/" + name + ".exe",
+                      buildDir + "/Debug/" + name + ".exe", buildDir + "/Release/" + name + ".exe"};
+    QString exe;
+    for (auto& c : cands) if (QFileInfo::exists(c)) { exe = c; break; }
+    if (exe.isEmpty()) {
+        m_runPanel->append("找不到可执行文件：" + cands.join(" / ") + "\n");
+        m_runDock->show();
+        m_runDock->raise();
+        return;
+    }
+    if (m_runProc) { m_runProc->kill(); m_runProc->deleteLater(); }
+    m_runProc = new QProcess(this);
+    m_runProc->setProcessChannelMode(QProcess::MergedChannels);
+    connect(m_runProc, &QProcess::readyReadStandardOutput, this, [this] {
+        m_runPanel->append(QString::fromLocal8Bit(m_runProc->readAllStandardOutput()));
+    });
+    connect(m_runProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int code, QProcess::ExitStatus) {
+                m_runPanel->append(QString("\n=== 程序退出，code=%1 ===\n").arg(code));
+            });
+    m_runPanel->append("=== 运行 " + exe + " ===\n");
+    m_runDock->show();
+    m_runDock->raise();
+    m_runProc->start(exe, QStringList());
+}
+
 void MainWindow::onSettings() {
     SettingsDialog dlg(this);
     dlg.exec();
@@ -873,16 +1030,40 @@ void MainWindow::onSettings() {
 
 /* 构建工程：先 cmake 配置（构建目录为空时），再 cmake --build */
 void MainWindow::onBuildProject() {
-    const QString buildDir = SettingsDialog::buildDir();
-    if (buildDir.isEmpty()) {
-        QMessageBox::information(this, "构建工程", "请先在「设置」里配置 CMake 与构建目录。");
-        onSettings();
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "构建工程", "请先新建或打开一个工程（构建需要工程的 CMakeLists.txt）。");
         return;
     }
+    const QString srcDir = QFileInfo(m_projectFile).absolutePath();
+    QString buildDir = SettingsDialog::buildDir();
+    if (buildDir.isEmpty()) buildDir = srcDir + "/build";   // 默认放工程目录下
     const QString cmake = SettingsDialog::cmakePath();
     QDir().mkpath(buildDir);
+    /* 构建目录里若已有指向别的源码树的缓存，必须清掉，否则会去构建那个工程 */
+    const QString cache = buildDir + "/CMakeCache.txt";
+    if (QFileInfo::exists(cache)) {
+        QFile cf(cache);
+        bool otherSource = false;
+        if (cf.open(QIODevice::ReadOnly)) {
+            for (auto& line : QString::fromLocal8Bit(cf.readAll()).split('\n')) {
+                if (line.startsWith("CMAKE_HOME_DIRECTORY:")) {
+                    const QString v = line.section('=', 1).trimmed();
+                    if (v != srcDir) otherSource = true;
+                }
+            }
+        }
+        if (otherSource) {
+            if (QMessageBox::question(this, "构建工程",
+                    "构建目录已被其它工程使用：\n" + buildDir + "\n\n清空并重新配置？")
+                != QMessageBox::Yes)
+                return;
+            QDir(buildDir).removeRecursively();
+            QDir().mkpath(buildDir);
+        }
+    }
     if (!QFileInfo::exists(buildDir + "/CMakeCache.txt")) {
-        QStringList cfg{"-S", QDir::currentPath(), "-B", buildDir,
+        m_buildPanel->append("=== 配置 " + srcDir + " -> " + buildDir + " ===\n");
+        QStringList cfg{"-S", srcDir, "-B", buildDir,
                         "-G", SettingsDialog::generator()};
         for (auto& a : SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts)) cfg << a;
         QProcess c;
@@ -893,6 +1074,9 @@ void MainWindow::onBuildProject() {
             return;
         }
     }
+    m_buildPanel->append("=== 构建 " + buildDir + " ===\n");
+    m_buildDock->show();
+    m_buildDock->raise();
     QProcess b;
     b.start(cmake, {"--build", buildDir, "-j"});
     statusBar()->showMessage("正在构建…");
@@ -901,6 +1085,8 @@ void MainWindow::onBuildProject() {
         return;
     }
     const QString out = QString::fromLocal8Bit(b.readAllStandardError());
+    m_buildPanel->append(QString::fromLocal8Bit(b.readAllStandardOutput()));
+    m_buildPanel->append(out);
     if (b.exitCode() == 0)
         statusBar()->showMessage("构建成功", 5000);
     else
@@ -938,6 +1124,9 @@ void MainWindow::onCompile() {
     } else {
         args << m_doc.filePath() << "-o" << outputPath << "--verbose";
     }
+    m_buildPanel->append("=== 编译 " + m_doc.filePath() + " ===\n");
+    m_buildDock->show();
+    m_buildDock->raise();
     proc.start(luicPath, args);
     statusBar()->showMessage("正在编译...");
 
