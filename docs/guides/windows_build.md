@@ -1,17 +1,17 @@
 # Windows 构建指南（MinGW-w64）
 
-> **适用版本：** EasyLVGL 2.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
+> **适用版本：** EasyLVGL 2.0.0（LVGL 9.6）　**最后更新：** 2026-10-18
 
 本项目在三个桌面平台上共用同一套源码与 CMake，只有“窗口/输入后端”按平台切换：
 
 | 平台 | 窗口/输入后端 | 依赖 |
 |------|----------------|------|
-| Windows | LVGL 原生 **Win32** 后端（`LV_USE_WINDOWS=1`） | 无（只用系统库） |
-| Linux / macOS | **SDL2**（`LV_USE_SDL=1`） | SDL2、SDL2_image |
+| Windows | LVGL 原生 **Win32** 后端（`CONFIG_LV_USE_WINDOWS`） | 无（只用系统库） |
+| Linux / macOS | **SDL2**（`CONFIG_LV_USE_SDL`） | SDL2 |
 
 平台判定集中在两处，业务代码不需要写平台分支：
 
-- `lv_conf.h`：根据 `_WIN32` 自动设置 `LV_USE_OS` / `LV_USE_SDL` / `LV_USE_WINDOWS`
+- Kconfig：`configs/linux-sdl.defconfig` 选择 SDL2 后端，Windows 配置选择 Win32 后端
 - `easylvgl/core/platform.hpp`：`easylvgl::init_desktop_display(w, h)` 统一创建窗口与输入设备
 
 ---
@@ -75,7 +75,7 @@ powershell -ExecutionPolicy Bypass -File scripts/win/build.ps1 -Target main -Tar
 ### 可视化设计器（Qt）
 
 `tools/lvgl-designer` 是一个 Qt Widgets 程序，它把 LVGL 渲染到自己的 framebuffer 后交给 Qt 绘制，
-**并不直接使用 SDL**，因此在 Windows 上不需要 SDL2。
+**并不直接使用 SDL**。设计器只链接构建出的 LVGL 静态库与 Qt，不再包含 `lvgl` 子目录或 SDL2 依赖。
 
 ```powershell
 # 方式一：脚本（需要指定与 MinGW 匹配的 Qt）
@@ -108,21 +108,14 @@ $env:Path = "E:\QT\QT5.12.2\5.12.2\mingw73_64\bin;" + $env:Path
 
 ## 4. 平台切换原理
 
-`lv_conf.h` 中：
+构建配置由 Kconfig 生成，默认使用 `configs/linux-sdl.defconfig`；Windows 配置打开
+Win32 后端。配置符号写入构建目录下的 `autoconf.h`：
 
-```c
-#if defined(_WIN32)
-    #define LV_USE_OS        LV_OS_WINDOWS   /* Win32 后端要求 */
-    #define LV_USE_SDL       0
-    #define LV_USE_WINDOWS   1
-    #define LV_USE_EVDEV     0               /* evdev 仅 Linux 可用 */
-#else
-    #define LV_USE_OS        LV_OS_NONE
-    #define LV_USE_SDL       1
-    #define LV_USE_WINDOWS   0
-    #define LV_USE_EVDEV     1
-#endif
-```
+| 符号 | 作用 |
+|------|------|
+| `CONFIG_LV_USE_SDL` | SDL2 窗口与输入 |
+| `CONFIG_LV_USE_WINDOWS` | Win32 窗口与输入 |
+| `CONFIG_LV_USE_EVDEV` | Linux evdev 输入 |
 
 `easylvgl/core/platform.hpp` 中：
 
@@ -151,7 +144,7 @@ inline lv_display_t *init_desktop_display(int w, int h) {
 - **CMake**：`bin/` 输出目录、多配置生成器 per-config 路径、`luic` 用 `$<TARGET_FILE:luic>` 引用、`run_*` 目标用生成表达式、MSVC 用 `lib.exe` / GNU 用 `ar -M` 合并静库。
 - **静态库合并** `cmake/merge_libs.cmake`：改用相对路径 + `WORKING_DIRECTORY`，避免 Windows 盘符让 `ar` 解析失败。
 - **`luic`**：`mkdir`/`stat` 在 Windows 走 `_mkdir`/`_stat`；路径判定兼容盘符与反斜杠；去掉 C++20 指定初始化器。
-- **`lv_conf.h`**：MinGW 默认按 Server 2003 裁剪头文件，CMake 补 `_WIN32_WINNT=0x0601`、`WINVER=0x0601`，并为旧 MinGW 补 `WM_DPICHANGED`。
+- **Kconfig**：构建配置由 defconfig 生成；MinGW 默认按 Server 2003 裁剪头文件，CMake 补 `_WIN32_WINNT=0x0601`、`WINVER=0x0601`，并为旧 MinGW 补 `WM_DPICHANGED`。
 
 ---
 

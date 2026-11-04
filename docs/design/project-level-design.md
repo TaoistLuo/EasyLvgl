@@ -47,7 +47,7 @@ EasyLVGL 的目标是**让 LVGL 开发像 Qt 一样简单**：拖拽搭界面 �
                         │
                         ▼
 ┌───────────────────────────────────────────────────────────────┐
-│  easylvgl（header-only C++ 封装，直接调用 LVGL 9.2 C API）      │
+│  easylvgl（header-only C++ 封装，直接调用 LVGL 9.6 C API）      │
 │  35 个 Widget + 4 个布局器 + LStyle(88 setter) + 事件/信号     │
 └───────────────────────────────────────────────────────────────┘
 
@@ -479,7 +479,7 @@ public:
 
 | 情况 | 处理 |
 |---|---|
-| 无内容对象（空 image / 空 canvas / 空 animimg / tile / spangroup）的 `transform_*` 与非 0 `blend_mode` | **跳过不应用**——LVGL 9.2 软件渲染在该组合下死循环，会卡死设计器 |
+| 无内容对象（空 image / 空 canvas / 空 animimg / tile / spangroup）的 `transform_*` 与非 0 `blend_mode` | **跳过不应用**——LVGL 软件渲染在该组合下死循环，会卡死设计器 |
 | 文本样式组 | `LChart` 不绘制任何文字，整组隐藏；`LCalendar`/`LRoller` 的 `text_align` 隐藏 |
 | 标签 `text_color`/`text_font_size` | 隐藏，统一用 `color`/`font_size`（避免两行重复且其中一行永远被覆盖） |
 | 正方形控件（`LArc`/`LLed`/`LSpinner`）的 `height` | 隐藏，宽高始终一致 |

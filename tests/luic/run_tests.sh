@@ -8,6 +8,13 @@ ROOT_DIR="$(cd "$TEST_DIR/../.." && pwd)"
 PASS=0
 FAIL=0
 
+# 9.6 使用 Kconfig 生成配置：编译生成代码时直接引用同一次构建的 autoconf.h。
+# 未构建过时退回到 LVGL 默认配置，保证语法检查仍可进行。
+LV_CONF_FLAGS=(-DLV_CONF_SKIP)
+if [ -f "$ROOT_DIR/build/lvgl/autoconf.h" ]; then
+    LV_CONF_FLAGS+=(-DLV_CONF_KCONFIG_EXTERNAL_INCLUDE="\"$ROOT_DIR/build/lvgl/autoconf.h\"")
+fi
+
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
@@ -21,7 +28,7 @@ compile_output() {
 int main() { return 0; }
 EOF
 
-    g++ -std=c++17 -I"$ROOT_DIR" -I"$ROOT_DIR/lvgl" -I"$ROOT_DIR/easylvgl" -I"$ROOT_DIR/tools/luic" -c "$compile_unit" -o "$object_file"
+    g++ -std=c++17 "${LV_CONF_FLAGS[@]}" -I"$ROOT_DIR" -I"$ROOT_DIR/lvgl" -I"$ROOT_DIR/easylvgl" -I"$ROOT_DIR/tools/luic" -c "$compile_unit" -o "$object_file"
 }
 
 run_test() {

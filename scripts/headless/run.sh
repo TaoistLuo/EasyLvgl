@@ -24,8 +24,10 @@ MOC="$(find "$BUILD" -name moc_SDL2Widget.cpp | head -1)"
 INCS=(-I "$ROOT/tools/lvgl-designer/src" -I "$ROOT" -I "$ROOT/build/lvgl"
       -isystem "$ROOT/lvgl" -isystem "$ROOT/lvgl/demos" -isystem "$ROOT/lvgl/src/libs/thorvg"
       -I "$QT/include" -I "$QT/include/QtCore" -I "$QT/include/QtGui" -I "$QT/include/QtWidgets")
-LIBS=(-L"$ROOT/build/lib" -llvgl -llvgl_thorvg -L"$QT/lib" -Wl,-rpath,"$QT/lib" -lm -lpthread)
-FLAGS=(-x c++ -g -std=gnu++17 -fPIC -O0)
+LIBS=(-L"$ROOT/build/lvgl" -llvgl -llvgl_thorvg -L"$QT/lib" -Wl,-rpath,"$QT/lib" -lm -lpthread)
+FLAGS=(-x c++ -g -std=gnu++17 -fPIC -O0
+       -DLV_CONF_SKIP
+       -DLV_CONF_KCONFIG_EXTERNAL_INCLUDE="\"$ROOT/build/lvgl/autoconf.h\"")
 
 mkdir -p "$OUT"
 fails=0

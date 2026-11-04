@@ -7,26 +7,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
-# 桌面窗口后端：Windows 用 LVGL 原生 Win32 后端；其它平台沿用 SDL2。
-# 说明：SDL2Widget 实际把 LVGL 渲染到自己的 framebuffer 后交给 Qt 绘制，
-#       并不直接调用 SDL。Windows 上因此无需 SDL2；Linux 保留原 SDL2 链接。
-if(WIN32)
-    # LVGL Win32 后端所需：较新的 Windows 头声明 + 旧 MinGW 缺失的 WM_DPICHANGED
-    add_definitions(-D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -DWM_DPICHANGED=0x02E0)
-    set(DESIGNER_DESKTOP_LIBS
-        user32 gdi32 imm32 shell32 ole32 oleaut32 uuid comctl32)
-else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(SDL2 REQUIRED sdl2)
-    set(DESIGNER_DESKTOP_LIBS ${SDL2_LIBRARIES})
-endif()
+find_package(Threads REQUIRED)
 
 set(LVGL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lvgl")
-set(LVGL_INCLUDE_DIR "${LVGL_DIR}")
-set(LV_CONF_INCLUDE_SIMPLE ON CACHE BOOL "Use simple include for lv_conf.h" FORCE)
-set(LV_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../lv_conf.h" CACHE PATH "Path to lv_conf.h" FORCE)
-set(LV_USE_THORVG_INTERNAL OFF CACHE BOOL "Disable ThorVG" FORCE)
+set(LV_BUILD_USE_KCONFIG ON CACHE BOOL "use kconfig" FORCE)
+set(LV_BUILD_KCONFIG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../Kconfig" CACHE PATH "path to root kconfig" FORCE)
+set(LV_BUILD_DEFCONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../configs/linux-sdl.defconfig" CACHE PATH "path to defconfig" FORCE)
+set(LV_BUILD_INSTALL OFF CACHE BOOL "disable lvgl install rules" FORCE)
+unset(LV_BUILD_DOTCONFIG_PATH CACHE)
+unset(LV_BUILD_CONF_DIR CACHE)
+unset(LV_BUILD_CONF_PATH CACHE)
+unset(LV_CONF_PATH CACHE)
 add_subdirectory(${LVGL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/lvgl_build)
 
 set(LUIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../luic")
@@ -60,19 +51,13 @@ target_include_directories(lvgl-designer PRIVATE
     "${LUIC_DIR}"
     "${LUIC_DIR}/.."
     "${EASYLVGL_DIR}"
-    "${LVGL_INCLUDE_DIR}"
-    "${LVGL_INCLUDE_DIR}/src"
-    "${LVGL_INCLUDE_DIR}/.."
-    "${SDL2_INCLUDE_DIRS}"
-)
-
-target_compile_definitions(lvgl-designer PRIVATE
-    LV_CONF_INCLUDE_SIMPLE
+    "${LVGL_DIR}/.."
 )
 
 target_link_libraries(lvgl-designer PRIVATE
-    lvgl
-    ${DESIGNER_DESKTOP_LIBS}
+    lvgl::lvgl
+    lvgl::thorvg
+    Threads::Threads
     Qt5::Widgets
 )
 

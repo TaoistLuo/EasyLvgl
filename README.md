@@ -1,4 +1,4 @@
-# EasyLVGL - LVGL 9.2 的现代 C++ 封装
+# EasyLVGL - LVGL 9.6 的现代 C++ 封装
 
 **版本：** 2.0.0  
 **状态：** 已完成  
@@ -8,7 +8,7 @@
 
 ## 项目简介
 
-EasyLVGL 是对 LVGL 9.2 的 Header-Only C++ 封装库，提供 RAII 内存管理、链式 API、类型安全的事件系统。同时包含完整的工具链：luic 编译器、Qt 可视化设计器、VSCode 插件。
+EasyLVGL 是对 LVGL 9.6 的 Header-Only C++ 封装库，提供 RAII 内存管理、链式 API、类型安全的事件系统。同时包含完整的工具链：luic 编译器、Qt 可视化设计器、VSCode 插件。
 
 - **39 个封装组件**：35 个 Widget + 4 个布局器（VBox/HBox/Grid/Stacked），覆盖 LVGL 全部 32 个原生组件
 - **零成本抽象**：编译后与手写 C 代码性能一致
@@ -69,11 +69,17 @@ cmake --build build-win -j 8
 
 ### Linux / macOS（SDL2）
 
+构建配置由 Kconfig 管理，默认使用 `configs/linux-sdl.defconfig`；生成的配置头位于
+`build/lvgl/`，不再依赖手写的 `lv_conf.h`。
+
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ./bin/main
 ```
+
+构建目标包括 `main`、各示例、`luic`、`cpp_tests`，以及自动生成 UI 头文件的
+`ui_compile` / `widgets_ui_compile`。
 
 ### 设计器（Qt 5.15）
 

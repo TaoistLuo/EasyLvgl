@@ -7,7 +7,7 @@ EasyLVGL Designer 是一个 VSCode 插件，提供可视化编辑 .lui 文件的
 
 > **注意：** 除了 VSCode 插件，你也可以使用 Qt 桌面设计器来编辑 .lui 文件：
 > ```bash
-> ./bin/lvgl-designer
+> ./tools/lvgl-designer/build/lvgl-designer
 > ```
 > Qt 设计器支持 LVGL 真实渲染预览，功能更完整。
 
@@ -187,8 +187,8 @@ public:
 - 右键文件 → "Open With..." → 选择 "EasyLVGL Designer"
 
 ### 编译失败
-- 确认 `tools/luic/bin/luic` 存在且可执行
-- 运行 `cd tools/luic/build && cmake .. && make` 重新编译 luic
+- 确认 `bin/luic` 存在且可执行
+- 运行 `cmake --build build --target luic` 重新编译 luic
 - 检查 .lui 文件 JSON 格式是否正确
 
 ### out/extension.js 未更新

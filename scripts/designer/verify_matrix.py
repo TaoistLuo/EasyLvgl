@@ -2,10 +2,22 @@ import json, os, re, subprocess, sys
 ROOT=os.getcwd(); LUIC=os.path.join(ROOT,'bin/luic'); OUT='/tmp/matrix_out'
 os.makedirs(OUT, exist_ok=True)
 SKIP={"LLottie"}   # LV_USE_LOTTIE=0 时该组件不存在
-defaults={}
-for line in open('/tmp/schema_defaults.json'):
-    line=line.strip().rstrip(',')
-    if line: defaults.update(json.loads('{'+line+'}'))
+lv_conf_flags=["-DLV_CONF_SKIP"]
+_autoconf=os.path.join(ROOT,'build/lvgl/autoconf.h')
+if os.path.exists(_autoconf):
+    lv_conf_flags.append('-DLV_CONF_KCONFIG_EXTERNAL_INCLUDE="%s"'%_autoconf)
+def _load_defaults():
+    path='/tmp/schema_defaults.json'
+    if os.path.exists(path):
+        out={}
+        for line in open(path):
+            line=line.strip().rstrip(',')
+            if line: out.update(json.loads('{'+line+'}'))
+        return out
+    src=open(os.path.join(ROOT,'tools/luic/component_registry.hpp')).read()
+    return {t:({"col":0,"row":0,"dir":0} if t=="LTile" else {})
+            for t in re.findall(r'reg\("([A-Za-z0-9_]+)"', src)}
+defaults=_load_defaults()
 CONTAINERS={"LVBoxLayout","LHBoxLayout","LGridLayout","LStackedLayout","LTabView","LMenu",
             "LMenuPage","LMenuCont","LMenuSection","LTileView","LTile","LList","LWin","LGroupBox"}
 ok=[]; bad=[]
@@ -23,8 +35,8 @@ for typ, props in defaults.items():
         bad.append((typ,"luic",(r.stdout+r.stderr).strip().splitlines()[-1][:120])); continue
     cu=os.path.join(OUT,"u_%s.cpp"%typ)
     open(cu,'w').write('#include "%s"\nint main(){return 0;}\n'%hpp)
-    c=subprocess.run(["g++","-std=c++17","-fsyntax-only","-I"+ROOT,"-I"+os.path.join(ROOT,"lvgl"),
-                      "-I"+os.path.join(ROOT,"lvgl++"),"-I"+os.path.join(ROOT,"build/lvgl"),cu],
+    c=subprocess.run(["g++","-std=c++17","-fsyntax-only"]+lv_conf_flags+["-I"+ROOT,"-I"+os.path.join(ROOT,"lvgl"),
+                      "-I"+os.path.join(ROOT,"easylvgl"),"-I"+os.path.join(ROOT,"build/lvgl"),cu],
                      capture_output=True,text=True)
     if c.returncode!=0:
         errs=[l for l in c.stderr.splitlines() if 'error:' in l][:3]

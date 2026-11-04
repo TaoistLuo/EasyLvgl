@@ -1,6 +1,6 @@
 # luic 编译器使用指南
 
-> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
+> **适用版本：** EasyLVGL 2.0.0（LVGL 9.6）　**最后更新：** 2026-10-18
 
 luic 是 EasyLVGL 的 UI 编译器（C++ 实现），将 .lui 文件（JSON 格式）编译为 C++ 代码。
 
@@ -33,7 +33,7 @@ luic 是 EasyLVGL 的 UI 编译器（C++ 实现），将 .lui 文件（JSON 格�
 
 ```bash
 # 手动编译
-tools/luic/bin/luic ui/my_screen.lui -o ui_generated/my_screen_ui.hpp
+bin/luic ui/my_screen.lui -o ui_generated/my_screen_ui.hpp
 
 # 或者用 make 自动编译（推荐）
 cd build && make ui_compile

@@ -937,7 +937,7 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             /* LVGL 的 cross_place 只把子项对齐到"轨道"内部，而轨道宽度等于最宽子项，
              * 等宽子项时看不出变化；轨道对齐一并设置才符合"交叉轴对齐"的直觉。 */
             lv_obj_set_flex_align(obj,
-                                  lv_obj_get_style_flex_main_place(obj, 0),
+                                  lv_obj_get_style_flex_main_place(obj, LV_PART_MAIN),
                                   align,
                                   align);
         }
@@ -1682,7 +1682,7 @@ QVariant LvglRenderer::styleValue(const std::string& id, const std::string& prop
      * 用 v.num 显示会变成 "0"，没有意义 → 交给面板显示 schema 默认值 */
     if (sp == LV_STYLE_BG_IMAGE_SRC) return QVariant();
 
-    lv_style_value_t v = lv_obj_get_style_prop(it->second, 0, sp);
+    lv_style_value_t v = lv_obj_get_style_prop(it->second, LV_PART_MAIN, sp);
     if (isColorStyleProp(prop)) {
         char buf[16];
         std::snprintf(buf, sizeof(buf), "0x%02X%02X%02X", v.color.red, v.color.green, v.color.blue);

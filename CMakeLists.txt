@@ -10,7 +10,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+
+# 所有可执行文件统一输出到源码树下的 bin/。
+# 多配置生成器（MSVC）会忽略 EXECUTABLE_OUTPUT_PATH，需要 per-config 变量。
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+if(CMAKE_CONFIGURATION_TYPES)
+    foreach(_cfg ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER "${_cfg}" _cfg_upper)
+        set(EXECUTABLE_OUTPUT_PATH_${_cfg_upper} ${PROJECT_SOURCE_DIR}/bin)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_upper} ${PROJECT_SOURCE_DIR}/bin)
+    endforeach()
+endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
 
 if(ASAN)
@@ -128,7 +139,7 @@ install(TARGETS lvgl_linux
 
 add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/main DEPENDS main)
 
-# ===== EasyLVGL：示例与单元测试（工具链在后续阶段接入） =====
+# ===== EasyLVGL：示例与单元测试 =====
 set(EASYLVGL_APP_LIBS easylvgl_lib lvgl::lvgl lvgl::demos lvgl::thorvg lvgl_linux Threads::Threads)
 
 foreach(app layer1_demo layer2_demo complete_demo components_basic_demo
@@ -137,12 +148,124 @@ foreach(app layer1_demo layer2_demo complete_demo components_basic_demo
     target_link_libraries(${app} PRIVATE ${EASYLVGL_APP_LIBS})
 endforeach()
 
+# ===== luic：.lui -> C++ 代码生成器 =====
+add_executable(luic tools/luic/main.cpp)
+target_include_directories(luic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools/luic)
+target_compile_features(luic PRIVATE cxx_std_17)
+set_target_properties(luic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+# ui/*.lui -> ui_generated/*_ui.hpp
+file(GLOB LUI_FILES "${CMAKE_CURRENT_SOURCE_DIR}/ui/*.lui")
+set(LUI_GENERATED "")
+foreach(LUI_FILE ${LUI_FILES})
+    get_filename_component(LUI_NAME ${LUI_FILE} NAME_WE)
+    set(LUI_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/ui_generated/${LUI_NAME}_ui.hpp")
+    add_custom_command(
+        OUTPUT ${LUI_OUTPUT}
+        COMMAND $<TARGET_FILE:luic> ${LUI_FILE} -o ${LUI_OUTPUT}
+        DEPENDS ${LUI_FILE} luic
+        COMMENT "luic: ${LUI_NAME}.lui -> ${LUI_NAME}_ui.hpp"
+    )
+    list(APPEND LUI_GENERATED ${LUI_OUTPUT})
+endforeach()
+add_custom_target(ui_compile ALL DEPENDS ${LUI_GENERATED})
+
+# examples/widgets/*.lui -> examples/widgets/generated/*_ui.hpp
+file(GLOB WIDGET_LUI_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/widgets/*.lui")
+set(WIDGET_GENERATED "")
+foreach(LUI_FILE ${WIDGET_LUI_FILES})
+    get_filename_component(LUI_NAME ${LUI_FILE} NAME_WE)
+    set(LUI_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/examples/widgets/generated/${LUI_NAME}_ui.hpp")
+    add_custom_command(
+        OUTPUT ${LUI_OUTPUT}
+        COMMAND $<TARGET_FILE:luic> ${LUI_FILE} -o ${LUI_OUTPUT}
+        DEPENDS ${LUI_FILE} luic
+        COMMENT "luic: widgets/${LUI_NAME}.lui -> ${LUI_NAME}_ui.hpp"
+    )
+    list(APPEND WIDGET_GENERATED ${LUI_OUTPUT})
+endforeach()
+add_custom_target(widgets_ui_compile ALL DEPENDS ${WIDGET_GENERATED})
+
 add_executable(widgets_demo examples/widgets_demo.cpp)
-target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/widgets/generated)
+add_dependencies(widgets_demo widgets_ui_compile)
+target_include_directories(widgets_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/examples/widgets/generated)
 target_link_libraries(widgets_demo PRIVATE ${EASYLVGL_APP_LIBS})
+add_custom_target(run_widgets COMMAND $<TARGET_FILE:widgets_demo> DEPENDS widgets_demo)
+
+# ===== luic 端到端示例：使用 ui_compile 生成的主界面 =====
+add_executable(luic_demo examples/luic_demo.cpp)
+add_dependencies(luic_demo ui_compile)
+target_include_directories(luic_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated)
+target_link_libraries(luic_demo PRIVATE ${EASYLVGL_APP_LIBS})
+add_custom_target(run_luic_demo COMMAND $<TARGET_FILE:luic_demo> DEPENDS luic_demo)
+
+# ===== 图片资源编译期嵌入示例（qrc 风格） =====
+# assets/*.c 由 scripts/assets/convert_assets.py 生成并已入库，常规构建不需要 Python。
+set(EMBED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples/embedded_image)
+set(EMBED_GEN ${EMBED_DIR}/generated/screen_ui.hpp)
+add_custom_command(
+    OUTPUT ${EMBED_GEN}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EMBED_DIR}/generated
+    COMMAND $<TARGET_FILE:luic> ${EMBED_DIR}/screen.lui -o ${EMBED_GEN}
+            --assets-include "assets/lvgl_assets.h"
+    DEPENDS ${EMBED_DIR}/screen.lui luic
+    COMMENT "luic: embedded_image/screen.lui -> generated/screen_ui.hpp"
+)
+file(GLOB EMBED_ASSET_SRC ${EMBED_DIR}/assets/*.c)
+add_executable(embedded_image_demo examples/embedded_image/main.cpp ${EMBED_GEN} ${EMBED_ASSET_SRC})
+target_include_directories(embedded_image_demo PRIVATE ${EMBED_DIR} ${EMBED_DIR}/generated)
+target_link_libraries(embedded_image_demo PRIVATE ${EASYLVGL_APP_LIBS})
+add_custom_target(run_embedded_image COMMAND $<TARGET_FILE:embedded_image_demo> DEPENDS embedded_image_demo)
+
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    set(EASYLVGL_PYTHON ${Python3_EXECUTABLE})
+else()
+    set(EASYLVGL_PYTHON python)
+endif()
+add_custom_target(convert_assets
+    COMMAND ${EASYLVGL_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/assets/convert_assets.py ${EMBED_DIR}/screen.lui
+    COMMENT "把 .lui 里声明的图片资源转换成 LVGL C 数组")
 
 add_executable(cpp_tests tests/cpp/test_wrappers.cpp)
-target_include_directories(cpp_tests PRIVATE ${CMAKE_SOURCE_DIR}/easylvgl)
+target_include_directories(cpp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/easylvgl)
 target_link_libraries(cpp_tests PRIVATE ${EASYLVGL_APP_LIBS})
 
 add_custom_target(run_cpp_tests COMMAND $<TARGET_FILE:cpp_tests> DEPENDS cpp_tests)
+
+# ===== 合并为单一静态库 libeasylvgl.a（GNU ar MRI / MSVC lib.exe） =====
+set(LVGLCPP_LIB_DIR "${CMAKE_BINARY_DIR}/lib")
+set(LVGLCPP_INPUTS
+    "${CMAKE_BINARY_DIR}/lvgl/liblvgl.a"
+    "${CMAKE_BINARY_DIR}/lvgl/liblvgl_demos.a"
+    "${CMAKE_BINARY_DIR}/lvgl/liblvgl_thorvg.a")
+
+if(MSVC)
+    set(LVGLCPP_LIB "${LVGLCPP_LIB_DIR}/easylvgl.lib")
+    add_custom_command(
+        OUTPUT ${LVGLCPP_LIB}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${LVGLCPP_LIB_DIR}"
+        COMMAND ${CMAKE_AR} /NOLOGO /OUT:${LVGLCPP_LIB} ${LVGLCPP_INPUTS}
+        DEPENDS lvgl lvgl_demos lvgl_thorvg
+        COMMENT "Merging -> easylvgl.lib"
+    )
+else()
+    set(LVGLCPP_LIB "${LVGLCPP_LIB_DIR}/libeasylvgl.a")
+    add_custom_command(
+        OUTPUT ${LVGLCPP_LIB}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${LVGLCPP_LIB_DIR}"
+        COMMAND ${CMAKE_COMMAND}
+            -D "LIB_OUT=${LVGLCPP_LIB}"
+            -D "LIB_A=${CMAKE_BINARY_DIR}/lvgl/liblvgl.a"
+            -D "LIB_B=${CMAKE_BINARY_DIR}/lvgl/liblvgl_demos.a"
+            -D "LIB_C=${CMAKE_BINARY_DIR}/lvgl/liblvgl_thorvg.a"
+            -D "AR=${CMAKE_AR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/merge_libs.cmake"
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        DEPENDS lvgl lvgl_demos lvgl_thorvg
+        COMMENT "Merging -> libeasylvgl.a"
+    )
+endif()
+add_custom_target(easylvgl_archive ALL DEPENDS ${LVGLCPP_LIB})
+install(FILES ${LVGLCPP_LIB} DESTINATION lib)
+install(TARGETS luic RUNTIME DESTINATION bin)

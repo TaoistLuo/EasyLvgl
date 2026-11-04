@@ -21,7 +21,7 @@ btn.set_text("Click Me").set_size(120, 50).primary().on_click([](auto*) {
 
 | | |
 |---|---|
-| **43 components** | 35 widgets + 4 layouts, thin wrappers over LVGL 9.2 native widgets |
+| **43 components** | 35 widgets + 4 layouts, thin wrappers over LVGL 9.6 native widgets |
 | **Visual designer** | Qt-based, WYSIWYG canvas, real LVGL rendering (preview == runtime) |
 | **Code generator** | `luic` compiles `.lui` → C++ classes with `setup()` / `bind_events()` / virtual slots |
 | **Project mode** | custom components (`kind: component`), exported parameters, `"@Component"` instances, dependency graph + cycle detection |
@@ -44,7 +44,7 @@ Designer (requires Qt 5.15):
 cd tools/lvgl-designer
 cmake -S . -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/5.15.2/gcc_64
 cmake --build build -j8
-./build/lvgl-designer example.lui        # or pass lvglpp.project.json
+./tools/lvgl-designer/build/lvgl-designer example.lui   # or pass lvglpp.project.json
 ```
 
 ## A minimal project
@@ -91,11 +91,18 @@ See the [Windows build guide](docs/guides/windows_build.md).
 
 **Linux / macOS (SDL2)**
 
+The build configuration is managed by Kconfig. The default is
+`configs/linux-sdl.defconfig`, and the generated configuration headers live in
+`build/lvgl/`; no hand-written `lv_conf.h` is involved.
+
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ./bin/main
 ```
+
+Targets cover `main`, the examples, `luic`, `cpp_tests`, plus the
+`ui_compile` / `widgets_ui_compile` generators.
 
 **Designer (Qt 5.15)**
 

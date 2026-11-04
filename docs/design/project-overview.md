@@ -1,13 +1,13 @@
 # EasyLVGL 项目概述
 
-> **适用版本：** EasyLVGL 1.0.0（LVGL 9.2）　**最后更新：** 2026-10-18
+> **适用版本：** EasyLVGL 2.0.0（LVGL 9.6）　**最后更新：** 2026-10-18
 
 **版本：** 2.0.0  
 **状态：** ✅ 已完成
 
 ## 项目目标
 
-为LVGL 9.2创建现代C++抽象层，将开发效率提升到接近Qt的水平，同时保持嵌入式系统的性能和资源约束。
+为LVGL 9.6创建现代C++抽象层，将开发效率提升到接近Qt的水平，同时保持嵌入式系统的性能和资源约束。
 
 ## 核心问题
 
@@ -151,14 +151,14 @@ easylvgl/
 │   └── stacked_layout.hpp      # LStackedLayout（堆叠布局）
 ├── dialogs/
 │   └── dialog.hpp              # LDialog辅助类
-├── containers/                 # （空目录，布局已迁移至layouts/）
+├── containers/                 # （空目录，布局见 layouts/）
 ├── lvgl_core.hpp               # Layer 1 统一入口
 └── lvgl_widgets.hpp            # Layer 2 统一入口（39个组件）
 ```
 
 ## 兼容性
 
-- **LVGL版本**: 9.2+
+- **LVGL版本**: 9.6+
 - **C++标准**: C++14 或更高
 - **编译器**: GCC 7+, Clang 6+, MSVC 2017+
 - **平台**: Linux, Windows, macOS, 嵌入式RTOS
