@@ -12,7 +12,7 @@
 平台判定集中在两处，业务代码不需要写平台分支：
 
 - Kconfig：`configs/linux-sdl.defconfig` 选择 SDL2 后端，Windows 配置选择 Win32 后端
-- `easylvgl/core/platform.hpp`：`easylvgl::init_desktop_display(w, h)` 统一创建窗口与输入设备
+- `easylvgl/core/platform.hpp`：`easylvgl::init_desktop_display(w, h)` 按可用顺序选择后端（实现仍在 `src/lib/display_backends/`）
 
 ---
 
@@ -97,19 +97,19 @@ $env:Path = "E:\QT\QT5.12.2\5.12.2\mingw73_64\bin;" + $env:Path
 .\tools\lvgl-designer\build-win\lvgl-designer.exe
 ```
 
-> 设计器“新建工程”生成的 CMake / `main.cpp` 也已改为跨平台：Windows 链接 Win32 系统库，
-> 其它平台链接 SDL2，并且主程序统一调用 `easylvgl::init_desktop_display()`。
+> 设计器“新建工程”生成的 CMake / `main.cpp` 与宿主机平台一致；主程序不直接调用任何
+> 窗口 API，统一由 `src/lib/driver_backends` 按可用后端顺序选择（Windows 为 `WIN32`）。
 >
 > 设计器里“构建工程”的生成器在 Windows 上默认使用 **MinGW Makefiles**（可在“设置”里修改），
-> 并会自动把 Qt 安装目录下的 MinGW 工具链加入子进程 `PATH`；若旧配置里存的是 `Unix Makefiles`
-> 而系统没有 `make`，会自动回退，避免 `execution of make failed / Make command was: -f Makefile -j`。
+> 并会自动把 Qt 安装目录下的 MinGW 工具链加入子进程 `PATH`。
 
 ---
 
 ## 4. 平台切换原理
 
-构建配置由 Kconfig 生成，默认使用 `configs/linux-sdl.defconfig`；Windows 配置打开
-Win32 后端。配置符号写入构建目录下的 `autoconf.h`：
+构建配置由 Kconfig 生成：Linux 使用 `configs/linux-sdl.defconfig`，Windows 使用
+`configs/windows-win32.defconfig`（CMake 按平台自动选择）。配置符号写入构建目录下的
+`autoconf.h`：
 
 | 符号 | 作用 |
 |------|------|
@@ -117,24 +117,18 @@ Win32 后端。配置符号写入构建目录下的 `autoconf.h`：
 | `CONFIG_LV_USE_WINDOWS` | Win32 窗口与输入 |
 | `CONFIG_LV_USE_EVDEV` | Linux evdev 输入 |
 
-`easylvgl/core/platform.hpp` 中：
+后端选择集中在 `src/lib/driver_backends.c`，各后端实现在 `src/lib/display_backends/`：
 
-```cpp
-inline lv_display_t *init_desktop_display(int w, int h) {
-#if LV_USE_SDL
-    lv_display_t *disp = lv_sdl_window_create(w, h);
-    lv_sdl_mouse_create();
-    return disp;
-#elif LV_USE_WINDOWS
-    lv_display_t *disp = lv_windows_create_display(L"EasyLVGL", w, h, 100, false, true);
-    lv_windows_acquire_pointer_indev(disp);
-    lv_windows_acquire_keypad_indev(disp);
-    return disp;
-#endif
-}
+| 文件 | 后端 | 平台 |
+|------|------|------|
+| `sdl.c` | SDL2 | Linux / macOS |
+| `win32.c` | LVGL 原生 Win32 | Windows |
+| `fbdev.c` / `drm.c` / `x11.c` / `wayland.c` / `glfw3.c` | 其它 | Linux |
+
+主程序只调用 `driver_backends_init_backend()`，不出现平台分支。
 ```
 
-主程序与所有示例都只调用 `init_desktop_display(...)`，因此在 Linux 上走的仍是原来的
+主程序与所有示例都只调用 `init_desktop_display(...)`，平台差异全部集中在后端实现里，Linux 上走的仍是原来的
 `lv_sdl_window_create` + `lv_sdl_mouse_create`，行为不变。
 
 ---

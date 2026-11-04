@@ -33,6 +33,7 @@
 
 /* Catch configuration errors at compile time - checks if no backend was selected */
 #if LV_USE_SDL == 0 && \
+    LV_USE_WINDOWS == 0 && \
     LV_USE_WAYLAND == 0 && \
     LV_USE_LINUX_DRM == 0 && \
     LV_USE_GLFW == 0 && \
@@ -66,6 +67,10 @@ backend_init_t available_backends[] = {
 
 #if LV_USE_LINUX_DRM
     backend_init_drm,
+#endif
+
+#if LV_USE_WINDOWS
+    backend_init_win32,
 #endif
 
 #if LV_USE_SDL

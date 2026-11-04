@@ -33,6 +33,10 @@
 #pragma once
 #include "lvgl/lvgl.h"
 #include <thread>
+
+extern "C" {
+#include "driver_backends.h"
+}
 #include <chrono>
 #include <cstdlib>
 
@@ -52,9 +56,8 @@ inline int env_int(const char *name, int fallback) {
 /**
  * 创建桌面端窗口显示与默认输入设备。
  *
- * 后端选择完全由 lv_conf.h 决定，三平台共用同一套调用：
- *   - Windows：LVGL 原生 Win32 后端（lv_windows_*），不依赖 SDL
- *   - Linux/macOS 桌面：SDL2（lv_sdl_*）
+ * 后端选择由构建配置（Kconfig defconfig）与运行平台共同决定，实现位于
+ * src/lib/display_backends/；本函数只按可用顺序挑选，不直接调用平台 API。
  *
  * 窗口尺寸可分别用环境变量 EASYLVGL_WINDOW_WIDTH / EASYLVGL_WINDOW_HEIGHT 覆盖，
  * 为兼容旧用法也接受 LV_SDL_VIDEO_WIDTH / LV_SDL_VIDEO_HEIGHT。
@@ -63,26 +66,25 @@ inline int env_int(const char *name, int fallback) {
  */
 inline lv_display_t *init_desktop_display(int default_width, int default_height)
 {
-    int width = env_int("EASYLVGL_WINDOW_WIDTH", env_int("LV_SDL_VIDEO_WIDTH", default_width));
-    int height = env_int("EASYLVGL_WINDOW_HEIGHT", env_int("LV_SDL_VIDEO_HEIGHT", default_height));
+    int width = env_int("EASYLVGL_WINDOW_WIDTH", default_width);
+    int height = env_int("EASYLVGL_WINDOW_HEIGHT", default_height);
 
-#if LV_USE_SDL
-    lv_display_t *disp = lv_sdl_window_create(width, height);
-    lv_sdl_mouse_create();
-    return disp;
-#elif LV_USE_WINDOWS
-    lv_display_t *disp = lv_windows_create_display(
-        L"EasyLVGL", width, height, 100, false, true);
-    if(disp) {
-        lv_windows_acquire_pointer_indev(disp);
-        lv_windows_acquire_keypad_indev(disp);
+    /* 窗口与输入设备交由 port 的 backends 层创建：
+     * src/lib/display_backends/{sdl,win32,fbdev,drm,x11,wayland,glfw3}.c
+     * 本封装只按可用性顺序挑一个，不直接调用平台 API。 */
+    driver_backends_register();
+    static const char *candidates[] = {"WIN32", "SDL", "X11", "WAYLAND", "FBDEV", "DRM", "GLFW3", nullptr};
+    for(int i = 0; candidates[i]; i++) {
+        if(!driver_backends_is_supported(const_cast<char *>(candidates[i]))) continue;
+        if(driver_backends_init_backend(const_cast<char *>(candidates[i])) != 0) continue;
+        lv_display_t *disp = lv_display_get_default();
+        if(disp) {
+            lv_display_set_resolution(disp, width > 0 ? width : lv_display_get_horizontal_resolution(disp),
+                                      height > 0 ? height : lv_display_get_vertical_resolution(disp));
+        }
+        return disp;
     }
-    return disp;
-#else
-    (void)width;
-    (void)height;
     return nullptr;
-#endif
 }
 
 } // namespace easylvgl
