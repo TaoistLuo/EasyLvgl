@@ -107,8 +107,8 @@ public:
 
     LVBoxLayout& set_align_main(lv_flex_align_t align) {
         lv_obj_set_flex_align(m_obj, align,
-            lv_obj_get_style_flex_cross_place(m_obj, 0),
-            lv_obj_get_style_flex_track_place(m_obj, 0));
+            lv_obj_get_style_flex_cross_place(m_obj, LV_PART_MAIN),
+            lv_obj_get_style_flex_track_place(m_obj, LV_PART_MAIN));
         return *this;
     }
 
@@ -118,9 +118,9 @@ public:
 
     LVBoxLayout& set_align_cross(lv_flex_align_t align) {
         lv_obj_set_flex_align(m_obj,
-            lv_obj_get_style_flex_main_place(m_obj, 0),
+            lv_obj_get_style_flex_main_place(m_obj, LV_PART_MAIN),
             align,
-            lv_obj_get_style_flex_track_place(m_obj, 0));
+            lv_obj_get_style_flex_track_place(m_obj, LV_PART_MAIN));
         return *this;
     }
 
@@ -130,8 +130,8 @@ public:
 
     LVBoxLayout& set_align_track(lv_flex_align_t align) {
         lv_obj_set_flex_align(m_obj,
-            lv_obj_get_style_flex_main_place(m_obj, 0),
-            lv_obj_get_style_flex_cross_place(m_obj, 0),
+            lv_obj_get_style_flex_main_place(m_obj, LV_PART_MAIN),
+            lv_obj_get_style_flex_cross_place(m_obj, LV_PART_MAIN),
             align);
         return *this;
     }

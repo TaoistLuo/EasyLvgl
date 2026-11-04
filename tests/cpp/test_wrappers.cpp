@@ -93,8 +93,8 @@ static void test_style() {
     LStyle s;
     s.set_bg_color(0x2196F3).set_radius(8).set_pad_all(10);
     s.apply_to(btn.native());
-    CHECK(lv_obj_get_style_radius(btn.native(), 0) == 8);
-    CHECK(lv_obj_get_style_pad_top(btn.native(), 0) == 10);
+    CHECK(lv_obj_get_style_radius(btn.native(), LV_PART_MAIN) == 8);
+    CHECK(lv_obj_get_style_pad_top(btn.native(), LV_PART_MAIN) == 10);
 }
 
 static void test_events() {
@@ -159,7 +159,7 @@ static void test_regressions() {
     // LGridLayout int overload builds an FR(1) template
     LGridLayout grid;
     grid.set_columns(2).set_rows(2);
-    CHECK(lv_obj_get_style_grid_column_dsc_array(grid.native(), 0) != nullptr);
+    CHECK(lv_obj_get_style_grid_column_dsc_array(grid.native(), LV_PART_MAIN) != nullptr);
 
     // LTable cell values
     LTable tbl;

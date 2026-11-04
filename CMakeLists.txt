@@ -95,15 +95,18 @@ list(APPEND LIBS lvgl::examples)
 endif()
 find_package(Threads REQUIRED)
 target_link_libraries(lvgl_linux PUBLIC ${LIBS})
-add_executable(lvglsim src/main.c)
-target_link_libraries(lvglsim PUBLIC lvgl_linux ${EXTRA_LIBS} Threads::Threads)
+add_executable(main src/main.cpp)
+add_subdirectory(easylvgl)
+target_include_directories(main PRIVATE src/lib)
+target_link_libraries(main PRIVATE easylvgl_lib)
+target_link_libraries(main PUBLIC lvgl_linux ${EXTRA_LIBS} Threads::Threads)
 
 if(CONFIG_LV_USE_DEMO_TRUCK)
-    target_compile_definitions(lvglsim PUBLIC CONFIG_LV_USE_DEMO_TRUCK)
+    target_compile_definitions(main PUBLIC CONFIG_LV_USE_DEMO_TRUCK)
 endif()
 
 if(WERROR)
-    target_compile_options(lvglsim PRIVATE -Werror)
+    target_compile_options(main PRIVATE -Werror)
     target_compile_options(lvgl_linux PRIVATE -Werror)
     if(TARGET lvgl)
         target_compile_options(lvgl PRIVATE -Werror)
@@ -123,4 +126,23 @@ install(TARGETS lvgl_linux
     ARCHIVE DESTINATION lib
 )
 
-add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/lvglsim DEPENDS lvglsim)
+add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/main DEPENDS main)
+
+# ===== EasyLVGL：示例与单元测试（工具链在后续阶段接入） =====
+set(EASYLVGL_APP_LIBS easylvgl_lib lvgl::lvgl lvgl::demos lvgl::thorvg lvgl_linux Threads::Threads)
+
+foreach(app layer1_demo layer2_demo complete_demo components_basic_demo
+            components_advanced_demo components_containers_demo untested_components_demo)
+    add_executable(${app} examples/${app}.cpp)
+    target_link_libraries(${app} PRIVATE ${EASYLVGL_APP_LIBS})
+endforeach()
+
+add_executable(widgets_demo examples/widgets_demo.cpp)
+target_include_directories(widgets_demo PRIVATE ${CMAKE_SOURCE_DIR}/examples/widgets/generated)
+target_link_libraries(widgets_demo PRIVATE ${EASYLVGL_APP_LIBS})
+
+add_executable(cpp_tests tests/cpp/test_wrappers.cpp)
+target_include_directories(cpp_tests PRIVATE ${CMAKE_SOURCE_DIR}/easylvgl)
+target_link_libraries(cpp_tests PRIVATE ${EASYLVGL_APP_LIBS})
+
+add_custom_target(run_cpp_tests COMMAND $<TARGET_FILE:cpp_tests> DEPENDS cpp_tests)
