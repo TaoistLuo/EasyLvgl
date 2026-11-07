@@ -33,6 +33,7 @@
 #pragma once
 
 #include <lvgl.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
@@ -108,6 +109,7 @@ class LvglRenderer {
     std::deque<std::string> m_strStore;
     std::deque<std::vector<const char*>> m_mapStore;
     std::deque<std::vector<lv_point_precise_t>> m_ptsStore;
+    std::deque<std::vector<uint8_t>> m_lottieBufs;
 
 public:
     static constexpr const char* kRootId = "@root";

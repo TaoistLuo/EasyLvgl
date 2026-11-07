@@ -114,6 +114,9 @@ public:
         addGroup("显示", {
             {"LLabel",         "标签"},
             {"LImage",         "图片"},
+        {"LArclabel",      "弧形文字"},
+        {"LBarcode",       "条形码"},
+        {"LQrcode",        "二维码"},
             {"LBar",           "进度条"},
             {"LArc",           "圆弧"},
             {"LSpinner",       "加载动画"},

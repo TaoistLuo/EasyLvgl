@@ -133,13 +133,6 @@ MainWindow::MainWindow(QWidget* parent)
     setupToolbar();
     setupConnections();
 
-    /* 恢复上次打开的工程（命令行带参数时会被覆盖） */
-    {
-        const QString last = QSettings().value("project/last").toString();
-        if (!last.isEmpty() && QFileInfo::exists(last))
-            QTimer::singleShot(0, this, [this, last] { loadProject(last); });
-    }
-
     m_propPanel->setDocument(&m_doc);
     m_propPanel->setUndoStack(m_undoStack);
     m_treePanel->setDocument(&m_doc);
@@ -147,6 +140,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     m_statusInfo = new QLabel("就绪");
     statusBar()->addWidget(m_statusInfo, 1);
+}
+
+void MainWindow::restoreLastProject() {
+    const QString last = QSettings().value("project/last").toString();
+    if (!last.isEmpty() && QFileInfo::exists(last))
+        QTimer::singleShot(0, this, [this, last] { loadProject(last); });
 }
 
 bool MainWindow::openFile(const QString& path) {
@@ -1428,7 +1427,12 @@ void MainWindow::startBuildStage(int stage) {
         QStringList cfg{"-S", m_buildSrcDir, "-B", m_buildDir};
         const QString gen = SettingsDialog::generator();
         if (!gen.isEmpty()) cfg << "-G" << gen;
-        for (auto& a : SettingsDialog::extraArgs().split(' ', Qt::SkipEmptyParts)) cfg << a;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        const QStringList extra = SettingsDialog::extraArgs().split(' ', Qt::SkipEmptyParts);
+#else
+        const QStringList extra = SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts);
+#endif
+        for (auto& a : extra) cfg << a;
         m_buildPanel->append("=== 配置 " + m_buildSrcDir + " -> " + m_buildDir + " ===\n");
         statusBar()->showMessage("正在配置…");
         m_buildProc->start(cmake, cfg);

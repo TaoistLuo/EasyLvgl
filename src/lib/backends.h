@@ -77,6 +77,7 @@ int backend_init_sdl(backend_t * backend);
 int backend_init_glfw3(backend_t * backend);
 int backend_init_wayland(backend_t * backend);
 int backend_init_x11(backend_t * backend);
+int backend_init_win32(backend_t * backend);
 
 /* Input device driver backends */
 int backend_init_evdev(backend_t * backend);

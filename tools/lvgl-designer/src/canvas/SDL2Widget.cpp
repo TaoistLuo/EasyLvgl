@@ -31,6 +31,7 @@
  *************************************************************************************************/
 
 #include "canvas/SDL2Widget.hpp"
+#include <lvgl/src/libs/fsdrv/lv_fsdrv.h>
 #include <QShowEvent>
 #include <QResizeEvent>
 #include <QPaintEvent>
@@ -413,6 +414,11 @@ void SDL2Widget::initSdl() {
 void SDL2Widget::initLvgl() {
     if (!lv_is_initialized()) {
         lv_init();
+    }
+    static bool fsReady = false;
+    if (!fsReady) {
+        lv_fs_stdio_init();
+        fsReady = true;
     }
 
     m_display = lv_display_create(m_width, m_height);

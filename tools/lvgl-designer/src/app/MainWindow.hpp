@@ -110,6 +110,7 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     bool openFile(const QString& path);
     void loadProject(const QString& manifest);
+    void restoreLastProject();
     void onNewProject();
     void onNewComponent();
     void onNewScreen();

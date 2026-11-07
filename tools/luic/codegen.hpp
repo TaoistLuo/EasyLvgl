@@ -209,7 +209,10 @@ class CodeGenerator {
                 }
             }
         } else if (def.expand == "int_2arg") {
-            auto vals = split(prop.str_val, ',');
+            std::string norm = prop.str_val;
+            for (auto& ch : norm)
+                if (ch == ',' || ch == '\n' || ch == '\r' || ch == '\t' || ch == ';') ch = ' ';
+            auto vals = split(norm, ' ');
             for (size_t i = 0; i < vals.size(); i++) {
                 std::string v = vals[i];
                 while (!v.empty() && v.front() == ' ') v.erase(v.begin());
@@ -540,7 +543,7 @@ public:
         out << "    }\n";
 
         out << "};\n\n";
-        out << "} // namespace lvgl\n";
+        out << "} // namespace easylvgl\n";
 
         std::string result = out.str();
         /* 嵌入图片资源头（只有真的用到 "#别名" 时才 include） */

@@ -34,48 +34,50 @@
 #include "easylvgl/core/widget.hpp"
 #include "easylvgl/core/event.hpp"
 #include "lvgl/lvgl.h"
+#include <cstdint>
+#include <vector>
 
 namespace easylvgl {
 
 class LLottie : public LWidgetCRTP<LLottie> {
+    std::vector<uint8_t> m_buf;
+    int m_bufW = 0;
+    int m_bufH = 0;
+
+    /* lv_lottie 是 canvas 型控件，渲染前必须由调用方提供像素缓冲 */
+    void ensure_buffer() {
+        const int w = lv_obj_get_width(m_obj);
+        const int h = lv_obj_get_height(m_obj);
+        if (w <= 0 || h <= 0) return;
+        if (w == m_bufW && h == m_bufH) return;
+        m_buf.assign(static_cast<size_t>(w) * static_cast<size_t>(h) * 4u, 0);
+        lv_lottie_set_buffer(m_obj, w, h, m_buf.data());
+        m_bufW = w;
+        m_bufH = h;
+    }
+
 public:
     using LWidgetCRTP<LLottie>::set_align;
 
     explicit LLottie(lv_obj_t* parent = nullptr)
         : LWidgetCRTP(lv_lottie_create(parent ? parent : lv_scr_act())) {}
 
+    LLottie& set_size(int w, int h) {
+        LWidgetCRTP<LLottie>::set_size(w, h);
+        m_bufW = m_bufH = 0;
+        ensure_buffer();
+        return *this;
+    }
+
     LLottie& set_src(const char* src) {
+        ensure_buffer();
         lv_lottie_set_src_file(m_obj, src);
         return *this;
     }
 
     LLottie& set_src_data(const void* data, size_t size) {
+        ensure_buffer();
         lv_lottie_set_src_data(m_obj, data, size);
-        return *this;
-    }
-
-    LLottie& set_loop(bool loop) {
-        lv_lottie_set_loop(m_obj, loop);
-        return *this;
-    }
-
-    LLottie& set_speed(float speed) {
-        lv_lottie_set_speed(m_obj, speed);
-        return *this;
-    }
-
-    LLottie& play() {
-        lv_lottie_play(m_obj);
-        return *this;
-    }
-
-    LLottie& pause() {
-        lv_lottie_pause(m_obj);
-        return *this;
-    }
-
-    LLottie& stop() {
-        lv_lottie_stop(m_obj);
         return *this;
     }
 

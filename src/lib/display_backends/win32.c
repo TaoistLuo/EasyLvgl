@@ -8,6 +8,8 @@
 
 #if LV_USE_WINDOWS
 
+#include <stdlib.h>
+
 #include "../simulator_util.h"
 #include "../simulator_settings.h"
 #include "../backends.h"
@@ -30,6 +32,7 @@ int backend_init_win32(backend_t * backend)
 
     backend->handle->display->init_display = init_win32;
     backend->name = backend_name;
+    backend->type = BACKEND_DISPLAY;
 
     return 0;
 }
@@ -37,7 +40,8 @@ int backend_init_win32(backend_t * backend)
 static lv_display_t * init_win32(void)
 {
     lv_display_t * disp = lv_windows_create_display(
-        L"EasyLVGL", settings.window_width, settings.window_height, 100, false, true);
+        L"EasyLVGL", (int32_t)settings.window_width, (int32_t)settings.window_height, 100, false,
+        true);
 
     if(disp == NULL) {
         return NULL;

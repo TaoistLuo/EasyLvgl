@@ -99,7 +99,12 @@ std::string normalize_slashes(std::string path) {
 
 bool mkdir_p(const std::string& raw_path) {
     std::string path = normalize_slashes(raw_path);
-    for (size_t i = 1; i < path.size(); i++) {
+    size_t first = 1;
+#if defined(_WIN32)
+    /* 盘符不是可创建的目录：C:/dir 从 "C:/" 之后开始逐级创建 */
+    if (path.size() >= 3 && path[1] == ':' && path[2] == '/') first = 3;
+#endif
+    for (size_t i = first; i < path.size(); i++) {
         if (path[i] == '/') {
             std::string dir = path.substr(0, i);
             luic_stat_t st;
@@ -312,10 +317,10 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
         cm << "set(EASYLVGL_PROJECT_NAME \"" << proj_name << "\")\n";
         cm << "set(EASYLVGL_ENTRY \"" << entry << "\")\n";
         cm << "set(EASYLVGL_UI_HEADERS\n";
-        for (auto& h : headers) cm << "    \"" << h << "\"\n";
+        for (auto& h : headers) cm << "    \"" << normalize_slashes(h) << "\"\n";
         cm << ")\n";
         cm << "set(EASYLVGL_UI_INCLUDE_DIRS\n";
-        for (auto& d : include_dirs) cm << "    \"" << d << "\"\n";
+        for (auto& d : include_dirs) cm << "    \"" << normalize_slashes(d) << "\"\n";
         cm << ")\n";
     }
 
@@ -409,7 +414,7 @@ int main(int argc, char* argv[]) {
     if (!assets_include.empty()) codegen.setAssetsInclude(assets_include);
     std::string code = codegen.generate(*doc);
 
-    auto slash = output_file.rfind('/');
+    auto slash = output_file.find_last_of("/\\");
     if (slash != std::string::npos) {
         if (!mkdir_p(output_file.substr(0, slash))) {
             return 1;

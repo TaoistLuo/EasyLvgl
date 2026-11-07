@@ -24,6 +24,16 @@ if(CMAKE_CONFIGURATION_TYPES)
 endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
 
+# MinGW 下的编译期差异（对 LVGL 源码零修改，仅调整编译宏）：
+#  - GCC 7.x 的 libstdc++ 在 C++ 中要显式开启 inttypes 格式宏，ThorVG 用到 PRIu32
+#  - MinGW 默认按 Server 2003 裁剪 Win32 头，且旧版头文件没有 Win8.1 的 DPI 消息常量，
+#    LVGL 的 Win32 后端会用到 WM_DPICHANGED
+if(MINGW)
+    add_definitions(-D__STDC_FORMAT_MACROS)
+    add_definitions(-D_WIN32_WINNT=0x0601 -DWINVER=0x0601)
+    add_definitions(-DWM_DPICHANGED=0x02E0)
+endif()
+
 if(ASAN)
     message(STATUS "Enabling Sanitizer")
     add_compile_options(-fsanitize=address,undefined,null)

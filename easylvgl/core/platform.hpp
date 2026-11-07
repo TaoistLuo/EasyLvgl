@@ -36,9 +36,13 @@
 
 extern "C" {
 #include "driver_backends.h"
+#include "simulator_settings.h"
+/* port 的 backends 层在创建窗口时读取该结构，定义在 src/lib/driver_backends.c */
+extern simulator_settings_t settings;
 }
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 
 namespace easylvgl {
 
@@ -66,8 +70,13 @@ inline int env_int(const char *name, int fallback) {
  */
 inline lv_display_t *init_desktop_display(int default_width, int default_height)
 {
-    int width = env_int("EASYLVGL_WINDOW_WIDTH", default_width);
-    int height = env_int("EASYLVGL_WINDOW_HEIGHT", default_height);
+    int width = env_int("EASYLVGL_WINDOW_WIDTH", env_int("LV_SDL_VIDEO_WIDTH", default_width));
+    int height = env_int("EASYLVGL_WINDOW_HEIGHT", env_int("LV_SDL_VIDEO_HEIGHT", default_height));
+    if(width <= 0) width = 800;
+    if(height <= 0) height = 480;
+
+    settings.window_width = static_cast<uint32_t>(width);
+    settings.window_height = static_cast<uint32_t>(height);
 
     /* 窗口与输入设备交由 port 的 backends 层创建：
      * src/lib/display_backends/{sdl,win32,fbdev,drm,x11,wayland,glfw3}.c
@@ -75,14 +84,15 @@ inline lv_display_t *init_desktop_display(int default_width, int default_height)
     driver_backends_register();
     static const char *candidates[] = {"WIN32", "SDL", "X11", "WAYLAND", "FBDEV", "DRM", "GLFW3", nullptr};
     for(int i = 0; candidates[i]; i++) {
-        if(!driver_backends_is_supported(const_cast<char *>(candidates[i]))) continue;
-        if(driver_backends_init_backend(const_cast<char *>(candidates[i])) != 0) continue;
-        lv_display_t *disp = lv_display_get_default();
-        if(disp) {
-            lv_display_set_resolution(disp, width > 0 ? width : lv_display_get_horizontal_resolution(disp),
-                                      height > 0 ? height : lv_display_get_vertical_resolution(disp));
-        }
-        return disp;
+        /* port 的 is_supported() 会就地把名字转大写，必须传入可写缓冲而不是字符串字面量 */
+        char name[16];
+        const size_t len = std::strlen(candidates[i]);
+        if(len == 0 || len >= sizeof(name)) continue;
+        std::memcpy(name, candidates[i], len + 1);
+
+        if(!driver_backends_is_supported(name)) continue;
+        if(driver_backends_init_backend(name) != 0) continue;
+        return lv_display_get_default();
     }
     return nullptr;
 }

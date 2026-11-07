@@ -64,6 +64,10 @@
 #include "easylvgl/widgets/span.hpp"
 #include "easylvgl/widgets/keyboard.hpp"
 #include "easylvgl/widgets/animimage.hpp"
+#include "easylvgl/widgets/lottie.hpp"
+#include "easylvgl/widgets/arclabel.hpp"
+#include "easylvgl/widgets/barcode.hpp"
+#include "easylvgl/widgets/qrcode.hpp"
 
 // Containers
 #include "easylvgl/widgets/groupbox.hpp"

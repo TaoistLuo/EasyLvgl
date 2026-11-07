@@ -33,4 +33,4 @@ public:
     }
 };
 
-} // namespace lvgl
+} // namespace easylvgl

@@ -138,6 +138,9 @@ struct WidgetNode {
         if (type == "LImageButton") return QSizeF(100, 40);
         if (type == "LWin") return QSizeF(300, 250);
         if (type == "LLottie") return QSizeF(100, 100);
+        if (type == "LArclabel") return QSizeF(300, 120);
+        if (type == "LBarcode") return QSizeF(200, 80);
+        if (type == "LQrcode") return QSizeF(120, 120);
         // Layouts - larger default containers
         if (type == "LVBoxLayout") return QSizeF(300, 400);
         if (type == "LHBoxLayout") return QSizeF(400, 100);

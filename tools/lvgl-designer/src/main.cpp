@@ -143,6 +143,8 @@ QToolTip { color: #dcdcdc; background: #2f2f2f; border: 1px solid #4a4a4a; paddi
             window.loadProject(arg);
         else
             window.openFile(arg);
+    } else {
+        window.restoreLastProject();
     }
 
     return app.exec();

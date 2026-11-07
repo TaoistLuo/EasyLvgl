@@ -36,3 +36,10 @@ opencode.json
 
 # 本地工具配置（不入库）
 opencode.json*
+
+# Python / IDE / session logs
+__pycache__/
+*.pyc
+*.user
+session-ses_*.md
+node_modules/

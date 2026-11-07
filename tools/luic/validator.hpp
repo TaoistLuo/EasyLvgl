@@ -145,6 +145,38 @@ public:
             }
         }
 
+        /* 子元素只能在对应的父容器内使用，否则生成代码里构造函数不匹配 */
+        static const std::map<std::string, std::set<std::string>> kAllowedParents = {
+            {"LTile", {"LTileView"}},
+            {"LMenuPage", {"LMenu"}},
+            {"LMenuSection", {"LMenuPage", "LMenuCont"}},
+            {"LMenuCont", {"LMenu", "LMenuPage", "LMenuSection"}},
+        };
+        std::function<void(const std::vector<widget_node_t>&, const std::string&)> checkParents =
+            [&](const std::vector<widget_node_t>& nodes, const std::string& parentType) {
+                for (auto& n : nodes) {
+                    auto it = kAllowedParents.find(n.type);
+                    if (it != kAllowedParents.end() && !it->second.count(parentType)) {
+                        std::string parents;
+                        for (auto& p : it->second) parents += (parents.empty() ? "" : " / ") + p;
+                        errors.push_back(n.id + ": " + n.type + " 只能位于 " + parents + " 内部");
+                    }
+                    checkParents(n.children, n.type);
+                }
+            };
+        checkParents(doc.children, "");
+
+        /* 引用型属性必须指向文档内存在的节点，否则生成 m_xxx 会编译失败 */
+        for (auto* n : doc.all_nodes()) {
+            for (auto& p : n->props) {
+                if (p.name != "textarea" && p.name != "active_page") continue;
+                if (p.str_val.empty()) continue;
+                if (!find_node(doc, p.str_val))
+                    errors.push_back(n->id + ": '" + p.name + "' 引用的节点 '" +
+                                     p.str_val + "' 不存在");
+            }
+        }
+
         return errors;
     }
 

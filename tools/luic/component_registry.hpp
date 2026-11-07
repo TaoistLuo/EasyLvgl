@@ -649,14 +649,65 @@ public:
             false,
             {
                 {"src",   "string",   "set_src"},
-                {"loop",  "bool",     "set_loop"},
-                {"speed", "int",      "set_speed"},
                 {"size",  "int_pair", "set_size"},
                 {"pos",   "int_pair", "set_pos"},
             },
             {
                 {"ready", "on_complete"},
             }
+        });
+
+        reg("LArclabel", {
+            false,
+            {
+                {"text",                  "string",   "set_text"},
+                {"angle_start",           "int",      "set_angle_start"},
+                {"angle_size",            "int",      "set_angle_size"},
+                {"offset",                "int",      "set_offset"},
+                {"dir",                   "int",      "set_dir"},
+                {"recolor",               "bool",     "set_recolor"},
+                {"radius",                "int",      "set_radius"},
+                {"center_offset_x",       "int",      "set_center_offset_x"},
+                {"center_offset_y",       "int",      "set_center_offset_y"},
+                {"text_vertical_align",   "int",      "set_text_vertical_align"},
+                {"text_horizontal_align", "int",      "set_text_horizontal_align"},
+                {"overflow",              "int",      "set_overflow"},
+                {"end_overlap",           "bool",     "set_end_overlap"},
+                {"size",                  "int_pair", "set_size"},
+                {"pos",                   "int_pair", "set_pos"},
+            },
+            {}
+        });
+
+        reg("LBarcode", {
+            false,
+            {
+                {"data",        "string",   "set_data"},
+                {"dark_color",  "hex",      "set_dark_color"},
+                {"light_color", "hex",      "set_light_color"},
+                {"scale",       "int",      "set_scale"},
+                {"direction",   "int",      "set_direction"},
+                {"tiled",       "bool",     "set_tiled"},
+                {"encoding",    "int",      "set_encoding"},
+                {"update_mode", "int",      "set_update_mode"},
+                {"size",        "int_pair", "set_size"},
+                {"pos",         "int_pair", "set_pos"},
+            },
+            {}
+        });
+
+        reg("LQrcode", {
+            false,
+            {
+                {"data",        "string",   "set_data"},
+                {"dark_color",  "hex",      "set_dark_color"},
+                {"light_color", "hex",      "set_light_color"},
+                {"quiet_zone",  "bool",     "set_quiet_zone"},
+                {"update_mode", "int",      "set_update_mode"},
+                {"size",        "int_pair", "set_size"},
+                {"pos",         "int_pair", "set_pos"},
+            },
+            {}
         });
 
         // ===== Layout Containers =====

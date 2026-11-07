@@ -61,6 +61,10 @@
 #include <lvgl/src/widgets/tileview/lv_tileview.h>
 #include <lvgl/src/widgets/canvas/lv_canvas.h>
 #include <lvgl/src/widgets/animimage/lv_animimage.h>
+#include <lvgl/src/widgets/lottie/lv_lottie.h>
+#include <lvgl/src/widgets/arclabel/lv_arclabel.h>
+#include <lvgl/src/libs/barcode/lv_barcode.h>
+#include <lvgl/src/libs/qrcode/lv_qrcode.h>
 #include <lvgl/src/widgets/span/lv_span.h>
 #include <lvgl/src/widgets/spinbox/lv_spinbox.h>
 #include <lvgl/src/widgets/calendar/lv_calendar.h>
@@ -219,6 +223,12 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, b
         obj = lv_button_create(targetParent);
     } else if (node.type == "LLabel") {
         obj = lv_label_create(targetParent);
+    } else if (node.type == "LArclabel") {
+        obj = lv_arclabel_create(targetParent);
+    } else if (node.type == "LBarcode") {
+        obj = lv_barcode_create(targetParent);
+    } else if (node.type == "LQrcode") {
+        obj = lv_qrcode_create(targetParent);
     } else if (node.type == "LSlider") {
         obj = lv_slider_create(targetParent);
     } else if (node.type == "LBar") {
@@ -292,6 +302,8 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, b
         obj = lv_canvas_create(targetParent);
     } else if (node.type == "LAnimImage") {
         obj = lv_animimg_create(targetParent);
+    } else if (node.type == "LLottie") {
+        obj = lv_lottie_create(targetParent);
     } else if (node.type == "LSpan") {
         obj = lv_spangroup_create(targetParent);
     } else if (node.type == "LSpinbox") {
@@ -659,25 +671,77 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("long_mode")) {
             lv_label_set_long_mode(obj, (lv_label_long_mode_t)propInt("long_mode"));
         }
+    } else if (node.type == "LArclabel") {
+        if (node.props.count("text")) lv_arclabel_set_text(obj, propStr("text").c_str());
+        if (node.props.count("angle_start")) lv_arclabel_set_angle_start(obj, propInt("angle_start"));
+        if (node.props.count("angle_size")) lv_arclabel_set_angle_size(obj, propInt("angle_size"));
+        if (node.props.count("offset")) lv_arclabel_set_offset(obj, propInt("offset"));
+        if (node.props.count("dir")) lv_arclabel_set_dir(obj, (lv_arclabel_dir_t)propInt("dir"));
+        if (node.props.count("recolor")) lv_arclabel_set_recolor(obj, propBool("recolor"));
+        if (node.props.count("radius")) lv_arclabel_set_radius(obj, (uint32_t)propInt("radius"));
+        if (node.props.count("center_offset_x"))
+            lv_arclabel_set_center_offset_x(obj, (uint32_t)propInt("center_offset_x"));
+        if (node.props.count("center_offset_y"))
+            lv_arclabel_set_center_offset_y(obj, (uint32_t)propInt("center_offset_y"));
+        if (node.props.count("text_vertical_align"))
+            lv_arclabel_set_text_vertical_align(obj, (lv_arclabel_text_align_t)propInt("text_vertical_align"));
+        if (node.props.count("text_horizontal_align"))
+            lv_arclabel_set_text_horizontal_align(obj, (lv_arclabel_text_align_t)propInt("text_horizontal_align"));
+        if (node.props.count("overflow"))
+            lv_arclabel_set_overflow(obj, (lv_arclabel_overflow_t)propInt("overflow"));
+        if (node.props.count("end_overlap")) lv_arclabel_set_end_overlap(obj, propBool("end_overlap"));
+    } else if (node.type == "LBarcode") {
+        if (node.props.count("dark_color"))
+            lv_barcode_set_dark_color(obj, lv_color_hex(propHex("dark_color")));
+        if (node.props.count("light_color"))
+            lv_barcode_set_light_color(obj, lv_color_hex(propHex("light_color")));
+        if (node.props.count("scale")) lv_barcode_set_scale(obj, (uint16_t)propInt("scale"));
+        if (node.props.count("direction")) lv_barcode_set_direction(obj, (lv_dir_t)propInt("direction"));
+        if (node.props.count("tiled")) lv_barcode_set_tiled(obj, propBool("tiled"));
+        if (node.props.count("encoding"))
+            lv_barcode_set_encoding(obj, (lv_barcode_encoding_t)propInt("encoding"));
+        if (node.props.count("update_mode"))
+            lv_barcode_set_update_mode(obj, (lv_barcode_update_mode_t)propInt("update_mode"));
+        if (node.props.count("data")) {
+            lv_obj_update_layout(obj);
+            lv_barcode_update(obj, propStr("data").c_str());
+        }
+    } else if (node.type == "LQrcode") {
+        if (node.props.count("dark_color"))
+            lv_qrcode_set_dark_color(obj, lv_color_hex(propHex("dark_color")));
+        if (node.props.count("light_color"))
+            lv_qrcode_set_light_color(obj, lv_color_hex(propHex("light_color")));
+        if (node.props.count("quiet_zone")) lv_qrcode_set_quiet_zone(obj, propBool("quiet_zone"));
+        if (node.props.count("update_mode"))
+            lv_qrcode_set_update_mode(obj, (lv_qrcode_update_mode_t)propInt("update_mode"));
+        {
+            const QSizeF sz = node.size();
+            const int side = static_cast<int>(std::min(sz.width(), sz.height()));
+            if (side > 0) lv_qrcode_set_size(obj, side);
+        }
+        if (node.props.count("data")) {
+            lv_obj_update_layout(obj);
+            lv_qrcode_set_data(obj, propStr("data").c_str());
+        }
     } else if (node.type == "LSlider") {
         if (node.props.count("range")) {
             auto list = node.props.at("range").toList();
             if (list.size() == 2) lv_slider_set_range(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("value")) lv_slider_set_value(obj, propInt("value"), LV_ANIM_OFF);
+        if (node.props.count("mode")) lv_slider_set_mode(obj, (lv_slider_mode_t)propInt("mode"));
         if (node.props.count("left_value") && node.props.count("range")) {
             auto list = node.props.at("range").toList();
             if (list.size() == 2) lv_slider_set_left_value(obj, propInt("left_value"), LV_ANIM_OFF);
         }
-        if (node.props.count("mode")) lv_slider_set_mode(obj, (lv_slider_mode_t)propInt("mode"));
     } else if (node.type == "LBar") {
         if (node.props.count("range")) {
             auto list = node.props.at("range").toList();
             if (list.size() == 2) lv_bar_set_range(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("value")) lv_bar_set_value(obj, propInt("value"), LV_ANIM_OFF);
-        if (node.props.count("start_value")) lv_bar_set_start_value(obj, propInt("start_value"), LV_ANIM_OFF);
         if (node.props.count("mode")) lv_bar_set_mode(obj, (lv_bar_mode_t)propInt("mode"));
+        if (node.props.count("start_value")) lv_bar_set_start_value(obj, propInt("start_value"), LV_ANIM_OFF);
         if (node.props.count("orientation")) {
             if (propInt("orientation") == 1) {
                 int w = lv_obj_get_width(obj);
@@ -791,6 +855,16 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
         if (node.props.count("inner_align")) lv_image_set_inner_align(obj, (lv_image_align_t)propInt("inner_align"));
         if (node.props.count("blend_mode")) lv_image_set_blend_mode(obj, (lv_blend_mode_t)propInt("blend_mode"));
         if (node.props.count("opacity")) lv_obj_set_style_image_opa(obj, propInt("opacity"), 0);
+    } else if (node.type == "LLottie") {
+        if (node.props.count("src")) {
+            const QSizeF sz = node.size();
+            const int w = std::max(1, static_cast<int>(sz.width()));
+            const int h = std::max(1, static_cast<int>(sz.height()));
+            m_lottieBufs.emplace_back(static_cast<size_t>(w) * static_cast<size_t>(h) * 4u);
+            lv_lottie_set_buffer(obj, w, h, m_lottieBufs.back().data());
+            const std::string src = resolveSrc(propStr("src"));
+            if (!src.empty()) lv_lottie_set_src_file(obj, src.c_str());
+        }
     } else if (node.type == "LArc") {
         if (node.props.count("range")) {
             auto list = node.props.at("range").toList();
@@ -809,6 +883,10 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
             if (list.size() == 2) lv_arc_set_angles(obj, list[0].toInt(), list[1].toInt());
         }
         if (node.props.count("knob_offset")) lv_arc_set_knob_offset(obj, propInt("knob_offset"));
+        if (node.props.count("knob_enabled")) {
+            if (propBool("knob_enabled")) lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+            else lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+        }
     } else if (node.type == "LSpinner") {
         if (node.props.count("color")) lv_obj_set_style_arc_color(obj, lv_color_hex(propHex("color")), LV_PART_INDICATOR);
         if (node.props.count("anim_speed") || node.props.count("anim_period")) {
@@ -940,6 +1018,12 @@ void LvglRenderer::applyProps(lv_obj_t* obj, const WidgetNode& node) {
                                   lv_obj_get_style_flex_main_place(obj, LV_PART_MAIN),
                                   align,
                                   align);
+        }
+        if (node.props.count("align_main")) {
+            lv_obj_set_flex_align(obj,
+                                  (lv_flex_align_t)propInt("align_main"),
+                                  lv_obj_get_style_flex_cross_place(obj, LV_PART_MAIN),
+                                  lv_obj_get_style_flex_track_place(obj, LV_PART_MAIN));
         }
     } else if (node.type == "LGridLayout") {
         if (node.props.count("padding") && !node.props.count("pad_top") && !node.props.count("pad_bottom") &&
@@ -1704,6 +1788,7 @@ void LvglRenderer::clear() {
     m_strStore.clear();
     m_mapStore.clear();
     m_ptsStore.clear();
+    m_lottieBufs.clear();
 
     lv_obj_clean(lv_scr_act());
 }

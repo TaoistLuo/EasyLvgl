@@ -158,7 +158,7 @@ struct ComponentSchema {
 
         // text_* 是会被子控件继承的样式；对自身无文本、也无文本子控件的基础控件是空操作
         static const std::set<std::string> noText = {
-            "LImage", "LCanvas", "LAnimImage", "LLottie",
+            "LImage", "LCanvas", "LAnimImage", "LLottie", "LBarcode", "LQrcode",
             "LLine", "LLed", "LBar", "LArc", "LSpinner", "LSlider", "LSwitch",
             "LImageButton", "LChart"
         };
@@ -395,8 +395,35 @@ struct ComponentSchema {
             comp.props.push_back({"indent", "int", QVariant(0)});
         } else if (type == "LLottie") {
             comp.props.push_back({"src", "string", QVariant(QString(""))});
-            comp.props.push_back({"loop", "bool", QVariant(true)});
-            comp.props.push_back({"speed", "int", QVariant(1)});
+        } else if (type == "LArclabel") {
+            comp.props.push_back({"text", "string", QVariant(QString("Arced Text"))});
+            comp.props.push_back({"angle_start", "int", QVariant(0)});
+            comp.props.push_back({"angle_size", "int", QVariant(360)});
+            comp.props.push_back({"offset", "int", QVariant(0)});
+            comp.props.push_back({"dir", "int", QVariant(0)});
+            comp.props.push_back({"recolor", "bool", QVariant(false)});
+            comp.props.push_back({"radius", "int", QVariant(80)});
+            comp.props.push_back({"center_offset_x", "int", QVariant(0)});
+            comp.props.push_back({"center_offset_y", "int", QVariant(0)});
+            comp.props.push_back({"text_vertical_align", "int", QVariant(0)});
+            comp.props.push_back({"text_horizontal_align", "int", QVariant(0)});
+            comp.props.push_back({"overflow", "int", QVariant(0)});
+            comp.props.push_back({"end_overlap", "bool", QVariant(false)});
+        } else if (type == "LBarcode") {
+            comp.props.push_back({"data", "string", QVariant(QString("1234567890"))});
+            comp.props.push_back({"dark_color", "hex", QVariant(QString("0x000000"))});
+            comp.props.push_back({"light_color", "hex", QVariant(QString("0xFFFFFF"))});
+            comp.props.push_back({"scale", "int", QVariant(2)});
+            comp.props.push_back({"direction", "int", QVariant(3)});
+            comp.props.push_back({"tiled", "bool", QVariant(false)});
+            comp.props.push_back({"encoding", "int", QVariant(0)});
+            comp.props.push_back({"update_mode", "int", QVariant(0)});
+        } else if (type == "LQrcode") {
+            comp.props.push_back({"data", "string", QVariant(QString("https://lvgl.io"))});
+            comp.props.push_back({"dark_color", "hex", QVariant(QString("0x000000"))});
+            comp.props.push_back({"light_color", "hex", QVariant(QString("0xFFFFFF"))});
+            comp.props.push_back({"quiet_zone", "bool", QVariant(true)});
+            comp.props.push_back({"update_mode", "int", QVariant(0)});
         } else if (type == "LMsgBox") {
             comp.props.push_back({"title", "string", QVariant(QString("Title"))});
             comp.props.push_back({"text", "string", QVariant(QString("Message"))});
