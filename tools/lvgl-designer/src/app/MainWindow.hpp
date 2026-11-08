@@ -144,6 +144,8 @@ private:
     void onPaste();
     void onSelectAll();
     void onAddImageResource();
+    void onRemoveImageResource(const QString& alias);
+    void onPreviewImageResource(const QString& alias);
     void onDelete();
     void onCanvasSize();
     void onCompile();

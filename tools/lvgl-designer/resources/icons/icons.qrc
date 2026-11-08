@@ -4,5 +4,7 @@
     <file>copy.svg</file>
     <file>clipboard.svg</file>
     <file>trash.svg</file>
+    <file>arrow_right.svg</file>
+    <file>arrow_down.svg</file>
   </qresource>
 </RCC>

@@ -94,6 +94,13 @@ QTreeWidget, QTreeView, QListView {
     background: #252525; border: 1px solid #3c3c3c; outline: none;
     alternate-background-color: #282828; }
 QTreeWidget::item, QTreeView::item { padding: 4px 2px; border: none; }
+QTreeView::branch { background: transparent; }
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    border-image: none; image: url(:/icons/arrow_right.svg); }
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+    border-image: none; image: url(:/icons/arrow_down.svg); }
 QTreeWidget::item:hover, QTreeView::item:hover { background: #333333; }
 QTreeWidget::item:selected, QTreeView::item:selected { background: #2f5d8a; color: #ffffff; }
 QHeaderView::section { background: #323232; color: #cfcfcf; padding: 4px 6px;

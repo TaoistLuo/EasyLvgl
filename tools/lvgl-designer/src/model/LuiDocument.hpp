@@ -548,6 +548,9 @@ public:
         m_resources[name] = relPath;
         m_modified = true;
     }
+    void removeResource(const std::string& name) {
+        if (m_resources.erase(name) > 0) m_modified = true;
+    }
     bool hasResource(const std::string& name) const { return m_resources.count(name) > 0; }
     /** .lui 所在目录；未保存时用当前工作目录 */
     QString baseDir() const {

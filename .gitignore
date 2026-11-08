@@ -43,3 +43,13 @@ __pycache__/
 *.user
 session-ses_*.md
 node_modules/
+
+# luic 生成的中间头文件（构建时自动生成）
+ui_generated/
+examples/widgets/generated/
+examples/embedded_image/generated/
+tests/ui_generated/
+
+# convert_assets.py 生成的 C 数组与声明（构建时自动生成）
+examples/embedded_image/assets/*.c
+examples/embedded_image/assets/lvgl_assets.h

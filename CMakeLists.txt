@@ -219,29 +219,39 @@ target_link_libraries(luic_demo PRIVATE ${EASYLVGL_APP_LIBS})
 add_custom_target(run_luic_demo COMMAND $<TARGET_FILE:luic_demo> DEPENDS luic_demo)
 
 # ===== 图片资源编译期嵌入示例（qrc 风格） =====
-# assets/*.c 由 scripts/assets/convert_assets.py 生成并已入库，常规构建不需要 Python。
-set(EMBED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples/embedded_image)
-set(EMBED_GEN ${EMBED_DIR}/generated/screen_ui.hpp)
-add_custom_command(
-    OUTPUT ${EMBED_GEN}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${EMBED_DIR}/generated
-    COMMAND $<TARGET_FILE:luic> ${EMBED_DIR}/screen.lui -o ${EMBED_GEN}
-            --assets-include "assets/lvgl_assets.h"
-    DEPENDS ${EMBED_DIR}/screen.lui luic
-    COMMENT "luic: embedded_image/screen.lui -> generated/screen_ui.hpp"
-)
-file(GLOB EMBED_ASSET_SRC ${EMBED_DIR}/assets/*.c)
-add_executable(embedded_image_demo examples/embedded_image/main.cpp ${EMBED_GEN} ${EMBED_ASSET_SRC})
-target_include_directories(embedded_image_demo PRIVATE ${EMBED_DIR} ${EMBED_DIR}/generated)
-target_link_libraries(embedded_image_demo PRIVATE ${EASYLVGL_APP_LIBS})
-add_custom_target(run_embedded_image COMMAND $<TARGET_FILE:embedded_image_demo> DEPENDS embedded_image_demo)
-
+# assets/*.c 与 lvgl_assets.h 由 scripts/assets/convert_assets.py 在构建时生成（不入库）。
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
     set(EASYLVGL_PYTHON ${Python3_EXECUTABLE})
 else()
     set(EASYLVGL_PYTHON python)
 endif()
+
+set(EMBED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples/embedded_image)
+set(EMBED_GEN ${EMBED_DIR}/generated/screen_ui.hpp)
+set(EMBED_ASSETS_C ${EMBED_DIR}/assets/caret.c)
+set(EMBED_ASSETS_H ${EMBED_DIR}/assets/lvgl_assets.h)
+add_custom_command(
+    OUTPUT ${EMBED_ASSETS_C} ${EMBED_ASSETS_H}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EMBED_DIR}/assets
+    COMMAND ${EASYLVGL_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/assets/convert_assets.py
+            ${EMBED_DIR}/screen.lui
+    DEPENDS ${EMBED_DIR}/screen.lui ${CMAKE_CURRENT_SOURCE_DIR}/scripts/assets/convert_assets.py
+    COMMENT "convert_assets: screen.lui resources -> assets/lvgl_assets.h"
+)
+add_custom_command(
+    OUTPUT ${EMBED_GEN}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EMBED_DIR}/generated
+    COMMAND $<TARGET_FILE:luic> ${EMBED_DIR}/screen.lui -o ${EMBED_GEN}
+            --assets-include "assets/lvgl_assets.h"
+    DEPENDS ${EMBED_DIR}/screen.lui luic ${EMBED_ASSETS_H}
+    COMMENT "luic: embedded_image/screen.lui -> generated/screen_ui.hpp"
+)
+add_executable(embedded_image_demo examples/embedded_image/main.cpp ${EMBED_GEN} ${EMBED_ASSETS_C})
+target_include_directories(embedded_image_demo PRIVATE ${EMBED_DIR} ${EMBED_DIR}/generated)
+target_link_libraries(embedded_image_demo PRIVATE ${EASYLVGL_APP_LIBS})
+add_custom_target(run_embedded_image COMMAND $<TARGET_FILE:embedded_image_demo> DEPENDS embedded_image_demo)
+
 add_custom_target(convert_assets
     COMMAND ${EASYLVGL_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/assets/convert_assets.py ${EMBED_DIR}/screen.lui
     COMMENT "把 .lui 里声明的图片资源转换成 LVGL C 数组")

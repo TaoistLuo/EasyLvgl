@@ -34,7 +34,9 @@
 #include <QTreeWidget>
 #include <QMenu>
 #include <QFont>
+#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace designer {
@@ -52,10 +54,12 @@ public:
     explicit ProjectPanel(QWidget* parent = nullptr) : QTreeWidget(parent) {
         setHeaderHidden(true);
         setContextMenuPolicy(Qt::CustomContextMenu);
+        setIndentation(16);
         connect(this, &QWidget::customContextMenuRequested, this, &ProjectPanel::onMenu);
         connect(this, &QTreeWidget::itemDoubleClicked, [this](QTreeWidgetItem* it, int) {
-            QString p = it->data(0, Qt::UserRole).toString();
-            if (p.endsWith(".lui")) emit openRequested(p);
+            QString d = it->data(0, Qt::UserRole).toString();
+            if (d.startsWith("res:")) emit previewResourceRequested(d.mid(4));
+            else if (d.endsWith(".lui")) emit openRequested(d);
         });
         showEmpty();
     }
@@ -68,7 +72,8 @@ public:
     }
 
     void setProject(const QString& name, const QString& manifest,
-                    const std::vector<ProjectFile>& files) {
+                    const std::vector<ProjectFile>& files,
+                    const std::vector<std::pair<QString, QString>>& resources) {
         clear();
         m_manifest = manifest;
         auto* root = new QTreeWidgetItem(this);
@@ -81,11 +86,37 @@ public:
         screens->setText(0, "屏幕");
         auto* comps = new QTreeWidgetItem(root);
         comps->setText(0, "组件");
+        auto* res = new QTreeWidgetItem(root);
+        res->setText(0, "资源");
         for (auto& pf : files) {
             auto* it = new QTreeWidgetItem(pf.isComponent ? comps : screens);
             it->setText(0, QString::fromStdString(pf.name));
             it->setData(0, Qt::UserRole, pf.path);
             it->setToolTip(0, pf.path);
+        }
+        std::map<QString, QTreeWidgetItem*> resDirs;
+        for (auto& r : resources) {
+            QStringList parts = r.second.split('/');
+            QTreeWidgetItem* parent = res;
+            QString key;
+            for (int i = 0; i + 1 < parts.size(); ++i) {
+                if (parts[i].isEmpty()) continue;
+                key += (key.isEmpty() ? "" : "/") + parts[i];
+                auto it = resDirs.find(key);
+                if (it == resDirs.end()) {
+                    auto* d = new QTreeWidgetItem(parent);
+                    d->setText(0, parts[i]);
+                    d->setToolTip(0, key);
+                    parent = d;
+                    resDirs[key] = d;
+                } else {
+                    parent = it->second;
+                }
+            }
+            auto* leaf = new QTreeWidgetItem(parent);
+            leaf->setText(0, "#" + r.first);
+            leaf->setData(0, Qt::UserRole, "res:" + r.first);
+            leaf->setToolTip(0, r.second);
         }
         expandAll();
     }
@@ -100,6 +131,9 @@ signals:
     void newComponentRequested();
     void newScreenRequested();
     void addFilesRequested();
+    void addResourceRequested();
+    void removeResourceRequested(QString alias);
+    void previewResourceRequested(QString alias);
     void removeRequested(QString path);
 
 private:
@@ -110,14 +144,21 @@ private:
 
     void onMenu(const QPoint& pos) {
         QTreeWidgetItem* it = itemAt(pos);
-        QString path = it ? it->data(0, Qt::UserRole).toString() : QString();
-        bool isFile = path.endsWith(".lui");
+        QString data = it ? it->data(0, Qt::UserRole).toString() : QString();
+        bool isFile = data.endsWith(".lui");
+        bool isResource = data.startsWith("res:");
         QMenu m;
-        if (isFile) m.addAction("打开", [this, path] { emit openRequested(path); });
+        if (isFile) m.addAction("打开", [this, data] { emit openRequested(data); });
+        if (isResource) {
+            QString alias = data.mid(4);
+            m.addAction("删除资源", [this, alias] { emit removeResourceRequested(alias); });
+            m.addSeparator();
+        }
         m.addAction("新建组件…", [this] { emit newComponentRequested(); });
         m.addAction("新建屏幕…", [this] { emit newScreenRequested(); });
         m.addAction("添加已有文件…", [this] { emit addFilesRequested(); });
-        if (isFile) m.addAction("从工程中删除", [this, path] { emit removeRequested(path); });
+        m.addAction("添加图片资源…", [this] { emit addResourceRequested(); });
+        if (isFile) m.addAction("从工程中删除", [this, data] { emit removeRequested(data); });
         m.exec(mapToGlobal(pos));
     }
 

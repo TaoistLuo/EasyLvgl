@@ -43,6 +43,9 @@
 #include <QJsonObject>
 #include <QPainter>
 #include <QPixmap>
+#include <QDialog>
+#include <QLabel>
+#include <QVBoxLayout>
 #include <QPolygonF>
 #include <QTabWidget>
 #include <QSettings>
@@ -592,6 +595,9 @@ void MainWindow::setupConnections() {
     connect(m_projectPanel, &ProjectPanel::newComponentRequested, this, &MainWindow::onNewComponent);
     connect(m_projectPanel, &ProjectPanel::newScreenRequested, this, &MainWindow::onNewScreen);
     connect(m_projectPanel, &ProjectPanel::addFilesRequested, this, &MainWindow::onAddProjectFiles);
+    connect(m_projectPanel, &ProjectPanel::addResourceRequested, this, &MainWindow::onAddImageResource);
+    connect(m_projectPanel, &ProjectPanel::removeResourceRequested, this, &MainWindow::onRemoveImageResource);
+    connect(m_projectPanel, &ProjectPanel::previewResourceRequested, this, &MainWindow::onPreviewImageResource);
     connect(m_projectPanel, &ProjectPanel::removeRequested, this, &MainWindow::removeFromProject);
 
     m_propPanel->setComponentResolver([this](const std::string& name) -> const LuiDocument* {
@@ -696,6 +702,57 @@ void MainWindow::onAddImageResource() {
     statusBar()->showMessage(QString("已添加图片资源 #%1（生成代码前请运行 "
                                      "scripts/assets/convert_assets.py）")
                              .arg(QString::fromStdString(alias)), 8000);
+}
+
+void MainWindow::onRemoveImageResource(const QString& alias) {
+    if (alias.isEmpty()) return;
+    const std::string name = alias.toStdString();
+
+    if (!m_projectFile.isEmpty() && m_projectResources.count(name)) {
+        QFile f(m_projectFile);
+        if (!f.open(QIODevice::ReadOnly)) return;
+        auto root = QJsonDocument::fromJson(f.readAll()).object();
+        f.close();
+        QJsonObject res = root["resources"].toObject();
+        res.remove(alias);
+        root["resources"] = res;
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return;
+        f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+        f.close();
+        loadProject(m_projectFile);
+        return;
+    }
+
+    m_doc.removeResource(name);
+    updateTitle();
+    refreshProjectPanel();
+}
+
+void MainWindow::onPreviewImageResource(const QString& alias) {
+    if (alias.isEmpty()) return;
+    const std::string path = m_doc.resolveResource("#" + alias.toStdString());
+    if (path.empty()) {
+        QMessageBox::warning(this, "预览图片", "找不到资源 #" + alias);
+        return;
+    }
+    QPixmap pm(QString::fromStdString(path));
+    if (pm.isNull()) {
+        QMessageBox::warning(this, "预览图片",
+                             "无法加载图片：\n" + QString::fromStdString(path));
+        return;
+    }
+
+    QDialog dlg(this);
+    dlg.setWindowTitle("资源预览 - #" + alias);
+    auto* view = new QLabel(&dlg);
+    view->setAlignment(Qt::AlignCenter);
+    view->setPixmap(pm.scaled(720, 540, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    auto* info = new QLabel(QString("%1 × %2 px").arg(pm.width()).arg(pm.height()), &dlg);
+    info->setAlignment(Qt::AlignCenter);
+    auto* lay = new QVBoxLayout(&dlg);
+    lay->addWidget(view);
+    lay->addWidget(info);
+    dlg.exec();
 }
 
 void MainWindow::updateTitle() {
@@ -1065,7 +1122,26 @@ void MainWindow::refreshProjectPanel() {
         pf.isComponent = kv.second->isComponent();
         files.push_back(pf);
     }
-    m_projectPanel->setProject(name, m_projectFile, files);
+
+    std::vector<std::pair<QString, QString>> resources;
+    for (auto& kv : m_projectResources) {
+        QString rel = QString::fromStdString(kv.second);
+        rel.replace('\\', '/');
+        resources.emplace_back(QString::fromStdString(kv.first), rel);
+    }
+    for (auto& kv : m_doc.resources()) {
+        const QString alias = QString::fromStdString(kv.first);
+        bool dup = false;
+        for (auto& r : resources) {
+            if (r.first == alias) { dup = true; break; }
+        }
+        if (dup) continue;
+        QString rel = QString::fromStdString(kv.second);
+        rel.replace('\\', '/');
+        resources.emplace_back(alias, rel);
+    }
+
+    m_projectPanel->setProject(name, m_projectFile, files, resources);
     if (!m_doc.filePath().isEmpty()) m_projectPanel->setCurrentFile(m_doc.filePath());
 }
 
