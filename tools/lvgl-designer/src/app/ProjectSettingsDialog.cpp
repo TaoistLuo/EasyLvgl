@@ -36,6 +36,8 @@ ProjectSettingsDialog::ProjectSettingsDialog(const QString& manifest,
     }
 
     m_name = new QLineEdit(root["name"].toString("Project"), this);
+    m_target = new QLineEdit(
+        root["target"].toString(root["name"].toString("Project")), this);
     m_entry = new QComboBox(this);
     m_entry->setEditable(true);
     for (const QString& screen : screens) m_entry->addItem(screen);
@@ -45,6 +47,7 @@ ProjectSettingsDialog::ProjectSettingsDialog(const QString& manifest,
 
     auto* form = new QFormLayout();
     form->addRow("工程名称", m_name);
+    form->addRow("可执行目标", m_target);
     form->addRow("入口屏幕", m_entry);
 
     auto* fontRow = new QHBoxLayout();
@@ -148,6 +151,16 @@ bool ProjectSettingsDialog::apply() {
         return false;
     }
     root["name"] = name;
+
+    const QString target =
+        m_target->text().trimmed().isEmpty() ? name : m_target->text().trimmed();
+    if (!ident.match(target).hasMatch()) {
+        QMessageBox::warning(
+            this, "工程设置",
+            "可执行目标只能包含字母、数字、下划线，且不能以数字开头。");
+        return false;
+    }
+    root["target"] = target;
 
     const QString entry = m_entry->currentText().trimmed();
     if (!entry.isEmpty()) root["entry"] = entry;

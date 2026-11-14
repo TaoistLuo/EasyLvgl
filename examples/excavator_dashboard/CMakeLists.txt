@@ -15,6 +15,12 @@ add_subdirectory(${EASYLVGL_ROOT} ${CMAKE_BINARY_DIR}/easylvgl_root EXCLUDE_FROM
 find_package(Threads REQUIRED)
 
 set(MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro")
+file(READ "${MANIFEST}" _manifest_json)
+set(EXEC_TARGET "excavator_dashboard")
+if(_manifest_json MATCHES "\"target\"[ \t\r\n]*:[ \t\r\n]*\"([^\"]+)\"")
+    set(EXEC_TARGET "${CMAKE_MATCH_1}")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${MANIFEST}")
 set(GEN_DIR "${CMAKE_BINARY_DIR}/ui_generated")
 set(ASSET_DIR "${CMAKE_BINARY_DIR}/assets")
 
@@ -68,8 +74,8 @@ set(APP_SOURCES
     ui/screens/Dashboard.cpp
     ui/screens/InfoCenter.cpp
     ui/screens/Settings.cpp)
-add_executable(excavator_dashboard ${APP_SOURCES} ${ASSET_SOURCES})
-add_dependencies(excavator_dashboard excavator_ui_compile excavator_assets excavator_i18n)
+add_executable(${EXEC_TARGET} ${APP_SOURCES} ${ASSET_SOURCES})
+add_dependencies(${EXEC_TARGET} excavator_ui_compile excavator_assets excavator_i18n)
 
 # 项目字体：由工程清单的 "font" 决定，运行时 Tiny TTF 加载
 set(EXCAVATOR_FONT_FILE "" CACHE FILEPATH "覆盖工程清单里的字体路径（可选）")
@@ -83,14 +89,14 @@ endif()
 if(NOT EXISTS "${EXCAVATOR_FONT_FILE}")
     message(WARNING "project font not found: ${EXCAVATOR_FONT_FILE}")
 endif()
-target_compile_definitions(excavator_dashboard PRIVATE
+target_compile_definitions(${EXEC_TARGET} PRIVATE
     EXCAVATOR_FONT_FILE="${EXCAVATOR_FONT_FILE}")
 
-target_include_directories(excavator_dashboard PRIVATE
+target_include_directories(${EXEC_TARGET} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${GEN_DIR}"
     "${I18N_GEN_DIR}"
     "${CMAKE_BINARY_DIR}"            # 解析生成代码里的 "assets/lvgl_assets.h"
     "${EASYLVGL_ROOT}/src/lib")      # driver_backends.h / simulator_settings.h
-target_link_libraries(excavator_dashboard PRIVATE
+target_link_libraries(${EXEC_TARGET} PRIVATE
     easylvgl_lib lvgl_linux lvgl::thorvg Threads::Threads)

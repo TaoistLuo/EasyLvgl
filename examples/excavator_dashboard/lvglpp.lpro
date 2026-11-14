@@ -1,6 +1,7 @@
 {
     "version": "1.0",
     "name": "ExcavatorDashboard",
+    "target": "excavator_dashboard",
     "entry": "Dashboard",
     "font": "fonts/NotoSansSC-Regular.ttf",
     "outDir": "ui_generated",

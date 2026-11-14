@@ -13,6 +13,10 @@ public:
     bool saveAs(const QString& path);
     QString filePath() const { return m_path; }
 
+signals:
+    void saved(const QString& path);
+
 private:
     QString m_path;
+    class QSyntaxHighlighter* m_highlighter = nullptr;
 };

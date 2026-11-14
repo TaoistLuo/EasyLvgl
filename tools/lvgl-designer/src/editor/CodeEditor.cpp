@@ -121,7 +121,6 @@ CodeEditor::CodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
     colors.setColor(QPalette::Highlight, QColor(0x2f, 0x5d, 0x8a));
     colors.setColor(QPalette::HighlightedText, Qt::white);
     setPalette(colors);
-    new CppHighlighter(document());
 }
 
 bool CodeEditor::loadFile(const QString& path, QString* error) {
@@ -135,6 +134,17 @@ bool CodeEditor::loadFile(const QString& path, QString* error) {
     text.replace('\r', '\n');
     setPlainText(text);
     m_path = QFileInfo(path).absoluteFilePath();
+
+    if (m_highlighter) {
+        delete m_highlighter;
+        m_highlighter = nullptr;
+    }
+    const QString suffix = QFileInfo(path).suffix().toLower();
+    if (suffix == "h" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" ||
+        suffix == "c" || suffix == "cpp" || suffix == "cc" || suffix == "cxx" ||
+        suffix == "py") {
+        m_highlighter = new CppHighlighter(document());
+    }
     document()->setModified(false);
     return true;
 }
@@ -146,6 +156,7 @@ bool CodeEditor::save() {
     file.write(toPlainText().toUtf8());
     if (!file.commit()) return false;
     document()->setModified(false);
+    emit saved(m_path);
     return true;
 }
 

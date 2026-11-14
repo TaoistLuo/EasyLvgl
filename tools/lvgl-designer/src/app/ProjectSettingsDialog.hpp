@@ -24,6 +24,7 @@ private:
 
     QString m_manifest;
     QLineEdit* m_name = nullptr;
+    QLineEdit* m_target = nullptr;
     QComboBox* m_entry = nullptr;
     QLineEdit* m_font = nullptr;
     QLineEdit* m_outDir = nullptr;

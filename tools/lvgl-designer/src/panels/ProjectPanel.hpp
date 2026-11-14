@@ -46,6 +46,16 @@
 
 namespace designer {
 
+inline bool isTextFile(const QString& path) {
+    const QFileInfo info(path);
+    const QString suffix = info.suffix().toLower();
+    const QString name = info.fileName().toLower();
+    return suffix == "txt" || suffix == "md" || suffix == "cmake" ||
+           suffix == "lpro" || suffix == "json" || suffix == "yaml" ||
+           suffix == "yml" || suffix == "ini" || suffix == "sh" ||
+           suffix == "ps1" || suffix == "csv" || name == "cmakelists.txt";
+}
+
 inline bool isCodeFile(const QString& path) {
     const QString suffix = QFileInfo(path).suffix().toLower();
     return suffix == "h" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" ||
@@ -104,8 +114,8 @@ public:
         connect(this, &QTreeWidget::itemDoubleClicked, [this](QTreeWidgetItem* it, int) {
             QString d = it->data(0, Qt::UserRole).toString();
             if (d.startsWith("res:")) emit previewResourceRequested(d.mid(4));
-            else if (d.endsWith(".lui") || isCodeFile(d)) emit openRequested(d);
-            else if (d == m_manifest) emit projectSettingsRequested();
+            else if (d.endsWith(".lui") || isCodeFile(d) || isTextFile(d))
+                emit openRequested(d);
         });
         showEmpty();
     }
@@ -241,9 +251,10 @@ private:
     void onMenu(const QPoint& pos) {
         QTreeWidgetItem* it = itemAt(pos);
         QString data = it ? it->data(0, Qt::UserRole).toString() : QString();
-        bool isFile = data.endsWith(".lui") || isCodeFile(data);
+        bool isFile = data.endsWith(".lui") || isCodeFile(data) || isTextFile(data);
         if (data == m_manifest) {
             QMenu rootMenu;
+            rootMenu.addAction("编辑工程文件...", [this, data] { emit openRequested(data); });
             rootMenu.addAction("工程设置...", [this] { emit projectSettingsRequested(); });
             rootMenu.exec(mapToGlobal(pos));
             return;
@@ -260,7 +271,8 @@ private:
         m.addAction("新建屏幕…", [this] { emit newScreenRequested(); });
         m.addAction("添加已有文件…", [this] { emit addFilesRequested(); });
         m.addAction("添加图片资源…", [this] { emit addResourceRequested(); });
-        if (isFile) m.addAction("从工程中删除", [this, data] { emit removeRequested(data); });
+        if (data.endsWith(".lui") || isCodeFile(data))
+            m.addAction("从工程中删除", [this, data] { emit removeRequested(data); });
         m.exec(mapToGlobal(pos));
     }
 

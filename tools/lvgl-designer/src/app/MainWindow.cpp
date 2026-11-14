@@ -860,7 +860,7 @@ void MainWindow::onOpen() {
     if (m_doc.isModified() && !confirmDiscard()) return;
     QString path = QFileDialog::getOpenFileName(
         this, "打开文件", QString(),
-        "LVGL UI (*.lui);;C/C++ (*.h *.hpp *.c *.cpp *.cc *.cxx);;All Files (*)");
+        "LVGL UI (*.lui);;C/C++ (*.h *.hpp *.c *.cpp *.cc *.cxx);;文本/工程 (*.txt *.md *.lpro *.json *.cmake);;All Files (*)");
     if (!path.isEmpty()) openPath(path);
 }
 
@@ -1024,6 +1024,7 @@ void MainWindow::onNewProject() {
     QJsonObject manifest{
         {"version", "1.0"},
         {"name", name},
+        {"target", name},
         {"entry", screenName},
         {"files", QJsonArray{"ui/" + screenName + ".lui"}},
     };
@@ -1034,7 +1035,7 @@ void MainWindow::onNewProject() {
     repoRoot = QDir(repoRoot).absolutePath();
 
     QString cmakeLists = QString(
-        "cmake_minimum_required(VERSION 3.16)\n"
+        "cmake_minimum_required(VERSION 3.19)\n"
         "project(%1 C CXX)\n\n"
         "set(CMAKE_CXX_STANDARD 17)\n"
         "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n\n"
@@ -1043,6 +1044,15 @@ void MainWindow::onNewProject() {
         "  set(EASYLVGL_ROOT \"%2\" CACHE PATH \"easylvgl 仓库根目录\")\n"
         "endif()\n\n"
         "add_subdirectory(${EASYLVGL_ROOT} ${CMAKE_BINARY_DIR}/lvglpp EXCLUDE_FROM_ALL)\n\n"
+        "# 可执行目标：由工程清单 target 决定，缺省等于工程名\n"
+        "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\" _project_json)\n"
+        "set(EXEC_TARGET \"%1\")\n"
+        "string(JSON _manifest_target ERROR_VARIABLE _target_error GET \"${_project_json}\" target)\n"
+        "if(NOT _target_error)\n"
+        "  set(EXEC_TARGET \"${_manifest_target}\")\n"
+        "endif()\n"
+        "set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS\n"
+        "             \"${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\")\n\n"
         "# .lui -> *_ui.hpp（改界面后重新编译会自动重生成）\n"
         "file(GLOB LUI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens/*.lui\n"
         "                    ${CMAKE_CURRENT_SOURCE_DIR}/ui/components/*.lui)\n"
@@ -1064,22 +1074,22 @@ void MainWindow::onNewProject() {
         "    COMMENT \"转换图片资源\")\n"
         "add_dependencies(ui assets)\n"
         "file(GLOB ASSET_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c)\n"
-        "add_executable(%1 main.cpp ${ASSET_SOURCES})\n"
-        "add_dependencies(%1 ui)\n"
-        "target_include_directories(%1 PRIVATE\n"
+        "add_executable(${EXEC_TARGET} main.cpp ${ASSET_SOURCES})\n"
+        "add_dependencies(${EXEC_TARGET} ui)\n"
+        "target_include_directories(${EXEC_TARGET} PRIVATE\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}\n"
         "    ${CMAKE_BINARY_DIR}/ui_generated\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
         "    ${EASYLVGL_ROOT})\n"
         "# 桌面窗口后端：Windows 用 LVGL 原生 Win32 后端（无需 SDL2），其它平台用 SDL2\n"
         "if(WIN32)\n"
-        "  target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
+        "  target_link_libraries(${EXEC_TARGET} PRIVATE lvgl lvgl::thorvg\n"
         "      user32 gdi32 imm32 shell32 ole32 oleaut32 uuid comctl32)\n"
         "else()\n"
         "  list(APPEND CMAKE_MODULE_PATH \"${EASYLVGL_ROOT}/cmake\" \"${EASYLVGL_ROOT}/lvgl\")\n"
         "  find_package(SDL2 REQUIRED)\n"
         "  find_package(SDL2_image)\n"
-        "  target_link_libraries(%1 PRIVATE lvgl lvgl::thorvg\n"
+        "  target_link_libraries(${EXEC_TARGET} PRIVATE lvgl lvgl::thorvg\n"
         "      ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} m pthread)\n"
         "endif()\n"
     ).arg(name).arg(repoRoot);
@@ -1469,8 +1479,12 @@ void MainWindow::openPath(const QString& path) {
         openFile(path);
         return;
     }
-    static const QStringList code = {"h", "hpp", "hh", "hxx", "c", "cpp", "cc", "cxx"};
-    if (code.contains(suffix)) {
+    static const QStringList code = {"h", "hpp", "hh", "hxx", "c", "cpp", "cc", "cxx",
+                                      "py"};
+    static const QStringList text = {"txt", "md", "cmake", "lpro", "json", "yaml",
+                                     "yml", "ini", "sh", "ps1", "csv"};
+    const QString name = QFileInfo(path).fileName().toLower();
+    if (code.contains(suffix) || text.contains(suffix) || name == "cmakelists.txt") {
         openCodeFile(path);
         return;
     }
@@ -1495,6 +1509,17 @@ void MainWindow::openCodeFile(const QString& path) {
     m_centralTabs->setCurrentIndex(index);
     m_codeEditors.insert(abs, editor);
     m_propDock->hide();
+    connect(editor, &CodeEditor::saved, this, [this, editor](const QString& savedPath) {
+        if (m_projectFile.isEmpty()) return;
+        if (QFileInfo(savedPath).absoluteFilePath() !=
+            QFileInfo(m_projectFile).absoluteFilePath()) {
+            return;
+        }
+        const QString manifest = m_projectFile;
+        loadProject(manifest);
+        m_centralTabs->setCurrentWidget(editor);
+        statusBar()->showMessage("工程清单已保存并重新加载", 4000);
+    });
 }
 
 void MainWindow::closeEditorTab(int index) {
@@ -1664,14 +1689,66 @@ void MainWindow::onRunProject() {
     }
     QFile mf(m_projectFile);
     QString name = QFileInfo(m_projectFile).completeBaseName();
+    QString target;
     if (mf.open(QIODevice::ReadOnly)) {
         auto j = QJsonDocument::fromJson(mf.readAll()).object();
+        target = j["target"].toString().trimmed();
         if (!j["name"].toString().isEmpty()) name = j["name"].toString();
     }
-    QStringList cands{buildDir + "/" + name, buildDir + "/" + name + ".exe",
-                      buildDir + "/Debug/" + name + ".exe", buildDir + "/Release/" + name + ".exe"};
+    QStringList names{target, name, QFileInfo(m_projectFile).completeBaseName()};
+    names.removeAll(QString());
+    names.removeDuplicates();
+    QStringList cands;
+    for (const QString& n : names) {
+        cands << buildDir + "/" + n << buildDir + "/" + n + ".exe"
+              << buildDir + "/bin/" + n + ".exe"
+              << buildDir + "/Debug/" + n + ".exe"
+              << buildDir + "/Release/" + n + ".exe";
+    }
     QString exe;
     for (auto& c : cands) if (QFileInfo::exists(c)) { exe = c; break; }
+
+    /* 清单 name 往往不等于 CMake target，解析 add_executable(...) */
+    if (exe.isEmpty()) {
+        const QString srcDir = QFileInfo(m_projectFile).absolutePath();
+        QFile cmake(srcDir + "/CMakeLists.txt");
+        if (cmake.open(QIODevice::ReadOnly)) {
+            const QString content = QString::fromUtf8(cmake.readAll());
+            cmake.close();
+            static const QRegularExpression targetRe(
+                "add_executable\\s*\\(\\s*([A-Za-z_][A-Za-z0-9_]*)");
+            auto matches = targetRe.globalMatch(content);
+            while (matches.hasNext() && exe.isEmpty()) {
+                const QString target = matches.next().captured(1);
+                const QStringList targetCands{
+                    buildDir + "/" + target,
+                    buildDir + "/" + target + ".exe",
+                    buildDir + "/bin/" + target + ".exe",
+                    buildDir + "/Debug/" + target + ".exe",
+                    buildDir + "/Release/" + target + ".exe"};
+                for (const auto& c : targetCands) {
+                    if (QFileInfo::exists(c)) {
+                        exe = c;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /* 最后兜底：构建目录里最新的 exe（排除 CMake 自身的探测程序） */
+    if (exe.isEmpty()) {
+        QFileInfo newest;
+        QDirIterator it(buildDir, {"*.exe"}, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            const QString path = it.next();
+            if (path.contains("/CMakeFiles/") || path.contains("/CMakeTmp/")) continue;
+            const QFileInfo info(path);
+            if (!newest.exists() || info.lastModified() > newest.lastModified()) newest = info;
+        }
+        if (newest.exists()) exe = newest.absoluteFilePath();
+    }
+
     if (exe.isEmpty()) {
         m_runPanel->append("找不到可执行文件：" + cands.join(" / ") + "\n");
         m_runDock->show();
@@ -1691,6 +1768,7 @@ void MainWindow::onRunProject() {
     m_runPanel->append("=== 运行 " + exe + " ===\n");
     m_runDock->show();
     m_runDock->raise();
+    m_runProc->setWorkingDirectory(QFileInfo(exe).absolutePath());
     m_runProc->start(exe, QStringList());
 }
 

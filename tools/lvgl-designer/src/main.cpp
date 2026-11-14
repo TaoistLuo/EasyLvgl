@@ -85,6 +85,8 @@ QPushButton:disabled { color: #777; background: #333; border-color: #3c3c3c; }
 
 QDockWidget { color: #cfcfcf; titlebar-close-icon: none; }
 QDockWidget::title { background: #323232; padding: 5px 8px; border: 1px solid #3c3c3c; }
+QMainWindow::separator { background: #3c3c3c; width: 6px; height: 6px; }
+QMainWindow::separator:hover { background: #3c78b4; }
 QTabBar::tab { background: #2f2f2f; color: #b8b8b8; padding: 6px 14px;
                border: 1px solid #3c3c3c; border-bottom: none; }
 QTabBar::tab:selected { background: #2b2b2b; color: #e8e8e8; border-top: 2px solid #3c78b4; }
