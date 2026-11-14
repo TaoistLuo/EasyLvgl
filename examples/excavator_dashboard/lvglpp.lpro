@@ -1,0 +1,18 @@
+{
+    "version": "1.0",
+    "name": "ExcavatorDashboard",
+    "entry": "Dashboard",
+    "outDir": "ui_generated",
+    "files": [
+        "ui/components/GaugeCard.lui",
+        "ui/components/ParamRow.lui",
+        "ui/components/StatusBadge.lui",
+        "ui/screens/Dashboard.lui",
+        "ui/screens/InfoCenter.lui",
+        "ui/screens/Settings.lui"
+    ],
+    "resources": {
+        "excavator": "assets/excavator.png",
+        "gear": "assets/gear.png"
+    }
+}

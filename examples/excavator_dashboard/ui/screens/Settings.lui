@@ -1,0 +1,463 @@
+{
+    "version": "1.0",
+    "name": "Settings",
+    "kind": "screen",
+    "size": [800, 480],
+    "children": [
+        {
+            "id": "btn_back",
+            "type": "LButton",
+            "props": {
+                "pos": [16, 12],
+                "size": [88, 36],
+                "text": "< 返回",
+                "bg_color": "0x2A3542",
+                "text_color": "0xE8EEF5",
+                "radius": 8
+            },
+            "events": ["clicked"]
+        },
+        {
+            "id": "lbl_title",
+            "type": "LLabel",
+            "props": {
+                "pos": [120, 12],
+                "size": [400, 26],
+                "text": "配置设置",
+                "color": "0xE8EEF5"
+            }
+        },
+        {
+            "id": "lbl_sub",
+            "type": "LLabel",
+            "props": {
+                "pos": [120, 40],
+                "size": [480, 18],
+                "text": "本机设置  |  仅对当前设备生效",
+                "color": "0x8FA0B3"
+            }
+        },
+        {
+            "id": "img_gear",
+            "type": "LImage",
+            "props": {
+                "pos": [728, 14],
+                "size": [40, 40],
+                "src": "#gear"
+            }
+        },
+        {
+            "id": "panel_system",
+            "type": "LGroupBox",
+            "props": {
+                "pos": [16, 64],
+                "size": [368, 300],
+                "padding": 12,
+                "bg_color": "0x1C2530",
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10
+            },
+            "children": [
+                {
+                    "id": "lbl_system",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 4],
+                        "size": [200, 20],
+                        "text": "系统",
+                        "color": "0x00D1FF"
+                    }
+                },
+                {
+                    "id": "lbl_sw_backlight",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 40],
+                        "size": [240, 22],
+                        "text": "自动背光",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "sw_backlight",
+                    "type": "LSwitch",
+                    "props": {
+                        "pos": [300, 36],
+                        "size": [48, 24],
+                        "checked": true
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_sw_buzzer",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 84],
+                        "size": [240, 22],
+                        "text": "蜂鸣器",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "sw_buzzer",
+                    "type": "LSwitch",
+                    "props": {
+                        "pos": [300, 80],
+                        "size": [48, 24],
+                        "checked": true
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_sw_auto_idle",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 128],
+                        "size": [240, 22],
+                        "text": "自动怠速",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "sw_auto_idle",
+                    "type": "LSwitch",
+                    "props": {
+                        "pos": [300, 124],
+                        "size": [48, 24],
+                        "checked": false
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_sw_eco",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 172],
+                        "size": [240, 22],
+                        "text": "节能模式",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "sw_eco",
+                    "type": "LSwitch",
+                    "props": {
+                        "pos": [300, 168],
+                        "size": [48, 24],
+                        "checked": true
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_work_mode",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 210],
+                        "size": [200, 20],
+                        "text": "工作模式",
+                        "color": "0x00D1FF"
+                    }
+                },
+                {
+                    "id": "radio_std",
+                    "type": "LRadioButton",
+                    "props": {
+                        "pos": [14, 236],
+                        "size": [104, 28],
+                        "text": "标准",
+                        "checked": true
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "radio_eco",
+                    "type": "LRadioButton",
+                    "props": {
+                        "pos": [126, 236],
+                        "size": [100, 28],
+                        "text": "节能",
+                        "checked": false
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "radio_power",
+                    "type": "LRadioButton",
+                    "props": {
+                        "pos": [234, 236],
+                        "size": [116, 28],
+                        "text": "重载",
+                        "checked": false
+                    },
+                    "events": ["value_changed"]
+                }
+            ]
+        },
+        {
+            "id": "panel_params",
+            "type": "LGroupBox",
+            "props": {
+                "pos": [400, 64],
+                "size": [384, 300],
+                "padding": 12,
+                "bg_color": "0x1C2530",
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10
+            },
+            "children": [
+                {
+                    "id": "lbl_params",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 4],
+                        "size": [200, 20],
+                        "text": "参数",
+                        "color": "0x00D1FF"
+                    }
+                },
+                {
+                    "id": "lbl_bright",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 30],
+                        "size": [200, 22],
+                        "text": "亮度 (%)",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "spin_bright",
+                    "type": "LSpinbox",
+                    "props": {
+                        "pos": [232, 22],
+                        "size": [128, 36],
+                        "range": [10, 100],
+                        "value": 80,
+                        "step": 5,
+                        "digit_format": [3, 0],
+                        "bg_color": "0x1C2530",
+                        "bg_opa": 255,
+                        "text_color": "0xE8EEF5",
+                        "border_width": 1,
+                        "border_color": "0x2C3A4A",
+                        "radius": 8
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_volume",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 74],
+                        "size": [200, 22],
+                        "text": "音量 (%)",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "spin_volume",
+                    "type": "LSpinbox",
+                    "props": {
+                        "pos": [232, 66],
+                        "size": [128, 36],
+                        "range": [0, 100],
+                        "value": 60,
+                        "step": 5,
+                        "digit_format": [3, 0],
+                        "bg_color": "0x1C2530",
+                        "bg_opa": 255,
+                        "text_color": "0xE8EEF5",
+                        "border_width": 1,
+                        "border_color": "0x2C3A4A",
+                        "radius": 8
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_idle",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 118],
+                        "size": [200, 22],
+                        "text": "怠速超时 (秒)",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "spin_idle",
+                    "type": "LSpinbox",
+                    "props": {
+                        "pos": [232, 110],
+                        "size": [128, 36],
+                        "range": [30, 600],
+                        "value": 180,
+                        "step": 10,
+                        "digit_format": [3, 0],
+                        "bg_color": "0x1C2530",
+                        "bg_opa": 255,
+                        "text_color": "0xE8EEF5",
+                        "border_width": 1,
+                        "border_color": "0x2C3A4A",
+                        "radius": 8
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_lang",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 162],
+                        "size": [200, 22],
+                        "text": "语言",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "dd_lang",
+                    "type": "LComboBox",
+                    "props": {
+                        "pos": [232, 154],
+                        "size": [128, 36],
+                        "bg_color": "0x1C2530",
+                        "bg_opa": 255,
+                        "text_color": "0xE8EEF5",
+                        "border_width": 1,
+                        "border_color": "0x2C3A4A",
+                        "radius": 8,
+                        "options": "简体中文\nEnglish\nРусский",
+                        "selected": 0
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_dd_arrow",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [342, 162],
+                        "size": [16, 20],
+                        "text": "v",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "cb_remember",
+                    "type": "LCheckbox",
+                    "props": {
+                        "pos": [14, 202],
+                        "size": [300, 30],
+                        "text": "记住上次界面",
+                        "checked": true
+                    },
+                    "events": ["value_changed"]
+                },
+                {
+                    "id": "lbl_operator",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [14, 244],
+                        "size": [100, 22],
+                        "text": "操作员",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "edit_operator",
+                    "type": "LLineEdit",
+                    "props": {
+                        "pos": [120, 238],
+                        "size": [240, 36],
+                        "placeholder": "请输入操作员姓名",
+                        "max_length": 20,
+                        "bg_color": "0x1C2530",
+                        "bg_opa": 255,
+                        "text_color": "0xE8EEF5",
+                        "border_width": 1,
+                        "border_color": "0x2C3A4A",
+                        "radius": 8
+                    },
+                    "events": ["clicked", "ready"]
+                }
+            ]
+        },
+        {
+            "id": "lbl_hint",
+            "type": "LLabel",
+            "props": {
+                "pos": [16, 368],
+                "size": [768, 20],
+                "text": "修改保存在本机，重启后仍然有效。",
+                "color": "0x5E6C7C"
+            }
+        },
+        {
+            "id": "btn_save",
+            "type": "LButton",
+            "props": {
+                "pos": [16, 394],
+                "size": [160, 44],
+                "text": "保存",
+                "theme": "primary",
+                "radius": 8
+            },
+            "events": ["clicked"]
+        },
+        {
+            "id": "btn_reset",
+            "type": "LButton",
+            "props": {
+                "pos": [188, 394],
+                "size": [180, 44],
+                "text": "恢复默认",
+                "bg_color": "0x2A3542",
+                "text_color": "0xE8EEF5",
+                "radius": 8
+            },
+            "events": ["clicked"]
+        },
+        {
+            "id": "btn_back_bottom",
+            "type": "LButton",
+            "props": {
+                "pos": [380, 394],
+                "size": [120, 44],
+                "text": "返回",
+                "bg_color": "0x2A3542",
+                "text_color": "0xE8EEF5",
+                "radius": 8
+            },
+            "events": ["clicked"]
+        },
+        {
+            "id": "lbl_feedback",
+            "type": "LLabel",
+            "props": {
+                "pos": [520, 404],
+                "size": [264, 24],
+                "text": "无待保存修改",
+                "color": "0x28C76F"
+            }
+        },
+        {
+            "id": "lbl_footer",
+            "type": "LLabel",
+            "props": {
+                "pos": [16, 450],
+                "size": [768, 20],
+                "text": "挖掘机智能仪表  |  设置档案: 现场 01",
+                "color": "0x5E6C7C"
+            }
+        },
+        {
+            "id": "kb_operator",
+            "type": "LKeyboard",
+            "props": {
+                "pos": [16, 340],
+                "size": [768, 124],
+                "textarea": "edit_operator",
+                "hidden": true
+            }
+        }
+    ]
+}

@@ -1,0 +1,377 @@
+{
+    "version": "1.0",
+    "name": "InfoCenter",
+    "kind": "screen",
+    "size": [800, 480],
+    "children": [
+        {
+            "id": "btn_back",
+            "type": "LButton",
+            "props": {
+                "pos": [16, 12],
+                "size": [88, 36],
+                "text": "< 返回",
+                "bg_color": "0x2A3542",
+                "text_color": "0xE8EEF5",
+                "radius": 8
+            },
+            "events": ["clicked"]
+        },
+        {
+            "id": "lbl_title",
+            "type": "LLabel",
+            "props": {
+                "pos": [120, 12],
+                "size": [400, 26],
+                "text": "实时参数",
+                "color": "0xE8EEF5"
+            }
+        },
+        {
+            "id": "lbl_sub",
+            "type": "LLabel",
+            "props": {
+                "pos": [120, 40],
+                "size": [480, 18],
+                "text": "实时采集  |  CAN J1939  |  500 ms",
+                "color": "0x8FA0B3"
+            }
+        },
+        {
+            "id": "lbl_ts",
+            "type": "LLabel",
+            "props": {
+                "pos": [616, 14],
+                "size": [168, 22],
+                "text": "T+00:00:00",
+                "font_size": 18,
+                "color": "0x00D1FF",
+                "text_align": 2
+            }
+        },
+        {
+            "id": "param_rpm",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [16, 64],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "发动机转速",
+                "value": "1860",
+                "unit": "r/min",
+                "level": 62,
+                "accent": "0x00D1FF",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_hyd",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [272, 64],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "液压压力",
+                "value": "245",
+                "unit": "bar",
+                "level": 61,
+                "accent": "0xFFB300",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_coolant",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [16, 152],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "冷却液温度",
+                "value": "86",
+                "unit": "°C",
+                "level": 86,
+                "accent": "0xEA5455",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_fuel",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [272, 152],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "燃油液位",
+                "value": "78",
+                "unit": "%",
+                "level": 78,
+                "accent": "0x28C76F",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_batt",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [16, 240],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "蓄电池电压",
+                "value": "24.6",
+                "unit": "V",
+                "level": 82,
+                "accent": "0x28C76F",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_hours",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [272, 240],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "累计工时",
+                "value": "1284.5",
+                "unit": "h",
+                "level": 45,
+                "accent": "0xE8EEF5",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_hyd_oil",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [16, 328],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "液压油温",
+                "value": "72",
+                "unit": "°C",
+                "level": 72,
+                "accent": "0xFFB300",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "param_load",
+            "type": "@ParamRow",
+            "props": {
+                "pos": [272, 328],
+                "size": [240, 76],
+                "bg_color": "0x1C2530",
+                "bg_opa": 255,
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10,
+                "name": "负载率",
+                "value": "62",
+                "unit": "%",
+                "level": 62,
+                "accent": "0x00D1FF",
+                "track": "0x2A3542"
+            }
+        },
+        {
+            "id": "panel_status",
+            "type": "LGroupBox",
+            "props": {
+                "pos": [528, 64],
+                "size": [256, 384],
+                "padding": 12,
+                "bg_color": "0x1C2530",
+                "border_width": 1,
+                "border_color": "0x2C3A4A",
+                "radius": 10
+            },
+            "children": [
+                {
+                    "id": "lbl_matrix_title",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 4],
+                        "size": [220, 20],
+                        "text": "状态 / 报警",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "lbl_engine",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 44],
+                        "size": [116, 22],
+                        "text": "发动机",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "badge_engine",
+                    "type": "@StatusBadge",
+                    "props": {
+                        "pos": [132, 38],
+                        "size": [96, 28],
+                        "radius": 14,
+                        "bg_opa": 255,
+                        "text": "开",
+                        "bg_color": "0x28C76F"
+                    }
+                },
+                {
+                    "id": "lbl_hyd",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 104],
+                        "size": [116, 22],
+                        "text": "液压锁",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "badge_hyd",
+                    "type": "@StatusBadge",
+                    "props": {
+                        "pos": [132, 98],
+                        "size": [96, 28],
+                        "radius": 14,
+                        "bg_opa": 255,
+                        "text": "关",
+                        "bg_color": "0x2A3542"
+                    }
+                },
+                {
+                    "id": "lbl_auto_idle",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 164],
+                        "size": [116, 22],
+                        "text": "自动怠速",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "badge_auto_idle",
+                    "type": "@StatusBadge",
+                    "props": {
+                        "pos": [132, 158],
+                        "size": [96, 28],
+                        "radius": 14,
+                        "bg_opa": 255,
+                        "text": "关",
+                        "bg_color": "0x2A3542"
+                    }
+                },
+                {
+                    "id": "lbl_can",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 224],
+                        "size": [116, 22],
+                        "text": "CAN 总线",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "led_can",
+                    "type": "LLed",
+                    "props": {
+                        "pos": [136, 230],
+                        "size": [16, 16],
+                        "color": "0x28C76F",
+                        "on": true
+                    }
+                },
+                {
+                    "id": "lbl_can_state",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [160, 228],
+                        "size": [72, 20],
+                        "text": "在线",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "lbl_maint",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 284],
+                        "size": [116, 22],
+                        "text": "保养",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "led_maint",
+                    "type": "LLed",
+                    "props": {
+                        "pos": [136, 290],
+                        "size": [16, 16],
+                        "color": "0xEA5455",
+                        "on": true
+                    }
+                },
+                {
+                    "id": "lbl_maint_state",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [160, 288],
+                        "size": [72, 20],
+                        "text": "到期",
+                        "color": "0xE8EEF5"
+                    }
+                },
+                {
+                    "id": "lbl_oil",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [10, 344],
+                        "size": [116, 22],
+                        "text": "油温",
+                        "color": "0x8FA0B3"
+                    }
+                },
+                {
+                    "id": "lbl_oil_value",
+                    "type": "LLabel",
+                    "props": {
+                        "pos": [132, 344],
+                        "size": [96, 22],
+                        "text": "70 °C",
+                        "color": "0xE8EEF5",
+                        "text_align": 2
+                    }
+                }
+            ]
+        }
+    ]
+}

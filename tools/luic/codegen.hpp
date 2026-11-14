@@ -308,6 +308,21 @@ class CodeGenerator {
         bool has_chain = false;
         for (auto& prop : node.props) {
             if (is_ctor(prop.name)) continue;
+
+            /* 通用对象标志：不属于组件属性表，直接调用对象 API */
+            if (prop.name == "hidden" && prop.type == "bool") {
+                if (has_chain) { out << ";\n"; has_chain = false; }
+                out << pad << "lv_obj_set_hidden(m_" << node.id << "->native(), "
+                    << (prop.bool_val ? "true" : "false") << ");\n";
+                continue;
+            }
+            if (prop.name == "clickable" && prop.type == "bool") {
+                if (has_chain) { out << ";\n"; has_chain = false; }
+                out << pad << "lv_obj_set_flag(m_" << node.id << "->native(), LV_OBJ_FLAG_CLICKABLE, "
+                    << (prop.bool_val ? "true" : "false") << ");\n";
+                continue;
+            }
+
             auto* pdef = comp->find_prop(prop.name);
             if (!pdef) continue;
             /* 空图片路径会让 lv_image_set_src() 直接崩，空值表示"未设置图片" */

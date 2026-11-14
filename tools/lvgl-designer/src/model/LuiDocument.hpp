@@ -415,7 +415,7 @@ class LuiDocument {
     std::map<std::string, std::string> m_exports;
     /* 图片资源：别名 -> 路径（相对 .lui 所在目录），控件里用 "#别名" 引用 */
     std::map<std::string, std::string> m_resources;
-    /* 工程级资源（来自 lvglpp.project.json），只读、不写回 .lui */
+    /* 工程级资源（来自 lvglpp.lpro），只读、不写回 .lui */
     std::map<std::string, std::string> m_projectResources;
     QString m_projectBaseDir;   // 工程清单所在目录（工程级资源的基准）
     bool m_modified = false;

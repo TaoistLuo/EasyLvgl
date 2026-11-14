@@ -519,8 +519,8 @@ public:
 > | 阶段 | 状态 | 说明 |
 > |---|---|---|
 > | P1 组件化地基 | ✅ 已实现 | `kind` / `exports` / `@Name` / 组件透明根容器 / 导出 setter；单文件模式引用 `@组件` 会报错并提示用 `--project` |
-> | P2 工程清单 | ✅ 已实现 | `lvglpp.project.json` + `luic --project`（依赖图、拓扑排序、循环引用报错、`--emit-cmake`） |
-> | P3 设计器工程化 | 🚧 部分实现 | 已支持：打开工程（`lvglpp.project.json`，也可命令行传清单）、组件面板"项目组件"分组、实例拖入与递归预览、实例参数编辑（组件参数组）、组件文档独立预览、"设为导出"行内按钮。未做：新建组件/屏幕向导、工程树视图、工程级 CMake 构建配置 |
+> | P2 工程清单 | ✅ 已实现 | `lvglpp.lpro` + `luic --project`（依赖图、拓扑排序、循环引用报错、`--emit-cmake`） |
+> | P3 设计器工程化 | 🚧 部分实现 | 已支持：打开工程（`lvglpp.lpro`，也可命令行传清单）、组件面板"项目组件"分组、实例拖入与递归预览、实例参数编辑（组件参数组）、组件文档独立预览、"设为导出"行内按钮。未做：新建组件/屏幕向导、工程树视图、工程级 CMake 构建配置 |
 > | P4 组件间事件 | ⬜ 未开始 | — |
 >
 > **实现时对原方案的调整**
@@ -653,7 +653,7 @@ m_card1->set_accent(0xFF5722);
 ### 15.2 luic 工程模式
 
 ```
-luic --project lvglpp.project.json
+luic --project lvglpp.lpro
 ```
 
 流程：加载全部 `.lui` → 建立 `@Name` 依赖图 → 拓扑排序生成 → 循环检测（A 嵌 B、B 嵌 A 报错并给出环路径）→ 校验 `kind/size`、`@Name` 存在性、`exports` 路径有效性 → （可选）`--emit-cmake` 输出源文件列表。
@@ -789,7 +789,7 @@ int main() {
 
 ```
 MyProject/
-├── lvglpp.project.json
+├── lvglpp.lpro
 ├── main.cpp
 └── ui/
     ├── components/MyCard.lui      # kind: component + exports

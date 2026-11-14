@@ -1,0 +1,59 @@
+{
+    "version": "1.0",
+    "name": "ParamRow",
+    "kind": "component",
+    "exports": {
+        "name": "lbl_name.text",
+        "value": "lbl_value.text",
+        "unit": "lbl_unit.text",
+        "level": "bar.value",
+        "accent": "lbl_value.color",
+        "track": "bar.bg_color"
+    },
+    "children": [
+        {
+            "id": "lbl_name",
+            "type": "LLabel",
+            "props": {
+                "pos": [12, 2],
+                "size": [216, 22],
+                "text": "参数",
+                "color": "0x8FA0B3"
+            }
+        },
+        {
+            "id": "lbl_value",
+            "type": "LLabel",
+            "props": {
+                "pos": [12, 26],
+                "size": [140, 30],
+                "text": "--",
+                "font_size": 22,
+                "color": "0xE8EEF5"
+            }
+        },
+        {
+            "id": "lbl_unit",
+            "type": "LLabel",
+            "props": {
+                "pos": [156, 38],
+                "size": [72, 16],
+                "text": "unit",
+                "font_size": 12,
+                "color": "0x8FA0B3"
+            }
+        },
+        {
+            "id": "bar",
+            "type": "LBar",
+            "props": {
+                "pos": [12, 62],
+                "size": [216, 6],
+                "range": [0, 100],
+                "value": 0,
+                "bg_color": "0x2A3542",
+                "radius": 3
+            }
+        }
+    ]
+}

@@ -1,0 +1,65 @@
+{
+    "version": "1.0",
+    "name": "GaugeCard",
+    "kind": "component",
+    "exports": {
+        "caption": "lbl_caption.text",
+        "unit": "lbl_unit.text",
+        "reading": "lbl_reading.text",
+        "value": "arc.value",
+        "range": "arc.range"
+    },
+    "children": [
+        {
+            "id": "arc",
+            "type": "LArc",
+            "props": {
+                "pos": [61, 2],
+                "size": [126, 126],
+                "range": [0, 100],
+                "value": 0,
+                "angles": [135, 45],
+                "bg_angles": [135, 45],
+                "arc_width": 10,
+                "arc_rounded": true,
+                "arc_color": "0x2A3542",
+                "knob_enabled": false
+            }
+        },
+        {
+            "id": "lbl_reading",
+            "type": "LLabel",
+            "props": {
+                "pos": [16, 44],
+                "size": [216, 32],
+                "text": "0",
+                "font_size": 28,
+                "color": "0xE8EEF5",
+                "text_align": 1
+            }
+        },
+        {
+            "id": "lbl_caption",
+            "type": "LLabel",
+            "props": {
+                "pos": [16, 130],
+                "size": [216, 20],
+                "text": "标题",
+                "color": "0x8FA0B3",
+                "text_align": 1
+            }
+        },
+        {
+            "id": "lbl_unit",
+            "type": "LLabel",
+            "props": {
+                "pos": [16, 150],
+                "size": [216, 14],
+                "text": "unit",
+                "font_size": 12,
+                "color": "0x8FA0B3",
+                "text_align": 1
+            }
+        }
+    ]
+}

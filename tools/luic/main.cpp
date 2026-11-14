@@ -64,7 +64,7 @@
 void print_usage() {
     printf("用法：\n");
     printf("  luic <输入.lui> [-o 输出.hpp] [--assets-include <路径>] [--verbose]\n");
-    printf("  luic --project <工程清单.json> [--out-dir <目录>] [--emit-cmake <文件>]\n");
+    printf("  luic --project <工程清单.lpro> [--out-dir <目录>] [--emit-cmake <文件>]\n");
     printf("\n选项：\n");
     printf("  -o <文件>    输出文件路径（默认 <输入>_ui.hpp）\n");
     printf("  --assets-include <路径>  嵌入图片资源头文件的 include 路径\n");

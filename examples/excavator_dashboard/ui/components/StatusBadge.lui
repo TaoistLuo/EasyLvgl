@@ -1,0 +1,21 @@
+{
+    "version": "1.0",
+    "name": "StatusBadge",
+    "kind": "component",
+    "exports": {
+        "text": "lbl_text.text"
+    },
+    "children": [
+        {
+            "id": "lbl_text",
+            "type": "LLabel",
+            "props": {
+                "pos": [0, 2],
+                "size": [96, 24],
+                "text": "关",
+                "color": "0xE8EEF5",
+                "text_align": 1
+            }
+        }
+    ]
+}

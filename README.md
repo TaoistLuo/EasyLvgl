@@ -89,6 +89,21 @@ cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/5.15.2/gcc_64 -DCMAKE_BUILD_
 cmake --build build -j
 ```
 
+### 工程级示例：挖掘机仪表盘
+
+[`examples/excavator_dashboard/`](examples/excavator_dashboard/) 是一个完整的车载 HMI 工程，
+而不是单文件 demo：工程清单、多屏幕（仪表盘 / 实时参数查询 / 配置设置）、可复用组件
+（`GaugeCard`、`ParamRow`）、图片资源、业务逻辑与独立 CMake 构建，可直接用设计器打开编辑。
+
+```bash
+pip install pypng lz4      # convert_assets.py 依赖
+cmake -S examples/excavator_dashboard -B examples/excavator_dashboard/build
+cmake --build examples/excavator_dashboard/build -j 8
+./examples/excavator_dashboard/build/excavator_dashboard
+```
+
+详见 [该示例的 README](examples/excavator_dashboard/README.md)。
+
 ---
 
 ## 组件总览

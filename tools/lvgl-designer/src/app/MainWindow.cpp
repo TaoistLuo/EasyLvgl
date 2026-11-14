@@ -973,16 +973,16 @@ void MainWindow::onNewProject() {
         "file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated)\n"
         "add_custom_target(ui ALL\n"
         "    COMMAND ${EASYLVGL_ROOT}/bin/luic${CMAKE_EXECUTABLE_SUFFIX} --project\n"
-        "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
         "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
-        "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
         "    COMMENT \"luic: 生成 UI 代码\")\n"
         "add_dependencies(ui luic)\n\n"
         "# 图片资源：把工程清单里的 resources 转成 lv_image_dsc_t（qrc 式）\n"
         "find_program(EASYLVGL_PYTHON NAMES python3 python)\n"
         "add_custom_target(assets\n"
         "    COMMAND ${EASYLVGL_PYTHON} ${EASYLVGL_ROOT}/scripts/assets/convert_assets.py\n"
-        "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.project.json\n"
+        "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
         "    COMMENT \"转换图片资源\")\n"
         "add_dependencies(ui assets)\n"
         "file(GLOB ASSET_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c)\n"
@@ -1015,7 +1015,7 @@ void MainWindow::onNewProject() {
         "#include \"%1_ui.hpp\"\n"
         "#include \"easylvgl/core/platform.hpp\"\n\n"
         "using namespace easylvgl;   // 生成的界面类在 namespace lvgl 里\n\n"
-        "// 入口：由 lvglpp.project.json 的 entry 指定屏幕\n"
+        "// 入口：由 lvglpp.lpro 的 entry 指定屏幕\n"
         "class App : public easylvgl::%1_UI {\n"
         "public:\n"
         "    // 在这里 override on_<id>_<event>(lv_event_t*) 处理交互\n"
@@ -1037,7 +1037,7 @@ void MainWindow::onNewProject() {
     }
     QDir().mkpath(dir + "/ui_generated");
 
-    const QString manifestPath = dir + "/lvglpp.project.json";
+    const QString manifestPath = dir + "/lvglpp.lpro";
     QFile f(manifestPath);
     if (!f.open(QIODevice::WriteOnly)) {
         QMessageBox::critical(this, "新建工程", "无法写入：" + manifestPath);
@@ -1261,7 +1261,7 @@ void MainWindow::removeFromProject(const QString& path) {
 void MainWindow::onOpenProject() {
     if (m_doc.isModified() && !confirmDiscard()) return;
     QString path = QFileDialog::getOpenFileName(this, "打开工程", QString(),
-                                                "LVGL++ 工程 (lvglpp.project.json);;JSON (*.json)");
+                                                "LVGL++ 工程 (*.lpro);;JSON (*.json)");
     if (!path.isEmpty()) loadProject(path);
 }
 

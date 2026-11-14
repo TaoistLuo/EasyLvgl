@@ -801,6 +801,7 @@ public:
             {
                 {"value_changed", "on_change"},
                 {"ready",         "on_ready"},
+                {"clicked",       "on_click"},
             }
         });
 

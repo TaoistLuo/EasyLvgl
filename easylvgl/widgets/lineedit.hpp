@@ -111,6 +111,12 @@ public:
         return *this;
     }
 
+    template<typename Func>
+    LLineEdit& on_click(Func&& callback) {
+        connect_event(m_obj, LV_EVENT_CLICKED, std::forward<Func>(callback));
+        return *this;
+    }
+
     LLineEdit& set_enabled(bool enabled) {
         if (enabled) {
             lv_obj_remove_state(m_obj, LV_STATE_DISABLED);

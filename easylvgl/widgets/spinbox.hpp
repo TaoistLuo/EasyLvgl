@@ -94,6 +94,12 @@ public:
 
     LSpinbox& set_cursor_pos(int pos) { lv_spinbox_set_cursor_pos(m_obj, pos); return *this; }
 
+    template <typename F>
+    LSpinbox& on_change(F&& callback) {
+        connect_event(m_obj, LV_EVENT_VALUE_CHANGED, std::forward<F>(callback));
+        return *this;
+    }
+
 };
 
 } // namespace easylvgl

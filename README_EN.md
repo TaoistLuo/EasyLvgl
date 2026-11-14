@@ -44,7 +44,7 @@ Designer (requires Qt 5.15):
 cd tools/lvgl-designer
 cmake -S . -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/5.15.2/gcc_64
 cmake --build build -j8
-./tools/lvgl-designer/build/lvgl-designer example.lui   # or pass lvglpp.project.json
+./tools/lvgl-designer/build/lvgl-designer example.lui   # or pass lvglpp.lpro
 ```
 
 ## A minimal project
