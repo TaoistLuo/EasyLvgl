@@ -28,9 +28,14 @@
 ```
 excavator_dashboard/
 ├── lvglpp.lpro        # 工程清单：入口屏幕、文件列表、图片资源、输出目录
-├── main.cpp                   # 业务逻辑：页面切换、模拟数据、交互处理
+├── main.cpp                   # 入口：字体、页面容器、导航接线、主循环
+├── app_common.hpp             # 共享常量 / 类型 / 模拟数据
+├── screens/                   # 业务类（luic 生成物不在这里）
+│   ├── Dashboard.h/.cpp
+│   ├── InfoCenter.h/.cpp
+│   └── Settings.h/.cpp
 ├── i18n.hpp                   # LVGL 原生 lv_translation 封装（注册/切换/控件绑定）
-├── i18n/strings.xlsx          # 文案源（key / zh / en），Excel 是唯一来源
+├── i18n/strings.xlsx          # 文案源（key / zh / en / ru），Excel 是唯一来源
 ├── tools/xlsx2i18n.py         # 构建时把 xlsx 生成 i18n_generated.hpp（仅标准库）
 ├── CMakeLists.txt             # 独立工程构建（自动调用 luic + convert_assets + i18n）
 ├── ui/
@@ -101,8 +106,8 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
     监听 `LV_EVENT_TRANSLATION_LANGUAGE_CHANGED` 后重新调用 setter；
   - 实时状态词、反馈等动态文本用 `on_language_change()` 挂刷新回调。
 - 启动语言：默认中文；`EASYLVGL_LANG=en` 时以英文启动。
-- 新增语言：Excel 增加一列（当前封装固定 `zh`、`en` 两列与 `i18n::Lang` 映射），
-  当前封装固定 `zh`、`en`、`ru` 三列与 `i18n::Lang` 映射；新增语言需同时扩展 `i18n::Lang`、
+- 新增语言：当前封装固定 `zh`、`en`、`ru` 三列与 `i18n::Lang` 映射；新增语言需同时扩展
+  `i18n::Lang`、
   设置页下拉索引，并让生成器接受新的语言列（目前要求前三列依次为 zh/en/ru）。
   生成器会校验列顺序、重复 key 和空翻译。
 - 当前语言保存在内存；如需掉电保持，可在保存设置时写入配置文件。
@@ -117,15 +122,27 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
 - 许可：`fonts/OFL.txt`
 - 替换字体：配置时传 `-DEXCAVATOR_FONT_FILE=/path/to/your.ttf`（需要 TrueType `glyf` 轮廓，Tiny TTF 不支持 CFF/OTF）
 
-## 代码组织
+## UI 生成与业务骨架
 
-`main.cpp` 继承 luic 生成的三类 UI 类并覆写事件钩子：
+- luic 只生成中间 UI 头文件：`<build>/ui_generated/*_ui.hpp`，**不属于工程源码**，随构建生成。
+- 业务类在 `screens/`，构造函数调用 `setup(parent)` 与 `bind_events()`，其余事件和逻辑自行覆写：
 
 ```cpp
-class DashboardScreen : public Dashboard_UI {
-    void on_btn_info_clicked(lv_event_t*) override { /* 切页 */ }
-};
+Dashboard::Dashboard(lv_obj_t* parent) {
+    setup(parent);
+    bind_events();
+}
 ```
+
+- 设计器里可手动生成：构建菜单 / 工具栏“骨架”按钮；新建屏幕时可勾选“同步生成业务骨架”。
+- 命令行也可以只针对当前 `.lui` 生成一次骨架类（已存在的文件不会覆盖）：
+
+```bash
+bin/luic ui/screens/Dashboard.lui --scaffold screens
+```
+
+生成规则：类名和文件名与 `.lui` 完全一致（如 `Dashboard.lui` → `Dashboard.h/.cpp`，`GaugeCard.lui` → `GaugeCard.h/.cpp`），构造函数只调用 `setup(parent)` +
+`bind_events()`，不生成任何业务内容；UI 实现仍由 luic 在构建目录生成。
 
 生成的成员（`m_gauge_rpm`、`m_param_fuel`、`m_sw_eco` 等）在子类中可直接访问，
 组件实例则通过生成的 `set_*`（`set_value` / `set_reading` / `set_level` …）更新。

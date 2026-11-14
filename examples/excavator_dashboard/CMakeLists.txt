@@ -63,7 +63,12 @@ add_custom_command(
     COMMENT "i18n: strings.xlsx -> i18n_generated.hpp")
 add_custom_target(excavator_i18n DEPENDS ${I18N_HEADER})
 
-add_executable(excavator_dashboard main.cpp ${ASSET_SOURCES})
+set(APP_SOURCES
+    main.cpp
+    screens/Dashboard.cpp
+    screens/InfoCenter.cpp
+    screens/Settings.cpp)
+add_executable(excavator_dashboard ${APP_SOURCES} ${ASSET_SOURCES})
 add_dependencies(excavator_dashboard excavator_ui_compile excavator_assets excavator_i18n)
 
 # 中文字体：运行时由 LVGL Tiny TTF 读取该子集 TTF（不参与编译）
@@ -77,6 +82,7 @@ target_compile_definitions(excavator_dashboard PRIVATE
     EXCAVATOR_FONT_FILE="${EXCAVATOR_FONT_FILE}")
 
 target_include_directories(excavator_dashboard PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
     "${GEN_DIR}"
     "${I18N_GEN_DIR}"
     "${CMAKE_BINARY_DIR}"            # 解析生成代码里的 "assets/lvgl_assets.h"

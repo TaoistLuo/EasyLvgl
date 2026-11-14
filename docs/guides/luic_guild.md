@@ -65,6 +65,7 @@ int main() {
 
 ```
 luic <input.lui> [-o output.hpp] [--verbose]
+luic --project <工程清单.lpro> [--out-dir <目录>] [--scaffold <目录>] [--emit-cmake <文件>]
 
 参数：
   input.lui       输入的 .lui 文件
@@ -72,6 +73,41 @@ luic <input.lui> [-o output.hpp] [--verbose]
   --verbose       显示详细信息
   --help          显示帮助
 ```
+
+## 工程模式与屏幕骨架
+
+工程模式读取 `.lpro` 清单，编译清单中的全部 `.lui`：
+
+```bash
+luic --project my.lpro --out-dir build/ui_generated
+```
+
+生成的 `*_ui.hpp` 是中间文件，建议输出到构建目录，不放进工程源码。
+
+`--scaffold <目录>` 只针对当前传入的 `.lui` 生成一次业务骨架（屏幕和组件都支持，已存在则跳过）：
+
+```bash
+luic ui/screens/MainScreen.lui --scaffold screens
+```
+
+类名/文件名与 `.lui` 完全一致（如 `MainScreen.lui` → `MainScreen.h/.cpp`，`GaugeCard.lui` → `GaugeCard.h/.cpp`），不额外追加后缀。
+
+生成内容只有类声明和构造函数：
+
+```cpp
+class MainScreen : public easylvgl::MainScreen_UI {
+public:
+    explicit MainScreen(lv_obj_t* parent = nullptr);
+};
+
+MainScreen::MainScreen(lv_obj_t* parent) {
+    setup(parent);
+    bind_events();
+}
+```
+
+业务事件、数据处理由你在这对 `.h/.cpp` 里继续写，类似 Qt 的 `ui_*.h` + 手写窗口类：
+luic 只负责 UI 中间代码，骨架只生成一次，不会覆盖已有实现。
 
 ## .lui 文件格式
 

@@ -149,6 +149,7 @@ private:
     void onDelete();
     void onCanvasSize();
     void onCompile();
+    void onScaffold();
     void onAbout();
     void onBringToFront();
     void scheduleRebuild();

@@ -72,6 +72,7 @@ void print_usage() {
     printf("  --project <文件>  工程模式：编译清单中的全部 .lui，并解析 \"@组件\" 实例\n");
     printf("  --out-dir <目录>  工程模式的输出目录（默认取清单的 outDir 或 ui_generated）\n");
     printf("  --emit-cmake <文件>  工程模式输出 CMake 片段（头文件列表/包含目录）\n");
+    printf("  --scaffold <目录>  为当前 .lui 生成一次骨架类（屏幕/组件，已存在则跳过）\n");
     printf("  --verbose    打印详细信息\n");
     printf("  --help       显示本帮助\n");
 }
@@ -149,6 +150,47 @@ void collect_component_refs(const std::vector<luic::widget_node_t>& nodes,
         if (!n.type.empty() && n.type[0] == '@') out.insert(n.type.substr(1));
         collect_component_refs(n.children, out);
     }
+}
+
+int write_screen_scaffold(const std::string& dir, const std::string& name,
+                          const std::string& header_base) {
+    const std::string& cls = name;
+    const std::string hpath = dir + "/" + cls + ".h";
+    const std::string cpath = dir + "/" + cls + ".cpp";
+    luic_stat_t st;
+    if (luic_stat(hpath.c_str(), &st) == 0 || luic_stat(cpath.c_str(), &st) == 0) {
+        printf("luic: scaffold %s（已存在，跳过）\n", cls.c_str());
+        return 0;
+    }
+
+    const std::string hdr = header_base + "_ui.hpp";
+    std::ofstream h(hpath);
+    if (!h.is_open()) {
+        fprintf(stderr, "luic: 无法写入 %s\n", hpath.c_str());
+        return -1;
+    }
+    h << "#pragma once\n\n"
+      << "#include \"" << hdr << "\"\n\n"
+      << "class " << cls << " : public easylvgl::" << name << "_UI {\n"
+      << "public:\n"
+      << "    explicit " << cls << "(lv_obj_t* parent = nullptr);\n"
+      << "    ~" << cls << "() override = default;\n"
+      << "};\n";
+    h.close();
+
+    std::ofstream c(cpath);
+    if (!c.is_open()) {
+        fprintf(stderr, "luic: 无法写入 %s\n", cpath.c_str());
+        return -1;
+    }
+    c << "#include \"" << cls << ".h\"\n\n"
+      << cls << "::" << cls << "(lv_obj_t* parent) {\n"
+      << "    setup(parent);\n"
+      << "    bind_events();\n"
+      << "}\n";
+    c.close();
+    printf("luic: scaffold %s -> %s\n", cls.c_str(), dir.c_str());
+    return 1;
 }
 
 int run_project(const std::string& manifest, const std::string& out_dir_opt,
@@ -330,6 +372,29 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
     return 0;
 }
 
+int run_scaffold_single(const std::string& input, const std::string& scaffold_dir) {
+    using json = nlohmann::json;
+    json j;
+    {
+        std::ifstream f(input);
+        if (!f.is_open()) {
+            fprintf(stderr, "luic: 无法打开 %s\n", input.c_str());
+            return 1;
+        }
+        try { f >> j; } catch (const json::parse_error& e) {
+            fprintf(stderr, "luic: JSON 错误：%s\n", e.what());
+            return 1;
+        }
+    }
+    const std::string name = j.value("name", std::string());
+    if (name.empty()) {
+        fprintf(stderr, "luic: %s 缺少 name\n", input.c_str());
+        return 1;
+    }
+    if (!mkdir_p(scaffold_dir)) return 1;
+    return write_screen_scaffold(scaffold_dir, name, base_noext(input)) < 0 ? 1 : 0;
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -344,6 +409,7 @@ int main(int argc, char* argv[]) {
     std::string project_file;
     std::string out_dir;
     std::string cmake_out;
+    std::string scaffold_dir;
     bool verbose = false;
 
     for (int i = 1; i < argc; i++) {
@@ -362,6 +428,8 @@ int main(int argc, char* argv[]) {
             out_dir = argv[++i];
         } else if (strcmp(argv[i], "--emit-cmake") == 0 && i + 1 < argc) {
             cmake_out = argv[++i];
+        } else if (strcmp(argv[i], "--scaffold") == 0 && i + 1 < argc) {
+            scaffold_dir = argv[++i];
         } else if (input_file.empty()) {
             input_file = argv[i];
         }
@@ -372,7 +440,19 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "luic: --project 与单文件输入不能同时使用\n");
             return 1;
         }
+        if (!scaffold_dir.empty()) {
+            fprintf(stderr, "luic: --scaffold 只用于单个 .lui，请勿与 --project 同时使用\n");
+            return 1;
+        }
         return run_project(project_file, out_dir, cmake_out, assets_include, verbose);
+    }
+
+    if (!scaffold_dir.empty()) {
+        if (input_file.empty()) {
+            fprintf(stderr, "luic: --scaffold 需要输入 .lui 文件\n");
+            return 1;
+        }
+        return run_scaffold_single(input_file, scaffold_dir);
     }
 
     if (input_file.empty()) {

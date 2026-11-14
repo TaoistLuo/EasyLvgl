@@ -36,6 +36,7 @@
 #include <QStatusBar>
 #include <QKeySequence>
 #include <QInputDialog>
+#include <QCheckBox>
 #include <QClipboard>
 #include <QTimer>
 #include <QGuiApplication>
@@ -211,6 +212,7 @@ void MainWindow::setupMenus() {
     fileMenu->addAction("新建工程(&J)...", this, &MainWindow::onNewProject);
     fileMenu->addAction("打开工程(&P)...", this, &MainWindow::onOpenProject);
     fileMenu->addAction("新建组件(&M)...", this, &MainWindow::onNewComponent);
+    fileMenu->addAction("新建屏幕(&R)...", this, &MainWindow::onNewScreen);
     fileMenu->addAction("保存(&S)", this, &MainWindow::onSave, QKeySequence::Save);
     fileMenu->addAction("另存为(&A)...", this, &MainWindow::onSaveAs, QKeySequence("Ctrl+Shift+S"));
     fileMenu->addSeparator();
@@ -253,6 +255,7 @@ void MainWindow::setupMenus() {
 
     auto* buildMenu = menuBar()->addMenu("构建(&B)");
     buildMenu->addAction("编译 .lui(&C)", this, &MainWindow::onCompile, QKeySequence("F5"));
+    buildMenu->addAction("生成当前骨架(&K)", this, &MainWindow::onScaffold);
     buildMenu->addAction("构建工程(&B)", this, &MainWindow::onBuildProject, QKeySequence("Ctrl+B"));
     buildMenu->addAction("运行(&R)", this, &MainWindow::onRunProject, QKeySequence("Ctrl+R"));
     buildMenu->addAction("全构建并运行(&A)", this, &MainWindow::onBuildAndRun, QKeySequence("Ctrl+F5"));
@@ -397,6 +400,8 @@ void MainWindow::setupToolbar() {
     auto* aCompile = toolbar->addAction(makeIcon("compile"),
                                         "编译", this, &MainWindow::onCompile);
     aCompile->setToolTip("生成代码（luic，F5）");
+    auto* aScaffold = toolbar->addAction("骨架", this, &MainWindow::onScaffold);
+    aScaffold->setToolTip("为当前 .lui 生成业务骨架（screens/ 或 components/）");
     auto* aBuild = toolbar->addAction(makeIcon("build"),
                                       "构建", this, &MainWindow::onBuildProject);
     aBuild->setToolTip("构建工程（Ctrl+B）");
@@ -970,11 +975,11 @@ void MainWindow::onNewProject() {
         "file(GLOB LUI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens/*.lui\n"
         "                    ${CMAKE_CURRENT_SOURCE_DIR}/ui/components/*.lui)\n"
         "set(UI_HEADERS \"\")\n"
-        "file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated)\n"
+        "file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui_generated)\n"
         "add_custom_target(ui ALL\n"
         "    COMMAND ${EASYLVGL_ROOT}/bin/luic${CMAKE_EXECUTABLE_SUFFIX} --project\n"
         "            ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
-        "            --out-dir ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
+        "            --out-dir ${CMAKE_BINARY_DIR}/ui_generated\n"
         "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
         "    COMMENT \"luic: 生成 UI 代码\")\n"
         "add_dependencies(ui luic)\n\n"
@@ -990,7 +995,7 @@ void MainWindow::onNewProject() {
         "add_dependencies(%1 ui)\n"
         "target_include_directories(%1 PRIVATE\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}\n"
-        "    ${CMAKE_CURRENT_SOURCE_DIR}/ui_generated\n"
+        "    ${CMAKE_BINARY_DIR}/ui_generated\n"
         "    ${CMAKE_CURRENT_SOURCE_DIR}/ui\n"
         "    ${EASYLVGL_ROOT})\n"
         "# 桌面窗口后端：Windows 用 LVGL 原生 Win32 后端（无需 SDL2），其它平台用 SDL2\n"
@@ -1100,6 +1105,19 @@ void MainWindow::onNewComponent() {
     const QString manifest = m_projectFile;
     loadProject(manifest);
     openFile(path);
+
+    QMessageBox box(this);
+    box.setWindowTitle("新建组件");
+    box.setText(QString("组件 %1 已创建。").arg(name));
+    box.setInformativeText("是否为该组件生成业务骨架类？已存在的文件不会被覆盖。");
+    auto* sync = new QCheckBox("同步生成业务骨架（components/）", &box);
+    sync->setChecked(true);
+    box.setCheckBox(sync);
+    box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() == QMessageBox::Yes && sync->isChecked()) {
+        onScaffold();
+    }
 }
 
 void MainWindow::refreshProjectPanel() {
@@ -1202,6 +1220,19 @@ void MainWindow::onNewScreen() {
     updateManifestFiles([&](QJsonArray& files) { files.append(rel); });
     loadProject(m_projectFile);
     openFile(path);
+
+    QMessageBox box(this);
+    box.setWindowTitle("新建屏幕");
+    box.setText(QString("屏幕 %1 已创建。").arg(name));
+    box.setInformativeText("是否为该屏幕生成业务骨架类？已存在的文件不会被覆盖。");
+    auto* sync = new QCheckBox("同步生成业务骨架（screens/）", &box);
+    sync->setChecked(true);
+    box.setCheckBox(sync);
+    box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() == QMessageBox::Yes && sync->isChecked()) {
+        onScaffold();
+    }
 }
 
 /* 把外部复制进来的 .lui 收进工程（必要时先复制到 ui/components 或 ui/screens） */
@@ -1564,14 +1595,19 @@ void MainWindow::onCompile() {
     }
 
     QFileInfo fi(m_doc.filePath());
-    QString outputDir = fi.absolutePath() + "/../ui_generated";
+    QString buildDir = QSettings().value("build/buildDir").toString();
+    if (buildDir.isEmpty() || !QFileInfo(buildDir).isDir())
+        buildDir = QDir(QFileInfo(m_projectFile.isEmpty() ? m_doc.filePath() : m_projectFile).absolutePath())
+                       .absoluteFilePath("build_lvgl");
+    QDir().mkpath(buildDir);
+    QString outputDir = buildDir + "/ui_generated";
     QDir().mkpath(outputDir);
     QString outputPath = outputDir + "/" + fi.baseName() + "_ui.hpp";
 
     QStringList args;
     if (!m_projectFile.isEmpty()) {
         /* 工程模式：一次生成全部文件（含 "@组件" 实例展开） */
-        args << "--project" << m_projectFile << "--verbose";
+        args << "--project" << m_projectFile << "--out-dir" << outputDir << "--verbose";
     } else {
         args << m_doc.filePath() << "-o" << outputPath << "--verbose";
     }
@@ -1601,6 +1637,57 @@ void MainWindow::onCompile() {
     } else {
         statusBar()->showMessage("编译失败", 5000);
         m_buildPanel->append(QString("=== 编译失败（luic 退出码 %1）===\n").arg(proc.exitCode()));
+    }
+}
+
+void MainWindow::onScaffold() {
+    if (m_doc.filePath().isEmpty()) {
+        QMessageBox::information(this, "生成骨架", "请先保存当前 .lui 文件。");
+        return;
+    }
+    QProcess proc;
+    QString luicPath = SettingsDialog::luicPath();
+    QFileInfo luicFi(luicPath);
+    if (!luicFi.exists()) {
+#ifdef Q_OS_WIN
+        luicPath = QApplication::applicationDirPath() + "/../bin/luic.exe";
+#else
+        luicPath = QApplication::applicationDirPath() + "/../bin/luic";
+#endif
+        luicFi.setFile(luicPath);
+        if (!luicFi.exists()) {
+            QMessageBox::critical(this, "生成骨架", "未找到 luic：\n" + luicPath + "\n\n请先构建 luic。");
+            return;
+        }
+    }
+
+    const QString projectDir = !m_projectFile.isEmpty()
+        ? QFileInfo(m_projectFile).absolutePath()
+        : QFileInfo(m_doc.filePath()).absolutePath();
+    const QString scaffoldDir = projectDir + (m_doc.isComponent() ? "/components" : "/screens");
+
+    QStringList args;
+    args << m_doc.filePath() << "--scaffold" << scaffoldDir << "--verbose";
+
+    m_buildPanel->append("=== 生成骨架 " + m_doc.filePath() + " -> " + scaffoldDir + " ===\n");
+    m_buildDock->show();
+    m_buildDock->raise();
+    proc.start(luicPath, args);
+    if (!proc.waitForFinished(10000)) {
+        m_buildPanel->append("luic 执行超时（10 秒）\n");
+        statusBar()->showMessage("生成骨架失败：超时", 5000);
+        return;
+    }
+    const QString out = proc.readAllStandardOutput();
+    const QString err = proc.readAllStandardError();
+    if (!out.isEmpty()) m_buildPanel->append(out);
+    if (!err.isEmpty()) m_buildPanel->append(err);
+    if (proc.exitCode() == 0) {
+        statusBar()->showMessage("骨架生成完成（已存在的文件不会覆盖）", 5000);
+        m_buildPanel->append("=== 骨架生成完成 ===\n");
+    } else {
+        statusBar()->showMessage("骨架生成失败", 5000);
+        m_buildPanel->append(QString("=== 骨架生成失败（退出码 %1）===\n").arg(proc.exitCode()));
     }
 }
 
