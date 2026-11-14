@@ -33,6 +33,7 @@
 #pragma once
 #include "ir.hpp"
 #include "component_registry.hpp"
+#include "external_component.hpp"
 #include <sstream>
 #include <string>
 #include <set>
@@ -48,12 +49,20 @@ class CodeGenerator {
     /* 工程模式：名字 -> 文档，用于展开 "@Name" 实例与校验 */
     const std::map<std::string, const lui_document_t*>* m_components = nullptr;
     std::set<std::string> m_usedComponents;   // 需要 include 的组件头
+    std::set<std::string> m_usedExternalIncludes;
+    const ExternalComponentMap* m_externals = nullptr;
 
     static bool is_instance(const widget_node_t& n) {
         return !n.type.empty() && n.type[0] == '@';
     }
-    static std::string instance_class(const widget_node_t& n) {
-        return n.type.substr(1) + "_UI";
+    std::string instance_class(const widget_node_t& n) const {
+        if (!is_instance(n)) return n.type;
+        const std::string name = n.type.substr(1);
+        if (m_externals) {
+            auto it = m_externals->find(name);
+            if (it != m_externals->end()) return it->second.class_name;
+        }
+        return name + "_UI";
     }
     static std::string ui_header_of(const lui_document_t& d) {
         std::string base = d.filePath.empty() ? d.name : d.filePath;
@@ -453,6 +462,9 @@ public:
     void setComponents(const std::map<std::string, const lui_document_t*>* comps) {
         m_components = comps;
     }
+    void setExternalComponents(const ExternalComponentMap* externals) {
+        m_externals = externals;
+    }
 
     std::string generate(const lui_document_t& doc) {
         m_usedResources.clear();
@@ -480,7 +492,12 @@ public:
         for (auto* n : all) {
             if (is_instance(*n)) {
                 out << "    " << instance_class(*n) << "* m_" << n->id << " = nullptr;\n";
-                m_usedComponents.insert(n->type.substr(1));
+                const std::string name = n->type.substr(1);
+                if (m_externals && m_externals->count(name)) {
+                    m_usedExternalIncludes.insert(m_externals->at(name).include);
+                } else {
+                    m_usedComponents.insert(name);
+                }
             } else {
                 out << "    " << n->type << "* m_" << n->id << " = nullptr;\n";
             }
@@ -580,6 +597,9 @@ public:
                         inc += "#include \"" + ui_header_of(*dit->second) + "\"\n";
                 }
             }
+            for (auto& path : m_usedExternalIncludes) {
+                inc += "#include \"" + path + "\"\n";
+            }
             auto pos = result.find(marker);
             if (pos != std::string::npos) result.replace(pos, marker.size(), inc);
         }
@@ -647,12 +667,22 @@ public:
     void gen_instance(std::ostringstream& out, const widget_node_t& node,
                       const std::string& parent_expr, int indent) {
         std::string pad(indent, ' ');
-        std::string cls = instance_class(node);
         std::string compName = node.type.substr(1);
-        m_usedComponents.insert(compName);
+        const ExternalComponent* ext = nullptr;
+        if (m_externals) {
+            auto eit = m_externals->find(compName);
+            if (eit != m_externals->end()) ext = &eit->second;
+        }
+        std::string cls = instance_class(node);
+        if (ext) m_usedExternalIncludes.insert(ext->include);
+        else m_usedComponents.insert(compName);
 
-        out << pad << "m_" << node.id << " = new " << cls << "();\n";
-        out << pad << "m_" << node.id << "->setup(" << parent_expr << ");\n";
+        if (ext) {
+            out << pad << "m_" << node.id << " = new " << cls << "(" << parent_expr << ");\n";
+        } else {
+            out << pad << "m_" << node.id << " = new " << cls << "();\n";
+            out << pad << "m_" << node.id << "->setup(" << parent_expr << ");\n";
+        }
 
         const lui_document_t* cdoc = nullptr;
         if (m_components) {
@@ -696,6 +726,18 @@ public:
                 else if (ptype == "string") arg = "\"" + escape_string(p.str_val) + "\"";
                 else if (ptype == "int_pair")
                     arg = std::to_string(p.int_val) + ", " + std::to_string(p.int_val2);
+                else arg = std::to_string(p.int_val);
+                out << pad << "m_" << node.id << "->set_" << p.name << "(" << arg << ");\n";
+            } else if (ext) {
+                std::string arg;
+                if (p.type == "hex") arg = p.str_val.empty() ? p.raw : p.str_val;
+                else if (p.type == "bool") arg = p.bool_val ? "true" : "false";
+                else if (p.type == "string") arg = "\"" + escape_string(p.str_val) + "\"";
+                else if (p.type == "int_pair")
+                    arg = std::to_string(p.int_val) + ", " + std::to_string(p.int_val2);
+                else if (p.type == "int_triple")
+                    arg = std::to_string(p.int_val) + ", " + std::to_string(p.int_val2) + ", " +
+                          std::to_string(p.int_val3);
                 else arg = std::to_string(p.int_val);
                 out << pad << "m_" << node.id << "->set_" << p.name << "(" << arg << ");\n";
             }

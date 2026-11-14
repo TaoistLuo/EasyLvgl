@@ -39,6 +39,7 @@
 #include <map>
 #include <deque>
 #include <functional>
+#include <set>
 #include <memory>
 #include <mutex>
 #include "model/LuiDocument.hpp"
@@ -59,6 +60,7 @@ class LvglRenderer {
     std::map<std::string, std::string> m_resAbs;
     /* 组件实例预览：名字 -> 组件文档（由工程提供） */
     std::function<const LuiDocument*(const std::string&)> m_componentResolver;
+    std::set<std::string> m_externalComponents;
     /* 构建单个实例时，内部子节点的 id -> 对象（用于应用导出参数） */
     std::map<std::string, lv_obj_t*> m_instanceObjects;
     int m_instanceDepth = 0;   // 组件实例递归深度保护
@@ -143,8 +145,13 @@ public:
     std::string objectType(const std::string& id) const;
     void screenToRelative(const std::string& parentId, int& x, int& y) const;
 
+    void setPreviewFont(const QString& path);
+
     void setComponentResolver(std::function<const LuiDocument*(const std::string&)> r) {
         m_componentResolver = std::move(r);
+    }
+    void setExternalComponents(const std::set<std::string>& names) {
+        m_externalComponents = names;
     }
     void setOnClick(std::function<void(const std::string&)> cb) { m_onClick = std::move(cb); }
     void setOnMoved(std::function<void(const std::string& id, int x, int y, int w, int h)> cb) { m_onMoved = std::move(cb); }

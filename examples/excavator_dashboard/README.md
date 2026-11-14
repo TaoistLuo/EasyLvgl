@@ -94,6 +94,40 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
 - 组件实例通过 `exports` 暴露参数，在右侧属性面板中按实例填写
   （例如 `GaugeCard` 的 `caption` / `value` / `range`）
 
+## 外部 C++ 组件
+
+组件不一定非得是 `.lui`，也可以是手写 C++ 类。在工程清单里注册即可：
+
+```json
+"externalComponents": {
+  "MyGauge": { "include": "widgets/MyGauge.hpp", "class": "MyGauge" }
+}
+```
+
+屏幕里照常引用：
+
+```json
+{ "id": "gauge", "type": "@MyGauge",
+  "props": { "pos": [10, 10], "size": [200, 100], "title": "Fuel", "value": 42 } }
+```
+
+luic 不会为它生成 UI 头，而是生成 `new MyGauge(parent)`，并按 props 调用
+`set_pos / set_size / set_align / set_title / set_value` 等方法。
+
+手写类需要提供：
+
+```cpp
+explicit MyGauge(lv_obj_t* parent = nullptr);
+lv_obj_t* root() const;
+MyGauge& set_pos(int, int);
+MyGauge& set_size(int, int);
+MyGauge& set_align(lv_align_t);
+// 以及实例 props 对应的 set_<name>(...)
+```
+
+设计器会把 `include` 指向的源码列到工程树“源码”分组，双击用内置编辑器修改
+（C/C++ 语法高亮）；画布上对这类组件显示占位块，因为它们的内部实现不在 `.lui` 里。
+
 ## 多语言（LVGL 原生 lv_translation）
 
 - 文案源：`i18n/strings.xlsx`（sheet `strings`，列 `key / zh / en / ru`），Excel 是唯一来源。
@@ -111,6 +145,20 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
   设置页下拉索引，并让生成器接受新的语言列（目前要求前三列依次为 zh/en/ru）。
   生成器会校验列顺序、重复 key 和空翻译。
 - 当前语言保存在内存；如需掉电保持，可在保存设置时写入配置文件。
+
+## 字库配置
+
+工程清单里的 `font` 同时决定**运行时**与**设计器预览**使用的字体：
+
+```json
+"font": "fonts/NotoSansSC-Regular.ttf"
+```
+
+- 示例的 CMake 从清单读取 `font`，通过 Tiny TTF 在运行时加载
+- 设计器打开工程时读取同一字段，预览按需用完整 TTF 渲染中文
+- 更换字体：设计器菜单「文件 → 项目字体...」，选择 `.ttf` 后会复制到工程
+  `fonts/`、写回清单，并立即重建预览
+- 也可以在清单里手动改路径；缺失字体时设计器回退到内置 CJK 子集（可能缺字）
 
 ## 中文字体
 

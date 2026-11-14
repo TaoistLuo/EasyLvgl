@@ -74,6 +74,17 @@ luic --project <工程清单.lpro> [--out-dir <目录>] [--scaffold <目录>] [-
   --help          显示帮助
 ```
 
+## 工程字体
+
+工程清单可以声明预览与运行时共用的字体：
+
+```json
+"font": "fonts/NotoSansSC-Regular.ttf"
+```
+
+luic 不使用该字段；它由设计器（预览）与应用的运行时（Tiny TTF）共同读取，
+保证“生成代码/运行效果”和设计器预览一致。字体路径相对工程清单所在目录。
+
 ## 工程模式与屏幕骨架
 
 工程模式读取 `.lpro` 清单，编译清单中的全部 `.lui`：
@@ -108,6 +119,29 @@ MainScreen::MainScreen(lv_obj_t* parent) {
 
 业务事件、数据处理由你在这对 `.h/.cpp` 里继续写，类似 Qt 的 `ui_*.h` + 手写窗口类：
 luic 只负责 UI 中间代码，骨架只生成一次，不会覆盖已有实现。
+
+### 外部 C++ 组件
+
+工程清单可以注册手写组件，不生成 UI 头，直接实例化用户类：
+
+```json
+"externalComponents": {
+  "MyGauge": { "include": "widgets/MyGauge.hpp", "class": "MyGauge" }
+}
+```
+
+之后在任意 `.lui` 里用 `@MyGauge` 实例化。生成代码会：
+
+```cpp
+#include "MyGauge.hpp"
+m_gauge = new MyGauge(parent);
+m_gauge->set_pos(10, 10);
+m_gauge->set_size(200, 100);
+m_gauge->set_title("Fuel");
+```
+
+类需要提供 `Class(lv_obj_t* parent)`、`root()`、`set_pos/set_size/set_align`，
+以及实例 `props` 对应的 `set_<name>(...)` 方法。名称不能与工程内 `.lui` 重名。
 
 ## .lui 文件格式
 

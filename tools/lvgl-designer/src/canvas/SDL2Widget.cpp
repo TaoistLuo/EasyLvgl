@@ -425,6 +425,7 @@ void SDL2Widget::initLvgl() {
     lv_display_set_color_format(m_display, LV_COLOR_FORMAT_ARGB8888);
     lv_display_set_user_data(m_display, this);
     lv_display_set_flush_cb(m_display, flushCb);
+    lv_obj_set_style_text_font(lv_scr_act(), &lv_font_source_han_sans_sc_16_cjk, 0);
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);
     const uint32_t bufSize = stride * m_height;

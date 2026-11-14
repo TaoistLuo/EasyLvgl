@@ -44,6 +44,7 @@ namespace designer {
 class ComponentPanel : public QTreeWidget {
     Q_OBJECT
     QTreeWidgetItem* m_projectGroup = nullptr;
+    QTreeWidgetItem* m_externalGroup = nullptr;
 public:
     explicit ComponentPanel(QWidget* parent = nullptr) : QTreeWidget(parent) {
         setDragEnabled(true);
@@ -165,6 +166,30 @@ public:
             item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
         }
         m_projectGroup->setExpanded(true);
+    }
+
+    /* 外部 C++ 组件：只在校验/代码生成时存在，设计器里用占位块显示 */
+    void setExternalComponents(const std::vector<std::string>& comps) {
+        if (m_externalGroup) {
+            delete m_externalGroup;
+            m_externalGroup = nullptr;
+        }
+        if (comps.empty()) return;
+        m_externalGroup = new QTreeWidgetItem();
+        insertTopLevelItem(0, m_externalGroup);
+        m_externalGroup->setText(0, "外部组件");
+        m_externalGroup->setFlags(Qt::ItemIsEnabled);
+        QFont f = m_externalGroup->font(0);
+        f.setBold(true);
+        m_externalGroup->setFont(0, f);
+        for (auto& c : comps) {
+            auto* item = new QTreeWidgetItem(m_externalGroup);
+            item->setText(0, QString("%1(@%1)")
+                                 .arg(QString::fromStdString(c)));
+            item->setData(0, Qt::UserRole, QString::fromStdString("@" + c));
+            item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
+        }
+        m_externalGroup->setExpanded(true);
     }
 
 protected:

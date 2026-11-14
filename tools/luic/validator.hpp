@@ -33,6 +33,7 @@
 #pragma once
 #include "ir.hpp"
 #include "component_registry.hpp"
+#include "external_component.hpp"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -46,6 +47,7 @@ class Validator {
     const ComponentRegistry& m_registry;
     /* 工程模式下的全部文档（名字 -> 文档），用于解析 "@Name" 实例 */
     const std::map<std::string, const lui_document_t*>* m_components = nullptr;
+    const ExternalComponentMap* m_externals = nullptr;
 
     static const std::set<std::string>& base_props() {
         static const std::set<std::string> s = {
@@ -77,6 +79,9 @@ class Validator {
 public:
     void setComponents(const std::map<std::string, const lui_document_t*>* comps) {
         m_components = comps;
+    }
+    void setExternalComponents(const ExternalComponentMap* externals) {
+        m_externals = externals;
     }
 
     explicit Validator(const ComponentRegistry& reg) : m_registry(reg) {}
@@ -200,34 +205,41 @@ private:
         return found;
     }
 
-    /* "@MyCard" 实例：父文件里声明一个组件实例 */
+    /* "@MyCard" 实例：工程内组件或外部 C++ 组件 */
     void validate_instance(const widget_node_t& node, std::vector<std::string>& errors) {
         std::string compName = node.type.substr(1);
-        if (!m_components) {
-            errors.push_back(node.id + ": component instance '@" + compName +
-                             "' requires project mode (luic --project ...)");
-            return;
+        const lui_document_t* cdoc = nullptr;
+        if (m_components) {
+            auto it = m_components->find(compName);
+            if (it != m_components->end()) cdoc = it->second;
         }
-        auto it = m_components->find(compName);
-        if (it == m_components->end()) {
-            errors.push_back(node.id + ": unknown component '@" + compName + "'");
-            return;
-        }
-        const lui_document_t* cdoc = it->second;
-        if (!cdoc->is_component()) {
-            errors.push_back(node.id + ": '@" + compName + "' is not a component (kind: screen)");
+        const bool external = m_externals && m_externals->count(compName) > 0;
+
+        if (!cdoc && !external) {
+            if (!m_components) {
+                errors.push_back(node.id + ": component instance '@" + compName +
+                                 "' requires project mode (luic --project ...)");
+            } else {
+                errors.push_back(node.id + ": unknown component '@" + compName + "'");
+            }
             return;
         }
         if (!node.events.empty()) {
             errors.push_back(node.id + ": component instances do not support 'events' yet");
         }
-        for (auto& prop : node.props) {
-            if (prop.name == "pos" || prop.name == "size" || prop.name == "align" ||
-                prop.name == "hidden" || prop.name == "clickable") continue;
-            if (style_props().count(prop.name)) continue;
-            if (!cdoc->exports.count(prop.name)) {
-                errors.push_back(node.id + ": '@" + compName + "' has no exported parameter '" +
-                                 prop.name + "'");
+        if (cdoc) {
+            if (!cdoc->is_component()) {
+                errors.push_back(node.id + ": '@" + compName + "' is not a component (kind: screen)");
+                return;
+            }
+            for (auto& prop : node.props) {
+                if (prop.name == "pos" || prop.name == "size" || prop.name == "align" ||
+                    prop.name == "hidden" || prop.name == "clickable") continue;
+                if (style_props().count(prop.name)) continue;
+                if (!cdoc->exports.count(prop.name)) {
+                    errors.push_back(node.id + ": '@" + compName + "' has no exported parameter '" +
+                                     prop.name + "'");
+                }
             }
         }
         for (auto& child : node.children) {

@@ -33,8 +33,14 @@
 #include "canvas/LvglRenderer.hpp"
 #include "easylvgl/core/style.hpp"
 #include <set>
+#include <QStringList>
+#include <QFileInfo>
+#include <QCoreApplication>
 #include <cstdio>
 #include <algorithm>
+#include <fstream>
+#include <map>
+#include <vector>
 #include <algorithm>
 #include <lvgl/src/widgets/label/lv_label.h>
 #include <lvgl/src/widgets/button/lv_button.h>
@@ -207,6 +213,68 @@ static void applyCheckableAlignment(lv_obj_t* obj, const WidgetNode* node = null
     lv_obj_set_style_pad_all(obj, 1, LV_PART_INDICATOR);
 }
 
+namespace {
+
+bool has_non_ascii(const std::string& text) {
+    for (unsigned char c : text) {
+        if (c >= 0x80) return true;
+    }
+    return false;
+}
+
+struct PreviewFontState {
+    QString path;
+    std::vector<unsigned char> data;
+    bool loaded = false;
+    std::map<int, lv_font_t*> fonts;
+};
+
+PreviewFontState& preview_font_state() {
+    static PreviewFontState state;
+    return state;
+}
+
+void load_preview_font_data() {
+    PreviewFontState& state = preview_font_state();
+    if (state.loaded) return;
+    state.loaded = true;
+    if (state.path.isEmpty() || !QFileInfo::exists(state.path)) return;
+    std::ifstream file(state.path.toStdString(), std::ios::binary);
+    if (!file) return;
+    file.seekg(0, std::ios::end);
+    const auto size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    if (size > 0) {
+        state.data.resize(static_cast<size_t>(size));
+        file.read(reinterpret_cast<char*>(state.data.data()), size);
+    }
+}
+
+/* 预览与生成代码使用同一个项目字体；未配置时回退到编译进 LVGL 的 CJK 子集 */
+const lv_font_t* preview_cjk_font(int font_size) {
+    if (font_size < 8) font_size = 8;
+    if (font_size > 48) font_size = 48;
+    PreviewFontState& state = preview_font_state();
+    load_preview_font_data();
+#if LV_USE_TINY_TTF
+    if (!state.data.empty()) {
+        auto it = state.fonts.find(font_size);
+        if (it != state.fonts.end()) return it->second;
+        lv_font_t* font = lv_tiny_ttf_create_data(state.data.data(), state.data.size(), font_size);
+        state.fonts[font_size] = font;
+        return font;
+    }
+#endif
+    return font_size <= 14 ? &lv_font_source_han_sans_sc_14_cjk
+                           : &lv_font_source_han_sans_sc_16_cjk;
+}
+
+void apply_cjk_font(lv_obj_t* obj, int font_size) {
+    lv_obj_set_style_text_font(obj, preview_cjk_font(font_size), 0);
+}
+
+}  // namespace
+
 lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, bool selectable) {
     lv_obj_t* obj = nullptr;
     lv_obj_t* targetParent = parent ? parent : lv_scr_act();
@@ -360,6 +428,14 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, b
         }
         applyProps(obj, node);
 
+    if (node.props.count("text") && has_non_ascii(node.propString("text"))) {
+        apply_cjk_font(obj, node.propInt("font_size", 16));
+    }
+    if ((node.type == "LComboBox" || node.type == "LRoller") &&
+        node.props.count("options") && has_non_ascii(node.propString("options"))) {
+        apply_cjk_font(obj, node.propInt("font_size", 16));
+    }
+
         if (isInstance && m_instanceDepth < 8) {
             const LuiDocument* cdoc = m_componentResolver ? m_componentResolver(node.type.substr(1)) : nullptr;
             if (cdoc) {
@@ -370,6 +446,11 @@ lv_obj_t* LvglRenderer::createWidget(const WidgetNode& node, lv_obj_t* parent, b
                 m_instanceDepth--;
                 applyInstanceExports(obj, node, *cdoc);
                 m_instanceObjects = saved;
+            } else if (m_externalComponents.count(node.type.substr(1))) {
+                lv_obj_t* label = lv_label_create(obj);
+                lv_label_set_text(label, node.type.substr(1).c_str());
+                lv_obj_center(label);
+                lv_obj_set_style_text_color(label, lv_color_hex(0x8899AA), 0);
             }
         }
 
@@ -1555,7 +1636,19 @@ void LvglRenderer::pollEvents() {
     }
 }
 
+void LvglRenderer::setPreviewFont(const QString& path) {
+    PreviewFontState& state = preview_font_state();
+    for (auto& entry : state.fonts) {
+        if (entry.second) lv_tiny_ttf_destroy(entry.second);
+    }
+    state.fonts.clear();
+    state.data.clear();
+    state.path = path;
+    state.loaded = false;
+}
+
 void LvglRenderer::buildTree(const LuiDocument& doc) {
+    lv_obj_set_style_text_font(lv_scr_act(), preview_cjk_font(16), 0);
     clear();
 
     /* 资源别名 -> 绝对路径，供预览时按 lv_fs 路径加载 */

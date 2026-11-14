@@ -2,6 +2,7 @@
     "version": "1.0",
     "name": "ExcavatorDashboard",
     "entry": "Dashboard",
+    "font": "fonts/NotoSansSC-Regular.ttf",
     "outDir": "ui_generated",
     "files": [
         "ui/components/GaugeCard.lui",
@@ -11,6 +12,9 @@
         "ui/screens/InfoCenter.lui",
         "ui/screens/Settings.lui"
     ],
+    "externalComponents": {
+        "TempRow": { "include": "components/TempRow.hpp", "class": "TempRow" }
+    },
     "resources": {
         "excavator": "assets/excavator.png",
         "gear": "assets/gear.png"

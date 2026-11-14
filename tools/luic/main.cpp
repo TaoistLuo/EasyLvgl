@@ -34,6 +34,7 @@
 #include "validator.hpp"
 #include "codegen.hpp"
 #include "component_registry.hpp"
+#include "external_component.hpp"
 #include <fstream>
 #include <cstdio>
 #include <cstring>
@@ -233,6 +234,27 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
                 projectResources[it.key()] = it.value().get<std::string>();
     }
 
+    /* 外部 C++ 组件：不生成 UI 文件，直接实例化用户类 */
+    luic::ExternalComponentMap externals;
+    if (j.contains("externalComponents") && j["externalComponents"].is_object()) {
+        for (auto it = j["externalComponents"].begin();
+             it != j["externalComponents"].end(); ++it) {
+            if (!it.value().is_object()) {
+                fprintf(stderr, "luic: externalComponents.%s 必须是对象\n", it.key().c_str());
+                return 1;
+            }
+            luic::ExternalComponent ec;
+            ec.include = it.value().value("include", "");
+            ec.class_name = it.value().value("class", "");
+            if (ec.include.empty() || ec.class_name.empty()) {
+                fprintf(stderr, "luic: externalComponents.%s 需要 include 和 class\n",
+                        it.key().c_str());
+                return 1;
+            }
+            externals[it.key()] = ec;
+        }
+    }
+
     luic::ComponentRegistry registry;
     luic::Parser parser;
 
@@ -260,9 +282,17 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
             if (!d->resources.count(kv.first)) d->resources[kv.first] = kv.second;
     }
 
+    for (auto& kv : externals) {
+        if (by_name.count(kv.first)) {
+            fprintf(stderr, "luic: 外部组件与工程文件重名：%s\n", kv.first.c_str());
+            return 1;
+        }
+    }
+
     /* 2) 校验（带组件表） */
     luic::Validator validator(registry);
     validator.setComponents(&by_name);
+    if (!externals.empty()) validator.setExternalComponents(&externals);
     bool ok = true;
     for (auto& d : docs) {
         for (auto& err : validator.validate(*d)) {
@@ -326,10 +356,15 @@ int run_project(const std::string& manifest, const std::string& out_dir_opt,
     std::vector<std::string> headers;
     std::set<std::string> include_dirs;
     include_dirs.insert(out_dir);
+    for (auto& kv : externals) {
+        const std::string inc = kv.second.include;
+        include_dirs.insert(is_absolute_path(inc) ? dir_of(inc) : base + "/" + dir_of(inc));
+    }
     for (auto& name : order) {
         auto* d = doc_by_name[name];
         luic::CodeGenerator codegen(registry);
         codegen.setComponents(&by_name);
+        if (!externals.empty()) codegen.setExternalComponents(&externals);
         if (!assets_include.empty()) codegen.setAssetsInclude(assets_include);
         std::string code = codegen.generate(*d);
 

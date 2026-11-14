@@ -71,12 +71,17 @@ set(APP_SOURCES
 add_executable(excavator_dashboard ${APP_SOURCES} ${ASSET_SOURCES})
 add_dependencies(excavator_dashboard excavator_ui_compile excavator_assets excavator_i18n)
 
-# 中文字体：运行时由 LVGL Tiny TTF 读取该子集 TTF（不参与编译）
-set(EXCAVATOR_FONT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/fonts/NotoSansSC-Regular.ttf"
-    CACHE FILEPATH "示例使用的中文完整 TTF")
+# 项目字体：由工程清单的 "font" 决定，运行时 Tiny TTF 加载
+set(EXCAVATOR_FONT_FILE "" CACHE FILEPATH "覆盖工程清单里的字体路径（可选）")
+if(NOT EXCAVATOR_FONT_FILE)
+    file(READ "${MANIFEST}" _project_json)
+    if(_project_json MATCHES "\"font\"[ \t\r\n]*:[ \t\r\n]*\"([^\"]+)\"")
+        get_filename_component(EXCAVATOR_FONT_FILE
+            "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_MATCH_1}" ABSOLUTE)
+    endif()
+endif()
 if(NOT EXISTS "${EXCAVATOR_FONT_FILE}")
-    set(EXCAVATOR_FONT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/fonts/NotoSansSC-Regular.ttf"
-        CACHE FILEPATH "示例使用的中文完整 TTF" FORCE)
+    message(WARNING "project font not found: ${EXCAVATOR_FONT_FILE}")
 endif()
 target_compile_definitions(excavator_dashboard PRIVATE
     EXCAVATOR_FONT_FILE="${EXCAVATOR_FONT_FILE}")

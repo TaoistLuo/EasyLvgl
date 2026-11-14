@@ -31,6 +31,7 @@
  *************************************************************************************************/
 
 #include "app/MainWindow.hpp"
+#include "editor/CodeEditor.hpp"
 #include "commands/UndoCommands.hpp"
 #include <QApplication>
 #include <QStatusBar>
@@ -48,6 +49,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QPolygonF>
+#include <QTabBar>
 #include <QTabWidget>
 #include <QSettings>
 #include <QJsonArray>
@@ -125,7 +127,13 @@ MainWindow::MainWindow(QWidget* parent)
     m_undoStack = new QUndoStack(this);
 
     m_lvglWidget = new SDL2Widget(this);
-    setCentralWidget(m_lvglWidget);
+    m_centralTabs = new QTabWidget(this);
+    m_centralTabs->setTabsClosable(true);
+    m_centralTabs->setDocumentMode(true);
+    m_centralTabs->addTab(m_lvglWidget, "设计");
+    setCentralWidget(m_centralTabs);
+    connect(m_centralTabs, &QTabWidget::tabCloseRequested,
+            this, &MainWindow::closeEditorTab);
     m_lvglWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_compPanel = new ComponentPanel(this);
@@ -211,6 +219,7 @@ void MainWindow::setupMenus() {
     fileMenu->addAction("打开(&O)...", this, &MainWindow::onOpen, QKeySequence::Open);
     fileMenu->addAction("新建工程(&J)...", this, &MainWindow::onNewProject);
     fileMenu->addAction("打开工程(&P)...", this, &MainWindow::onOpenProject);
+    fileMenu->addAction("项目字体(&F)...", this, &MainWindow::onChooseProjectFont);
     fileMenu->addAction("新建组件(&M)...", this, &MainWindow::onNewComponent);
     fileMenu->addAction("新建屏幕(&R)...", this, &MainWindow::onNewScreen);
     fileMenu->addAction("保存(&S)", this, &MainWindow::onSave, QKeySequence::Save);
@@ -594,8 +603,8 @@ void MainWindow::setupConnections() {
         return m_renderer.styleValue(id, prop);
     });
     connect(m_projectPanel, &ProjectPanel::openRequested, this, [this](const QString& p) {
-        if (m_doc.isModified() && !confirmDiscard()) return;
-        openFile(p);
+        if (p.endsWith(".lui") && m_doc.isModified() && !confirmDiscard()) return;
+        openPath(p);
     });
     connect(m_projectPanel, &ProjectPanel::newComponentRequested, this, &MainWindow::onNewComponent);
     connect(m_projectPanel, &ProjectPanel::newScreenRequested, this, &MainWindow::onNewScreen);
@@ -809,8 +818,10 @@ void MainWindow::onNew() {
 
 void MainWindow::onOpen() {
     if (m_doc.isModified() && !confirmDiscard()) return;
-    QString path = QFileDialog::getOpenFileName(this, "Open .lui file", QString(), "LUI Files (*.lui);;All Files (*)");
-    if (!path.isEmpty()) openFile(path);
+    QString path = QFileDialog::getOpenFileName(
+        this, "打开文件", QString(),
+        "LVGL UI (*.lui);;C/C++ (*.h *.hpp *.c *.cpp *.cc *.cxx);;All Files (*)");
+    if (!path.isEmpty()) openPath(path);
 }
 
 /* 打开工程：读取清单 -> 加载全部 .lui -> 填组件面板 -> 打开入口文件 */
@@ -839,6 +850,22 @@ void MainWindow::loadProject(const QString& manifest) {
         for (auto it = res.begin(); it != res.end(); ++it)
             m_projectResources[it.key().toStdString()] = it.value().toString().toStdString();
     }
+    m_projectFontPath.clear();
+    const QString fontRel = root["font"].toString();
+    if (!fontRel.isEmpty())
+        m_projectFontPath = QDir(base).absoluteFilePath(fontRel);
+
+    m_externalComponents.clear();
+    m_externalIncludes.clear();
+    if (root.contains("externalComponents") && root["externalComponents"].isObject()) {
+        auto ext = root["externalComponents"].toObject();
+        for (auto it = ext.begin(); it != ext.end(); ++it) {
+            m_externalComponents.push_back(it.key().toStdString());
+            const QString inc = it.value().toObject()["include"].toString();
+            if (!inc.isEmpty()) m_externalIncludes << QDir(base).absoluteFilePath(inc);
+        }
+    }
+
     QSettings().setValue("project/last", manifest);   // 下次启动自动打开
 
     /* 默认构建目录：工程同级 build_lvgl（不存在就建；用户自定义在工程内的保持不动） */
@@ -853,6 +880,7 @@ void MainWindow::loadProject(const QString& manifest) {
     m_projectDocs.clear();
     m_componentDocs.clear();
     m_projectComponents.clear();
+    m_externalComponents.clear();
 
     QString entryPath;
     for (auto v : root["files"].toArray()) {
@@ -876,11 +904,15 @@ void MainWindow::loadProject(const QString& manifest) {
         std::vector<std::string> names;
         for (auto& c : m_projectComponents) names.push_back(c.first);
         m_compPanel->setProjectComponents(names);
+        m_compPanel->setExternalComponents(m_externalComponents);
     }
     m_renderer.setComponentResolver([this](const std::string& name) -> const LuiDocument* {
         auto it = m_componentDocs.find(name);
         return it == m_componentDocs.end() ? nullptr : it->second;
     });
+    m_renderer.setExternalComponents(
+        std::set<std::string>(m_externalComponents.begin(), m_externalComponents.end()));
+    m_renderer.setPreviewFont(m_projectFontPath);
 
     statusBar()->showMessage(QString("工程已打开：%1（%2 个文件）")
                                  .arg(QFileInfo(manifest).fileName())
@@ -1159,7 +1191,8 @@ void MainWindow::refreshProjectPanel() {
         resources.emplace_back(alias, rel);
     }
 
-    m_projectPanel->setProject(name, m_projectFile, files, resources);
+    std::vector<QString> sources(m_externalIncludes.begin(), m_externalIncludes.end());
+    m_projectPanel->setProject(name, m_projectFile, files, resources, sources);
     if (!m_doc.filePath().isEmpty()) m_projectPanel->setCurrentFile(m_doc.filePath());
 }
 
@@ -1236,6 +1269,45 @@ void MainWindow::onNewScreen() {
 }
 
 /* 把外部复制进来的 .lui 收进工程（必要时先复制到 ui/components 或 ui/screens） */
+void MainWindow::onChooseProjectFont() {
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "项目字体", "请先新建或打开一个工程。");
+        return;
+    }
+    const QString path = QFileDialog::getOpenFileName(
+        this, "选择项目字体", QFileInfo(m_projectFile).absolutePath(),
+        "字体 (*.ttf);;All Files (*)");
+    if (path.isEmpty()) return;
+
+    const QString projectDir = QFileInfo(m_projectFile).absolutePath();
+    const QString fontDir = projectDir + "/fonts";
+    QDir().mkpath(fontDir);
+    const QString target = fontDir + "/" + QFileInfo(path).fileName();
+    if (QFileInfo(path).absoluteFilePath() != QFileInfo(target).absoluteFilePath()) {
+        QFile::remove(target);
+        if (!QFile::copy(path, target)) {
+            QMessageBox::critical(this, "项目字体", "复制字体失败：\n" + target);
+            return;
+        }
+    }
+    const QString rel = QDir(projectDir).relativeFilePath(target);
+
+    QFile f(m_projectFile);
+    if (!f.open(QIODevice::ReadOnly)) return;
+    QJsonObject root = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+    root["font"] = rel;
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+        f.close();
+    }
+
+    m_projectFontPath = QFileInfo(target).absoluteFilePath();
+    m_renderer.setPreviewFont(m_projectFontPath);
+    rebuildFromDocument();
+    statusBar()->showMessage("项目字体：" + rel, 5000);
+}
+
 void MainWindow::onAddProjectFiles() {
     if (m_projectFile.isEmpty()) {
         QMessageBox::information(this, "添加已有文件", "请先新建或打开一个工程。");
@@ -1296,7 +1368,63 @@ void MainWindow::onOpenProject() {
     if (!path.isEmpty()) loadProject(path);
 }
 
+void MainWindow::openPath(const QString& path) {
+    const QString suffix = QFileInfo(path).suffix().toLower();
+    if (suffix == "lui") {
+        openFile(path);
+        return;
+    }
+    static const QStringList code = {"h", "hpp", "hh", "hxx", "c", "cpp", "cc", "cxx"};
+    if (code.contains(suffix)) {
+        openCodeFile(path);
+        return;
+    }
+    QMessageBox::information(this, "打开文件", "不支持的文件类型：" + suffix);
+}
+
+void MainWindow::openCodeFile(const QString& path) {
+    const QString abs = QFileInfo(path).absoluteFilePath();
+    if (auto* existing = m_codeEditors.value(abs)) {
+        m_centralTabs->setCurrentWidget(existing);
+        return;
+    }
+    auto* editor = new CodeEditor(m_centralTabs);
+    QString error;
+    if (!editor->loadFile(abs, &error)) {
+        QMessageBox::critical(this, "打开文件", "无法读取：\n" + abs + "\n" + error);
+        delete editor;
+        return;
+    }
+    const int index = m_centralTabs->addTab(editor, QFileInfo(abs).fileName());
+    m_centralTabs->setTabToolTip(index, abs);
+    m_centralTabs->setCurrentIndex(index);
+    m_codeEditors.insert(abs, editor);
+}
+
+void MainWindow::closeEditorTab(int index) {
+    auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->widget(index));
+    if (!editor) return;
+    if (editor->document()->isModified()) {
+        const auto answer = QMessageBox::question(
+            this, "关闭文件", "关闭前是否保存修改？\n" + editor->filePath(),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        if (answer == QMessageBox::Cancel) return;
+        if (answer == QMessageBox::Save && !editor->save()) {
+            QMessageBox::critical(this, "保存失败", editor->filePath());
+            return;
+        }
+    }
+    m_codeEditors.remove(editor->filePath());
+    m_centralTabs->removeTab(index);
+    editor->deleteLater();
+}
+
 void MainWindow::onSave() {
+    if (auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->currentWidget())) {
+        if (editor->save()) statusBar()->showMessage("已保存：" + editor->filePath(), 3000);
+        else QMessageBox::critical(this, "保存失败", editor->filePath());
+        return;
+    }
     if (m_doc.filePath().isEmpty()) {
         onSaveAs();
         return;
@@ -1310,6 +1438,26 @@ void MainWindow::onSave() {
 }
 
 void MainWindow::onSaveAs() {
+    if (auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->currentWidget())) {
+        QString path = QFileDialog::getSaveFileName(
+            this, "另存为源代码", editor->filePath(),
+            "C/C++ (*.h *.hpp *.c *.cpp *.cc *.cxx);;All Files (*)");
+        if (path.isEmpty()) return;
+        const QString oldPath = editor->filePath();
+        if (!editor->saveAs(path)) {
+            QMessageBox::critical(this, "保存失败", path);
+            return;
+        }
+        m_codeEditors.remove(oldPath);
+        m_codeEditors.insert(editor->filePath(), editor);
+        const int index = m_centralTabs->indexOf(editor);
+        if (index >= 0) {
+            m_centralTabs->setTabText(index, QFileInfo(path).fileName());
+            m_centralTabs->setTabToolTip(index, path);
+        }
+        statusBar()->showMessage("已保存：" + path, 3000);
+        return;
+    }
     QString path = QFileDialog::getSaveFileName(this, "Save .lui file", QString(), "LUI Files (*.lui)");
     if (path.isEmpty()) return;
     if (m_doc.saveTo(path)) {

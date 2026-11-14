@@ -52,6 +52,7 @@ add_executable(lvgl-designer
     src/panels/OutputPanel.hpp
     resources/icons/icons.qrc
     src/panels/TreePanel.cpp
+    src/editor/CodeEditor.cpp
     src/commands/UndoCommands.hpp
     src/commands/UndoCommands.cpp
 )
@@ -75,7 +76,7 @@ set_target_properties(lvgl-designer PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# ×Ô²âÄ¿±ê£º¼ÓÔØ .lui ²¢ÓÃÕæÊµäÖÈ¾Æ÷ÖðÊôÐÔÑéÖ¤£¨scripts/designer/matrix_all.py Çý¶¯£©
+# ï¿½Ô²ï¿½Ä¿ï¿½ê£ºï¿½ï¿½ï¿½ï¿½ .lui ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½scripts/designer/matrix_all.py ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 add_executable(designer_matrix
     tests/matrix_main.cpp
     src/model/LuiDocument.cpp

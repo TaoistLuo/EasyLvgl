@@ -351,24 +351,11 @@
                     }
                 },
                 {
-                    "id": "lbl_oil",
-                    "type": "LLabel",
+                    "id": "oil_row",
+                    "type": "@TempRow",
                     "props": {
-                        "pos": [10, 344],
-                        "size": [116, 22],
-                        "text": "油温",
-                        "color": "0x8FA0B3"
-                    }
-                },
-                {
-                    "id": "lbl_oil_value",
-                    "type": "LLabel",
-                    "props": {
-                        "pos": [132, 344],
-                        "size": [96, 22],
-                        "text": "70 °C",
-                        "color": "0xE8EEF5",
-                        "text_align": 2
+                        "pos": [10, 342],
+                        "size": [220, 26]
                     }
                 }
             ]

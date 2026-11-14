@@ -62,6 +62,9 @@
 #include "app/SettingsDialog.hpp"
 #include "panels/OutputPanel.hpp"
 
+class CodeEditor;
+class QTabWidget;
+
 namespace designer {
 
 class MainWindow : public QMainWindow {
@@ -69,6 +72,8 @@ class MainWindow : public QMainWindow {
 
     LuiDocument m_doc;
     SDL2Widget* m_lvglWidget;
+    QTabWidget* m_centralTabs = nullptr;
+    QHash<QString, CodeEditor*> m_codeEditors;
     LvglRenderer m_renderer;
     ComponentPanel* m_compPanel;
     PropertyPanel* m_propPanel;
@@ -90,9 +95,12 @@ class MainWindow : public QMainWindow {
 
     /* ---- 工程（组件化） ---- */
     QString m_projectFile;                                     // 工程清单路径
+    QString m_projectFontPath;                                  // 工程字体
     std::vector<std::unique_ptr<LuiDocument>> m_projectDocs;   // 工程内其他文档
     std::map<std::string, LuiDocument*> m_componentDocs;       // 名字 -> 文档
-    std::vector<std::pair<std::string, QString>> m_projectComponents;  // (名字, 路径)
+    std::vector<std::pair<std::string, QString>> m_projectComponents;
+    std::vector<std::string> m_externalComponents;  // (名字, 路径)
+    QStringList m_externalIncludes;
 
     QDockWidget* m_compDock = nullptr;
     QDockWidget* m_leftDock = nullptr;
@@ -109,12 +117,14 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     bool openFile(const QString& path);
+    void openPath(const QString& path);
     void loadProject(const QString& manifest);
     void restoreLastProject();
     void onNewProject();
     void onNewComponent();
     void onNewScreen();
     void onAddProjectFiles();
+    void onChooseProjectFont();
     void removeFromProject(const QString& path);
     void refreshProjectPanel();
     bool updateManifestFiles(const std::function<void(QJsonArray&)>& fn);
@@ -133,6 +143,8 @@ private:
     void updateStatusBar();
     void rebuildFromDocument();
 
+    void openCodeFile(const QString& path);
+    void closeEditorTab(int index);
     void onNew();
     void onOpen();
     void onSave();

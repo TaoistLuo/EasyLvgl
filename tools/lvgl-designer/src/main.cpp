@@ -145,11 +145,11 @@ QToolTip { color: #dcdcdc; background: #2f2f2f; border: 1px solid #4a4a4a; paddi
 
     if (argc > 1) {
         QString arg = QString::fromLocal8Bit(argv[1]);
-        /* 传工程清单（.json）则按工程打开，传 .lui 则单文件打开 */
-        if (arg.endsWith(".json", Qt::CaseInsensitive))
+        /* 传工程清单则按工程打开，其余交给 openPath（.lui 或源码文件） */
+        if (arg.endsWith(".json", Qt::CaseInsensitive) || arg.endsWith(".lpro", Qt::CaseInsensitive))
             window.loadProject(arg);
         else
-            window.openFile(arg);
+            window.openPath(arg);
     } else {
         window.restoreLastProject();
     }

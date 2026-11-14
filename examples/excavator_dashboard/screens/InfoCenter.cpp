@@ -36,7 +36,6 @@ void InfoCenter::bind_i18n() {
     i18n::bind_label(m_lbl_auto_idle->native(), K::PromptAutoIdle);
     i18n::bind_label(m_lbl_can->native(), K::PromptCanBus);
     i18n::bind_label(m_lbl_maint->native(), K::PromptMaint);
-    i18n::bind_label(m_lbl_oil->native(), K::PromptOilTemp);
     i18n::bind_text(m_btn_back->native(), K::InfoBack,
                     [this](const char* text) { m_btn_back->set_text(text); });
     i18n::bind_text(m_param_rpm->root(), K::ParamEngineSpeed,
@@ -114,7 +113,8 @@ void InfoCenter::apply(const Telemetry& t, uint32_t ms) {
     m_lbl_maint_state->set_text(i18n::tr(t.maintenance_due ? exc::K::MaintDueShort : exc::K::MaintOkShort));
 
     std::snprintf(text, sizeof text, "%d °C", t.hyd_oil_temp);
-    m_lbl_oil_value->set_text(text);
+    m_oil_row->set_label(i18n::tr(exc::K::PromptOilTemp));
+    m_oil_row->set_value(text);
 
     format_uptime(ms, clock, sizeof clock);
     std::snprintf(text, sizeof text, "T+%s", clock);

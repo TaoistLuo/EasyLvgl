@@ -31,6 +31,7 @@
  *************************************************************************************************/
 
 #pragma once
+#include <QFileInfo>
 #include <QTreeWidget>
 #include <QMenu>
 #include <QFont>
@@ -40,6 +41,12 @@
 #include <vector>
 
 namespace designer {
+
+inline bool isCodeFile(const QString& path) {
+    const QString suffix = QFileInfo(path).suffix().toLower();
+    return suffix == "h" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" ||
+           suffix == "c" || suffix == "cpp" || suffix == "cc" || suffix == "cxx";
+}
 
 struct ProjectFile {
     std::string name;      // .lui 里的 name
@@ -59,7 +66,7 @@ public:
         connect(this, &QTreeWidget::itemDoubleClicked, [this](QTreeWidgetItem* it, int) {
             QString d = it->data(0, Qt::UserRole).toString();
             if (d.startsWith("res:")) emit previewResourceRequested(d.mid(4));
-            else if (d.endsWith(".lui")) emit openRequested(d);
+            else if (d.endsWith(".lui") || isCodeFile(d)) emit openRequested(d);
         });
         showEmpty();
     }
@@ -73,7 +80,8 @@ public:
 
     void setProject(const QString& name, const QString& manifest,
                     const std::vector<ProjectFile>& files,
-                    const std::vector<std::pair<QString, QString>>& resources) {
+                    const std::vector<std::pair<QString, QString>>& resources,
+                    const std::vector<QString>& sources = {}) {
         clear();
         m_manifest = manifest;
         auto* root = new QTreeWidgetItem(this);
@@ -118,6 +126,16 @@ public:
             leaf->setData(0, Qt::UserRole, "res:" + r.first);
             leaf->setToolTip(0, r.second);
         }
+        if (!sources.empty()) {
+            auto* src = new QTreeWidgetItem(root);
+            src->setText(0, "源码");
+            for (auto& path : sources) {
+                auto* it = new QTreeWidgetItem(src);
+                it->setText(0, QFileInfo(path).fileName());
+                it->setData(0, Qt::UserRole, path);
+                it->setToolTip(0, path);
+            }
+        }
         expandAll();
     }
 
@@ -145,7 +163,7 @@ private:
     void onMenu(const QPoint& pos) {
         QTreeWidgetItem* it = itemAt(pos);
         QString data = it ? it->data(0, Qt::UserRole).toString() : QString();
-        bool isFile = data.endsWith(".lui");
+        bool isFile = data.endsWith(".lui") || isCodeFile(data);
         bool isResource = data.startsWith("res:");
         QMenu m;
         if (isFile) m.addAction("打开", [this, data] { emit openRequested(data); });
