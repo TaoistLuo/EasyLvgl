@@ -151,20 +151,24 @@ void SDL2Widget::paintEvent(QPaintEvent*) {
      * 屏幕区域由 LVGL 自己渲染，不加任何装饰，保证与运行时一致。 */
     painter.fillRect(rect(), QColor(0x2b, 0x2b, 0x2b));
     {
-        const QRect canvasRect(0, 0, m_width, m_height);
-        painter.setPen(QPen(QColor(0x4a, 0x4a, 0x4a), 1));
-        const int step = 10;
-        for (int y = 0; y < height(); y += step) {
-            for (int x = 0; x < width(); x += step) {
-                if (canvasRect.contains(x, y)) continue;
-                painter.drawPoint(x, y);
-            }
-        }
+        painter.setPen(QPen(QColor(0x3a, 0x3a, 0x3a), 1));
+        const int step = 20;
+        for (int x = 0; x < width(); x += step)
+            painter.drawLine(x, 0, x, height());
+        for (int y = 0; y < height(); y += step)
+            painter.drawLine(0, y, width(), y);
     }
     if (!m_fb) return;
 
     const uint32_t stride = lv_draw_buf_width_to_stride(m_width, LV_COLOR_FORMAT_ARGB8888);
     QImage image(m_fb, m_width, m_height, stride, QImage::Format_ARGB32_Premultiplied);
+    const QRect canvasArea(m_panX, m_panY,
+                           qRound(m_width * m_zoom), qRound(m_height * m_zoom));
+    painter.fillRect(canvasArea.translated(4, 4), QColor(0, 0, 0, 80));
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(0x55, 0x55, 0x55), 1));
+    painter.drawRect(canvasArea.adjusted(-1, -1, 0, 0));
+
     painter.translate(m_panX, m_panY);
     painter.scale(m_zoom, m_zoom);
     painter.drawImage(0, 0, image);
@@ -196,6 +200,12 @@ QPointF SDL2Widget::toLvgl(const QPoint& widgetPos) const {
     if (p.x() < 0) p.setX(0); else if (p.x() > maxX) p.setX(maxX);
     if (p.y() < 0) p.setY(0); else if (p.y() > maxY) p.setY(maxY);
     return p;
+}
+
+void SDL2Widget::resetView() {
+    m_zoom = 1.0;
+    clampPan();
+    update();
 }
 
 void SDL2Widget::clampPan() {

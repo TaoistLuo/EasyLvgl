@@ -51,6 +51,7 @@
 #include <QPolygonF>
 #include <QTabBar>
 #include <QTabWidget>
+#include <QtMath>
 #include <QSettings>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -174,11 +175,33 @@ bool MainWindow::openFile(const QString& path) {
     m_clipboard.reset();
     m_propPanel->setDocument(&m_doc);
     m_treePanel->setDocument(&m_doc);
-    m_lvglWidget->setLvglSize(m_doc.width(), m_doc.height());
+    int previewW = m_doc.width();
+    int previewH = m_doc.height();
+    if (m_doc.isComponent()) {
+        QRectF bounds;
+        std::function<void(const std::vector<WidgetNode>&, QPointF)> walk =
+            [&](const std::vector<WidgetNode>& nodes, QPointF offset) {
+                for (const auto& node : nodes) {
+                    QSizeF size = node.size();
+                    if (size.width() <= 0 || size.height() <= 0) size = node.defaultSize();
+                    const QRectF rect(offset + node.pos(), size);
+                    bounds = bounds.isNull() ? rect : bounds.united(rect);
+                    walk(node.children, offset + node.pos());
+                }
+            };
+        walk(m_doc.children(), QPointF(0, 0));
+        if (!bounds.isNull()) {
+            previewW = qBound(40, qCeil(bounds.right()) + 2, 800);
+            previewH = qBound(40, qCeil(bounds.bottom()) + 2, 480);
+        }
+    }
+    m_lvglWidget->setLvglSize(previewW, previewH);
+    m_lvglWidget->resetView();
     updateTitle();
     rebuildFromDocument();
     updateStatusBar();
     if (m_projectPanel) m_projectPanel->setCurrentFile(path);
+    if (m_centralTabs) m_centralTabs->setCurrentWidget(m_lvglWidget);
     return true;
 }
 

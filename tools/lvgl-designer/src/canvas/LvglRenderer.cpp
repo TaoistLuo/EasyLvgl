@@ -1649,6 +1649,31 @@ void LvglRenderer::setPreviewFont(const QString& path) {
 
 void LvglRenderer::buildTree(const LuiDocument& doc) {
     lv_obj_set_style_text_font(lv_scr_act(), preview_cjk_font(16), 0);
+
+    /* Qt Designer 风格：灰色画布 + 20px 平铺网格 */
+    static uint32_t gridPixels[20 * 20];
+    static lv_image_dsc_t gridImage;
+    static bool gridReady = false;
+    if (!gridReady) {
+        gridReady = true;
+        for (int y = 0; y < 20; y++) {
+            for (int x = 0; x < 20; x++) {
+                const bool line = (x == 0 || y == 0);
+                gridPixels[y * 20 + x] = line ? 0xFF444444 : 0xFF323232;
+            }
+        }
+        gridImage.header.magic = LV_IMAGE_HEADER_MAGIC;
+        gridImage.header.cf = LV_COLOR_FORMAT_ARGB8888;
+        gridImage.header.w = 20;
+        gridImage.header.h = 20;
+        gridImage.header.stride = 20 * 4;
+        gridImage.data = reinterpret_cast<const uint8_t*>(gridPixels);
+        gridImage.data_size = sizeof(gridPixels);
+    }
+    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x323232), 0);
+    lv_obj_set_style_bg_opa(lv_scr_act(), LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_image_src(lv_scr_act(), &gridImage, 0);
+    lv_obj_set_style_bg_image_tiled(lv_scr_act(), true, 0);
     clear();
 
     /* 资源别名 -> 绝对路径，供预览时按 lv_fs 路径加载 */

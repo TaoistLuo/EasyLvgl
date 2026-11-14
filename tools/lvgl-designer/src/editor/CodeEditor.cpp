@@ -130,7 +130,10 @@ bool CodeEditor::loadFile(const QString& path, QString* error) {
         if (error) *error = file.errorString();
         return false;
     }
-    setPlainText(QString::fromUtf8(file.readAll()));
+    QString text = QString::fromUtf8(file.readAll());
+    text.replace("\r\n", "\n");
+    text.replace('\r', '\n');
+    setPlainText(text);
     m_path = QFileInfo(path).absoluteFilePath();
     document()->setModified(false);
     return true;

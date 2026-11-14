@@ -56,6 +56,7 @@ public:
 
     lv_display_t* display() const { return m_display; }
     void setLvglSize(int w, int h);
+    void resetView();
     void setRootSelected(bool on);
 
 signals:

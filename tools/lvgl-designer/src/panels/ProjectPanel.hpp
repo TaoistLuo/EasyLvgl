@@ -31,6 +31,7 @@
  *************************************************************************************************/
 
 #pragma once
+#include <QDir>
 #include <QFileInfo>
 #include <QTreeWidget>
 #include <QMenu>
@@ -96,11 +97,12 @@ public:
         comps->setText(0, "组件");
         auto* res = new QTreeWidgetItem(root);
         res->setText(0, "资源");
+        const QString projectDir = QFileInfo(manifest).absolutePath();
         for (auto& pf : files) {
             auto* it = new QTreeWidgetItem(pf.isComponent ? comps : screens);
-            it->setText(0, QString::fromStdString(pf.name));
+            it->setText(0, QFileInfo(pf.path).fileName());
             it->setData(0, Qt::UserRole, pf.path);
-            it->setToolTip(0, pf.path);
+            it->setToolTip(0, QDir(projectDir).relativeFilePath(pf.path));
         }
         std::map<QString, QTreeWidgetItem*> resDirs;
         for (auto& r : resources) {
@@ -133,7 +135,7 @@ public:
                 auto* it = new QTreeWidgetItem(src);
                 it->setText(0, QFileInfo(path).fileName());
                 it->setData(0, Qt::UserRole, path);
-                it->setToolTip(0, path);
+                it->setToolTip(0, QDir(projectDir).relativeFilePath(path));
             }
         }
         expandAll();
