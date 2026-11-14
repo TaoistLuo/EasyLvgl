@@ -30,23 +30,20 @@ excavator_dashboard/
 ├── lvglpp.lpro        # 工程清单：入口屏幕、文件列表、图片资源、输出目录
 ├── main.cpp                   # 入口：字体、页面容器、导航接线、主循环
 ├── app_common.hpp             # 共享常量 / 类型 / 模拟数据
-├── screens/                   # 业务类（luic 生成物不在这里）
-│   ├── Dashboard.h/.cpp
-│   ├── InfoCenter.h/.cpp
-│   └── Settings.h/.cpp
 ├── i18n.hpp                   # LVGL 原生 lv_translation 封装（注册/切换/控件绑定）
 ├── i18n/strings.xlsx          # 文案源（key / zh / en / ru），Excel 是唯一来源
 ├── tools/xlsx2i18n.py         # 构建时把 xlsx 生成 i18n_generated.hpp（仅标准库）
 ├── CMakeLists.txt             # 独立工程构建（自动调用 luic + convert_assets + i18n）
 ├── ui/
-│   ├── screens/               # 屏幕（kind: screen）
-│   │   ├── Dashboard.lui
-│   │   ├── InfoCenter.lui
-│   │   └── Settings.lui
-│   └── components/            # 可复用组件（kind: component + exports）
-│       ├── GaugeCard.lui      # 弧线仪表卡：caption / reading / unit / value / range
-│       ├── ParamRow.lui       # 参数行：name / value / unit / level / accent
-│       └── StatusBadge.lui    # 状态徽章：text（背景色由逻辑层设置）
+│   ├── screens/               # 屏幕：.lui 与业务 .h/.cpp 同目录
+│   │   ├── Dashboard.lui/.h/.cpp
+│   │   ├── InfoCenter.lui/.h/.cpp
+│   │   └── Settings.lui/.h/.cpp
+│   └── components/            # 组件：.lui 与手写组件同目录
+│       ├── GaugeCard.lui
+│       ├── ParamRow.lui
+│       ├── StatusBadge.lui
+│       └── TempRow.hpp
 ├── assets/
 │   ├── excavator.png          # 挖机 logo（编译期嵌入，等价 qrc）
 │   └── gear.png               # 设置图标
@@ -89,7 +86,8 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
 
 用 Qt 设计器打开本目录（工程清单已被识别）即可：
 
-- 左侧工程树按 `kind` 分为“屏幕 / 组件”
+- 左侧工程树分为「UI 文件 / 源文件 / 嵌入资源（qrc）/ 其他文件」四类；每组内部保留真实目录层级，不再区分屏幕与组件
+- 「文件 → 工程设置...」可编辑工程名称、入口屏幕、项目字体、输出目录与外部组件，双击工程根节点也能打开
 - 双击屏幕编辑；修改后执行一次上面的 `cmake --build` 会自动重新生成 UI
 - 组件实例通过 `exports` 暴露参数，在右侧属性面板中按实例填写
   （例如 `GaugeCard` 的 `caption` / `value` / `range`）
@@ -173,7 +171,7 @@ MyGauge& set_align(lv_align_t);
 ## UI 生成与业务骨架
 
 - luic 只生成中间 UI 头文件：`<build>/ui_generated/*_ui.hpp`，**不属于工程源码**，随构建生成。
-- 业务类在 `screens/`，构造函数调用 `setup(parent)` 与 `bind_events()`，其余事件和逻辑自行覆写：
+- 业务类在 `ui/`，构造函数调用 `setup(parent)` 与 `bind_events()`，其余事件和逻辑自行覆写：
 
 ```cpp
 Dashboard::Dashboard(lv_obj_t* parent) {
@@ -186,7 +184,7 @@ Dashboard::Dashboard(lv_obj_t* parent) {
 - 命令行也可以只针对当前 `.lui` 生成一次骨架类（已存在的文件不会覆盖）：
 
 ```bash
-bin/luic ui/screens/Dashboard.lui --scaffold screens
+bin/luic ui/screens/Dashboard.lui --scaffold ui/screens
 ```
 
 生成规则：类名和文件名与 `.lui` 完全一致（如 `Dashboard.lui` → `Dashboard.h/.cpp`，`GaugeCard.lui` → `GaugeCard.h/.cpp`），构造函数只调用 `setup(parent)` +

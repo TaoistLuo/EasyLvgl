@@ -37,6 +37,7 @@ add_executable(lvgl-designer
     src/main.cpp
     src/app/MainWindow.hpp
     src/app/MainWindow.cpp
+    src/app/ProjectSettingsDialog.cpp
     src/model/LuiDocument.hpp
     src/model/LuiDocument.cpp
     src/canvas/SDL2Widget.hpp

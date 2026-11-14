@@ -65,9 +65,9 @@ add_custom_target(excavator_i18n DEPENDS ${I18N_HEADER})
 
 set(APP_SOURCES
     main.cpp
-    screens/Dashboard.cpp
-    screens/InfoCenter.cpp
-    screens/Settings.cpp)
+    ui/screens/Dashboard.cpp
+    ui/screens/InfoCenter.cpp
+    ui/screens/Settings.cpp)
 add_executable(excavator_dashboard ${APP_SOURCES} ${ASSET_SOURCES})
 add_dependencies(excavator_dashboard excavator_ui_compile excavator_assets excavator_i18n)
 

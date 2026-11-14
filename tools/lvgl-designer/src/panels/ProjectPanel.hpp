@@ -36,6 +36,9 @@
 #include <QTreeWidget>
 #include <QMenu>
 #include <QFont>
+#include <QIcon>
+#include <algorithm>
+#include <functional>
 #include <map>
 #include <string>
 #include <utility>
@@ -47,6 +50,39 @@ inline bool isCodeFile(const QString& path) {
     const QString suffix = QFileInfo(path).suffix().toLower();
     return suffix == "h" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" ||
            suffix == "c" || suffix == "cpp" || suffix == "cc" || suffix == "cxx";
+}
+
+inline QString projectIconForPath(const QString& path) {
+    if (path.startsWith("res:")) return ":/icons/file_image.svg";
+    const QFileInfo info(path);
+    const QString suffix = info.suffix().toLower();
+    const QString name = info.fileName().toLower();
+    if (suffix == "lui") return ":/icons/file_ui.svg";
+    if (suffix == "h" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" ||
+        suffix == "c" || suffix == "cpp" || suffix == "cc" || suffix == "cxx" ||
+        suffix == "py") {
+        return ":/icons/file_source.svg";
+    }
+    if (suffix == "png" || suffix == "jpg" || suffix == "jpeg" || suffix == "bmp" ||
+        suffix == "gif" || suffix == "svg" || suffix == "webp") {
+        return ":/icons/file_image.svg";
+    }
+    if (suffix == "ttf" || suffix == "otf" || suffix == "woff" || suffix == "woff2") {
+        return ":/icons/file_font.svg";
+    }
+    if (suffix == "xlsx" || suffix == "xls" || suffix == "csv") {
+        return ":/icons/file_sheet.svg";
+    }
+    if (suffix == "json" || suffix == "lpro" || suffix == "cmake" ||
+        suffix == "yaml" || suffix == "yml" || suffix == "ini" ||
+        name == "cmakelists.txt") {
+        return ":/icons/file_config.svg";
+    }
+    if (suffix == "md" || suffix == "txt" || suffix == "ofl" ||
+        name.startsWith("readme") || name.startsWith("license")) {
+        return ":/icons/file_doc.svg";
+    }
+    return ":/icons/file_other.svg";
 }
 
 struct ProjectFile {
@@ -63,11 +99,13 @@ public:
         setHeaderHidden(true);
         setContextMenuPolicy(Qt::CustomContextMenu);
         setIndentation(16);
+        setIconSize(QSize(16, 16));
         connect(this, &QWidget::customContextMenuRequested, this, &ProjectPanel::onMenu);
         connect(this, &QTreeWidget::itemDoubleClicked, [this](QTreeWidgetItem* it, int) {
             QString d = it->data(0, Qt::UserRole).toString();
             if (d.startsWith("res:")) emit previewResourceRequested(d.mid(4));
             else if (d.endsWith(".lui") || isCodeFile(d)) emit openRequested(d);
+            else if (d == m_manifest) emit projectSettingsRequested();
         });
         showEmpty();
     }
@@ -80,64 +118,101 @@ public:
     }
 
     void setProject(const QString& name, const QString& manifest,
-                    const std::vector<ProjectFile>& files,
+                    const std::vector<QString>& uiFiles,
+                    const std::vector<QString>& sourceFiles,
                     const std::vector<std::pair<QString, QString>>& resources,
-                    const std::vector<QString>& sources = {}) {
+                    const std::vector<QString>& otherFiles) {
         clear();
         m_manifest = manifest;
+        const QString projectDir = QFileInfo(manifest).absolutePath();
+
         auto* root = new QTreeWidgetItem(this);
         root->setText(0, name);
         root->setData(0, Qt::UserRole, manifest);
-        QFont f = root->font(0);
-        f.setBold(true);
-        root->setFont(0, f);
-        auto* screens = new QTreeWidgetItem(root);
-        screens->setText(0, "屏幕");
-        auto* comps = new QTreeWidgetItem(root);
-        comps->setText(0, "组件");
-        auto* res = new QTreeWidgetItem(root);
-        res->setText(0, "资源");
-        const QString projectDir = QFileInfo(manifest).absolutePath();
-        for (auto& pf : files) {
-            auto* it = new QTreeWidgetItem(pf.isComponent ? comps : screens);
-            it->setText(0, QFileInfo(pf.path).fileName());
-            it->setData(0, Qt::UserRole, pf.path);
-            it->setToolTip(0, QDir(projectDir).relativeFilePath(pf.path));
-        }
-        std::map<QString, QTreeWidgetItem*> resDirs;
-        for (auto& r : resources) {
-            QStringList parts = r.second.split('/');
-            QTreeWidgetItem* parent = res;
+        root->setData(0, Qt::UserRole + 1, true);
+        root->setToolTip(0, QFileInfo(manifest).fileName());
+        root->setIcon(0, QIcon(":/icons/project.svg"));
+        QFont bold = root->font(0);
+        bold.setBold(true);
+        root->setFont(0, bold);
+
+        auto makeGroup = [&](const QString& title, const QString& icon) {
+            auto* group = new QTreeWidgetItem(root);
+            group->setText(0, title);
+            group->setData(0, Qt::UserRole + 1, true);
+            group->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+            QFont groupFont = group->font(0);
+            groupFont.setBold(true);
+            group->setFont(0, groupFont);
+            group->setIcon(0, QIcon(icon));
+            return group;
+        };
+
+        std::map<QTreeWidgetItem*, std::map<QString, QTreeWidgetItem*>> dirs;
+        auto addPath = [&](QTreeWidgetItem* group, const QString& path,
+                           const QString& label, const QString& data) {
+            QString rel = QDir(projectDir).relativeFilePath(path);
+            rel.replace('\\', '/');
+            const QStringList parts = rel.split('/', QString::SkipEmptyParts);
+            if (parts.isEmpty()) return;
+            QTreeWidgetItem* parent = group;
             QString key;
             for (int i = 0; i + 1 < parts.size(); ++i) {
-                if (parts[i].isEmpty()) continue;
                 key += (key.isEmpty() ? "" : "/") + parts[i];
-                auto it = resDirs.find(key);
-                if (it == resDirs.end()) {
-                    auto* d = new QTreeWidgetItem(parent);
-                    d->setText(0, parts[i]);
-                    d->setToolTip(0, key);
-                    parent = d;
-                    resDirs[key] = d;
+                auto& groupDirs = dirs[group];
+                auto found = groupDirs.find(key);
+                if (found == groupDirs.end()) {
+                    auto* dir = new QTreeWidgetItem(parent);
+                    dir->setText(0, parts[i]);
+                    dir->setData(0, Qt::UserRole + 1, true);
+                    dir->setToolTip(0, key);
+                    dir->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+                    dir->setIcon(0, QIcon(":/icons/folder.svg"));
+                    groupDirs[key] = dir;
+                    parent = dir;
                 } else {
-                    parent = it->second;
+                    parent = found->second;
                 }
             }
             auto* leaf = new QTreeWidgetItem(parent);
-            leaf->setText(0, "#" + r.first);
-            leaf->setData(0, Qt::UserRole, "res:" + r.first);
-            leaf->setToolTip(0, r.second);
+            leaf->setText(0, label.isEmpty() ? parts.last() : label);
+            leaf->setData(0, Qt::UserRole, data);
+            leaf->setToolTip(0, rel);
+            leaf->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+            leaf->setIcon(0, QIcon(projectIconForPath(data)));
+        };
+
+        auto* uiGroup = makeGroup("UI 文件", ":/icons/file_ui.svg");
+        auto* sourceGroup = makeGroup("源文件", ":/icons/file_source.svg");
+        auto* resourceGroup = makeGroup("嵌入资源（qrc）", ":/icons/file_image.svg");
+        auto* otherGroup = makeGroup("其他文件", ":/icons/file_doc.svg");
+
+        for (const QString& path : uiFiles)
+            addPath(uiGroup, path, QFileInfo(path).fileName(), path);
+        for (const QString& path : sourceFiles)
+            addPath(sourceGroup, path, QFileInfo(path).fileName(), path);
+        for (const auto& r : resources) {
+            const QString abs = QDir(projectDir).absoluteFilePath(r.second);
+            addPath(resourceGroup, abs, "#" + r.first, "res:" + r.first);
         }
-        if (!sources.empty()) {
-            auto* src = new QTreeWidgetItem(root);
-            src->setText(0, "源码");
-            for (auto& path : sources) {
-                auto* it = new QTreeWidgetItem(src);
-                it->setText(0, QFileInfo(path).fileName());
-                it->setData(0, Qt::UserRole, path);
-                it->setToolTip(0, QDir(projectDir).relativeFilePath(path));
+        for (const QString& path : otherFiles)
+            addPath(otherGroup, path, QFileInfo(path).fileName(), path);
+
+        std::function<void(QTreeWidgetItem*)> sortTree = [&](QTreeWidgetItem* parent) {
+            std::vector<QTreeWidgetItem*> children;
+            while (parent->childCount() > 0) children.push_back(parent->takeChild(0));
+            std::sort(children.begin(), children.end(), [](QTreeWidgetItem* a, QTreeWidgetItem* b) {
+                const bool aDir = a->data(0, Qt::UserRole + 1).toBool();
+                const bool bDir = b->data(0, Qt::UserRole + 1).toBool();
+                if (aDir != bDir) return aDir;
+                return a->text(0).compare(b->text(0), Qt::CaseInsensitive) < 0;
+            });
+            for (auto* child : children) {
+                parent->addChild(child);
+                sortTree(child);
             }
-        }
+        };
+        for (auto* group : {uiGroup, sourceGroup, resourceGroup, otherGroup}) sortTree(group);
         expandAll();
     }
 
@@ -155,6 +230,7 @@ signals:
     void removeResourceRequested(QString alias);
     void previewResourceRequested(QString alias);
     void removeRequested(QString path);
+    void projectSettingsRequested();
 
 private:
     void mark(QTreeWidgetItem* it, const QString& p) {
@@ -166,6 +242,12 @@ private:
         QTreeWidgetItem* it = itemAt(pos);
         QString data = it ? it->data(0, Qt::UserRole).toString() : QString();
         bool isFile = data.endsWith(".lui") || isCodeFile(data);
+        if (data == m_manifest) {
+            QMenu rootMenu;
+            rootMenu.addAction("工程设置...", [this] { emit projectSettingsRequested(); });
+            rootMenu.exec(mapToGlobal(pos));
+            return;
+        }
         bool isResource = data.startsWith("res:");
         QMenu m;
         if (isFile) m.addAction("打开", [this, data] { emit openRequested(data); });

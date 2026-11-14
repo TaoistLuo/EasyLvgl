@@ -31,6 +31,7 @@
  *************************************************************************************************/
 
 #include "app/MainWindow.hpp"
+#include "app/ProjectSettingsDialog.hpp"
 #include "editor/CodeEditor.hpp"
 #include "commands/UndoCommands.hpp"
 #include <QApplication>
@@ -63,6 +64,8 @@
 #include <QInputDialog>
 #include <QRegularExpression>
 #include <QDir>
+#include <QDirIterator>
+#include <QSet>
 #include <QFileInfo>
 #include <QProcessEnvironment>
 #include <QStandardPaths>
@@ -202,6 +205,7 @@ bool MainWindow::openFile(const QString& path) {
     updateStatusBar();
     if (m_projectPanel) m_projectPanel->setCurrentFile(path);
     if (m_centralTabs) m_centralTabs->setCurrentWidget(m_lvglWidget);
+    m_propDock->show();
     return true;
 }
 
@@ -243,6 +247,7 @@ void MainWindow::setupMenus() {
     fileMenu->addAction("新建工程(&J)...", this, &MainWindow::onNewProject);
     fileMenu->addAction("打开工程(&P)...", this, &MainWindow::onOpenProject);
     fileMenu->addAction("项目字体(&F)...", this, &MainWindow::onChooseProjectFont);
+    fileMenu->addAction("工程设置(&G)...", this, &MainWindow::onProjectSettings);
     fileMenu->addAction("新建组件(&M)...", this, &MainWindow::onNewComponent);
     fileMenu->addAction("新建屏幕(&R)...", this, &MainWindow::onNewScreen);
     fileMenu->addAction("保存(&S)", this, &MainWindow::onSave, QKeySequence::Save);
@@ -433,7 +438,7 @@ void MainWindow::setupToolbar() {
                                         "编译", this, &MainWindow::onCompile);
     aCompile->setToolTip("生成代码（luic，F5）");
     auto* aScaffold = toolbar->addAction("骨架", this, &MainWindow::onScaffold);
-    aScaffold->setToolTip("为当前 .lui 生成业务骨架（screens/ 或 components/）");
+    aScaffold->setToolTip("为当前 .lui 生成业务骨架（ui/）");
     auto* aBuild = toolbar->addAction(makeIcon("build"),
                                       "构建", this, &MainWindow::onBuildProject);
     aBuild->setToolTip("构建工程（Ctrl+B）");
@@ -486,6 +491,7 @@ void MainWindow::setupDocks() {
     leftTabs->addTab(m_treePanel, "组件树");
     leftTabs->setCurrentIndex(0);
     m_leftDock->setWidget(leftTabs);
+    m_leftDock->setMinimumWidth(280);
     addDockWidget(Qt::LeftDockWidgetArea, m_leftDock);
 
     m_buildDock = new QDockWidget("编译输出", this);
@@ -512,10 +518,19 @@ void MainWindow::setupDocks() {
     m_propDock->setFeatures(QDockWidget::DockWidgetMovable);
     m_propDock->setMinimumWidth(300);
     addDockWidget(Qt::RightDockWidgetArea, m_propDock);
+    resizeDocks({m_leftDock, m_propDock}, {360, 300}, Qt::Horizontal);
 }
 
 void MainWindow::setupConnections() {
     /* Ctrl+点击（Qt 侧，带修饰键）：加选到多选集合 */
+    if (m_centralTabs) {
+        connect(m_centralTabs, &QTabWidget::currentChanged, this, [this](int) {
+            const bool codeTab =
+                qobject_cast<CodeEditor*>(m_centralTabs->currentWidget()) != nullptr;
+            m_propDock->setVisible(!codeTab);
+        });
+    }
+
     connect(m_lvglWidget, &SDL2Widget::widgetClicked, this,
             [this](int x, int y, Qt::KeyboardModifiers mod) {
         if (!(mod & Qt::ControlModifier)) return;
@@ -625,6 +640,8 @@ void MainWindow::setupConnections() {
     m_propPanel->setStyleValueProvider([this](const std::string& id, const std::string& prop) {
         return m_renderer.styleValue(id, prop);
     });
+    connect(m_projectPanel, &ProjectPanel::projectSettingsRequested, this,
+            &MainWindow::onProjectSettings);
     connect(m_projectPanel, &ProjectPanel::openRequested, this, [this](const QString& p) {
         if (p.endsWith(".lui") && m_doc.isModified() && !confirmDiscard()) return;
         openPath(p);
@@ -1008,7 +1025,7 @@ void MainWindow::onNewProject() {
         {"version", "1.0"},
         {"name", name},
         {"entry", screenName},
-        {"files", QJsonArray{"ui/screens/" + screenName + ".lui"}},
+        {"files", QJsonArray{"ui/" + screenName + ".lui"}},
     };
     /* ---- 完整工程脚手架：CMakeLists.txt + main.cpp + ui_generated 目录 ---- */
     /* easylvgl 仓库根：设计器可执行文件位于 <repo>/tools/lvgl-designer/build/ */
@@ -1029,6 +1046,7 @@ void MainWindow::onNewProject() {
         "# .lui -> *_ui.hpp（改界面后重新编译会自动重生成）\n"
         "file(GLOB LUI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ui/screens/*.lui\n"
         "                    ${CMAKE_CURRENT_SOURCE_DIR}/ui/components/*.lui)\n"
+        
         "set(UI_HEADERS \"\")\n"
         "file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui_generated)\n"
         "add_custom_target(ui ALL\n"
@@ -1165,7 +1183,7 @@ void MainWindow::onNewComponent() {
     box.setWindowTitle("新建组件");
     box.setText(QString("组件 %1 已创建。").arg(name));
     box.setInformativeText("是否为该组件生成业务骨架类？已存在的文件不会被覆盖。");
-    auto* sync = new QCheckBox("同步生成业务骨架（components/）", &box);
+    auto* sync = new QCheckBox("同步生成业务骨架（ui/screens 或 ui/components）", &box);
     sync->setChecked(true);
     box.setCheckBox(sync);
     box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -1214,8 +1232,49 @@ void MainWindow::refreshProjectPanel() {
         resources.emplace_back(alias, rel);
     }
 
-    std::vector<QString> sources(m_externalIncludes.begin(), m_externalIncludes.end());
-    m_projectPanel->setProject(name, m_projectFile, files, resources, sources);
+    std::vector<QString> uiFiles;
+    for (const auto& pf : files) uiFiles.push_back(pf.path);
+
+    QSet<QString> resourcePaths;
+    for (const auto& r : resources)
+        resourcePaths.insert(QFileInfo(QDir(QFileInfo(m_projectFile).absolutePath())
+                                          .absoluteFilePath(r.second)).absoluteFilePath());
+
+    QStringList sourceList;
+    QStringList otherList;
+    QSet<QString> seen;
+    auto addUnique = [&](QStringList& list, const QString& path) {
+        if (path.isEmpty()) return;
+        const QString abs = QFileInfo(path).absoluteFilePath();
+        if (seen.contains(abs)) return;
+        seen.insert(abs);
+        list << abs;
+    };
+    for (const QString& path : m_externalIncludes) addUnique(sourceList, path);
+
+    const QString projectDir = QFileInfo(m_projectFile).absolutePath();
+    QDirIterator filesIt(projectDir, QDir::Files, QDirIterator::Subdirectories);
+    while (filesIt.hasNext()) {
+        const QString path = filesIt.next();
+        QString rel = QDir(projectDir).relativeFilePath(path);
+        rel.replace('\\', '/');
+        if (rel.startsWith("build") || rel.contains("/build") ||
+            rel.contains("ui_generated") || rel.contains("node_modules") ||
+            rel.startsWith(".git/")) {
+            continue;
+        }
+        const QString abs = QFileInfo(path).absoluteFilePath();
+        if (abs == QFileInfo(m_projectFile).absoluteFilePath()) continue;
+        if (designer::isCodeFile(path)) addUnique(sourceList, path);
+        else if (path.endsWith(".lui")) continue;
+        else if (resourcePaths.contains(abs)) continue;
+        else addUnique(otherList, path);
+    }
+    if (!m_projectFontPath.isEmpty()) addUnique(otherList, m_projectFontPath);
+
+    std::vector<QString> sources(sourceList.begin(), sourceList.end());
+    std::vector<QString> others(otherList.begin(), otherList.end());
+    m_projectPanel->setProject(name, m_projectFile, uiFiles, sources, resources, others);
     if (!m_doc.filePath().isEmpty()) m_projectPanel->setCurrentFile(m_doc.filePath());
 }
 
@@ -1247,7 +1306,7 @@ bool MainWindow::updateManifestFiles(const std::function<void(QJsonArray&)>& fn)
     return true;
 }
 
-/* 新建屏幕：与新建组件同流程，放到 ui/screens */
+/* 新建屏幕：与新建组件同流程，放到 ui/ */
 void MainWindow::onNewScreen() {
     if (m_projectFile.isEmpty()) {
         QMessageBox::information(this, "新建屏幕", "请先新建或打开一个工程。");
@@ -1281,7 +1340,7 @@ void MainWindow::onNewScreen() {
     box.setWindowTitle("新建屏幕");
     box.setText(QString("屏幕 %1 已创建。").arg(name));
     box.setInformativeText("是否为该屏幕生成业务骨架类？已存在的文件不会被覆盖。");
-    auto* sync = new QCheckBox("同步生成业务骨架（screens/）", &box);
+    auto* sync = new QCheckBox("同步生成业务骨架（ui/screens 或 ui/components）", &box);
     sync->setChecked(true);
     box.setCheckBox(sync);
     box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -1291,7 +1350,20 @@ void MainWindow::onNewScreen() {
     }
 }
 
-/* 把外部复制进来的 .lui 收进工程（必要时先复制到 ui/components 或 ui/screens） */
+/* 把外部复制进来的 .lui 收进工程（统一放到 ui/） */
+void MainWindow::onProjectSettings() {
+    if (m_projectFile.isEmpty()) {
+        QMessageBox::information(this, "工程设置", "请先新建或打开一个工程。");
+        return;
+    }
+    QStringList screens;
+    for (const auto& doc : m_projectDocs) {
+        if (!doc->isComponent()) screens << QString::fromStdString(doc->name());
+    }
+    ProjectSettingsDialog dialog(m_projectFile, screens, this);
+    if (dialog.exec() == QDialog::Accepted) loadProject(m_projectFile);
+}
+
 void MainWindow::onChooseProjectFont() {
     if (m_projectFile.isEmpty()) {
         QMessageBox::information(this, "项目字体", "请先新建或打开一个工程。");
@@ -1422,6 +1494,7 @@ void MainWindow::openCodeFile(const QString& path) {
     m_centralTabs->setTabToolTip(index, abs);
     m_centralTabs->setCurrentIndex(index);
     m_codeEditors.insert(abs, editor);
+    m_propDock->hide();
 }
 
 void MainWindow::closeEditorTab(int index) {
@@ -1835,7 +1908,7 @@ void MainWindow::onScaffold() {
     const QString projectDir = !m_projectFile.isEmpty()
         ? QFileInfo(m_projectFile).absolutePath()
         : QFileInfo(m_doc.filePath()).absolutePath();
-    const QString scaffoldDir = projectDir + (m_doc.isComponent() ? "/components" : "/screens");
+    const QString scaffoldDir = projectDir + (m_doc.isComponent() ? "/ui/components" : "/ui/screens");
 
     QStringList args;
     args << m_doc.filePath() << "--scaffold" << scaffoldDir << "--verbose";

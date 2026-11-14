@@ -125,6 +125,7 @@ public:
     void onNewScreen();
     void onAddProjectFiles();
     void onChooseProjectFont();
+    void onProjectSettings();
     void removeFromProject(const QString& path);
     void refreshProjectPanel();
     bool updateManifestFiles(const std::function<void(QJsonArray&)>& fn);

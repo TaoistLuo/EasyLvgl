@@ -13,7 +13,7 @@
         "ui/screens/Settings.lui"
     ],
     "externalComponents": {
-        "TempRow": { "include": "components/TempRow.hpp", "class": "TempRow" }
+        "TempRow": { "include": "ui/components/TempRow.hpp", "class": "TempRow" }
     },
     "resources": {
         "excavator": "assets/excavator.png",

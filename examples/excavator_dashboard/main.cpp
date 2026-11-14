@@ -3,7 +3,7 @@
  * @brief       工程级示例：挖掘机智能仪表盘（HMI）
  * @details     目标平台为桌面 Linux（SDL2 后端）。
  *              UI 由 luic 生成到构建目录（中间文件，不入工程），业务逻辑在
- * screens/*.h/.cpp：
+ * ui/screens/*.h/.cpp：
  *              - 工程清单 + 多屏幕 + 可复用组件 + 图片资源
  *              - 屏幕类继承 luic 生成的 *_UI，构造函数里 setup(parent) +
  * bind_events()
@@ -30,9 +30,9 @@
 #include "easylvgl/core/platform.hpp"
 #include "easylvgl/core/signal_handler.hpp"
 #include "easylvgl/lvgl_widgets.hpp"
-#include "screens/Dashboard.h"
-#include "screens/InfoCenter.h"
-#include "screens/Settings.h"
+#include "ui/screens/Dashboard.h"
+#include "ui/screens/InfoCenter.h"
+#include "ui/screens/Settings.h"
 
 using namespace easylvgl;
 using namespace app;
@@ -189,7 +189,7 @@ int main() {
   std::printf("============================================\n");
   std::printf("  EXCAVATOR HMI  (project-level example, Linux)\n");
   std::printf(
-      "  ui: build/ui_generated (intermediate), logic: screens/*.cpp\n");
+      "  ui: build/ui_generated (intermediate), logic: ui/screens/*.cpp\n");
   std::printf("  language: %s (LVGL lv_translation)\n",
               i18n::current() == i18n::Lang::En
                   ? "English"

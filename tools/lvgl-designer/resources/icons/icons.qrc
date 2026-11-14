@@ -6,5 +6,15 @@
     <file>trash.svg</file>
     <file>arrow_right.svg</file>
     <file>arrow_down.svg</file>
+    <file>folder.svg</file>
+    <file>project.svg</file>
+    <file>file_ui.svg</file>
+    <file>file_source.svg</file>
+    <file>file_image.svg</file>
+    <file>file_font.svg</file>
+    <file>file_sheet.svg</file>
+    <file>file_config.svg</file>
+    <file>file_doc.svg</file>
+    <file>file_other.svg</file>
   </qresource>
 </RCC>
