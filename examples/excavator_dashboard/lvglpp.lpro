@@ -2,6 +2,7 @@
     "version": "1.0",
     "name": "ExcavatorDashboard",
     "target": "excavator_dashboard",
+    "buildDir": "build_lvgl",
     "entry": "Dashboard",
     "font": "fonts/NotoSansSC-Regular.ttf",
     "outDir": "ui_generated",

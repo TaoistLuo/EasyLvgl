@@ -27,7 +27,7 @@
 
 ```
 excavator_dashboard/
-├── lvglpp.lpro        # 工程清单：可执行目标、入口屏幕、文件列表、图片资源、输出目录
+├── lvglpp.lpro        # 工程清单：可执行目标、编译输出目录、入口屏幕、文件列表、图片资源、输出目录
 ├── main.cpp                   # 入口：字体、页面容器、导航接线、主循环
 ├── app_common.hpp             # 共享常量 / 类型 / 模拟数据
 ├── i18n.hpp                   # LVGL 原生 lv_translation 封装（注册/切换/控件绑定）
@@ -91,6 +91,17 @@ cmake --build examples/excavator_dashboard/build -j 8
 
 未配置 `target` 时默认使用工程名。上面的构建命令输出文件名也随之变化。
 
+## 编译输出目录
+
+工程清单的 `buildDir` 指定设计器构建与运行的输出目录，路径相对工程目录：
+
+```json
+"buildDir": "build_lvgl"
+```
+
+未配置时默认 `build_lvgl`。设计器构建、单文件编译和运行都优先使用该目录。
+`outDir` 只控制 luic 生成的 UI 头文件目录，与编译输出目录是两回事。
+
 Windows 下窗口由 LVGL 原生 Win32 后端创建；Linux/macOS 使用 SDL2（与主工程一致）。
 无头 CI 冒烟可用环境变量自动退出：
 
@@ -103,7 +114,7 @@ EASYLVGL_AUTOCLOSE_MS=3000 ./examples/excavator_dashboard/build/excavator_dashbo
 用 Qt 设计器打开本目录（工程清单已被识别）即可：
 
 - 左侧工程树分为「UI 文件 / 源文件 / 嵌入资源（qrc）/ 其他文件」四类；每组内部保留真实目录层级，不再区分屏幕与组件
-- 「文件 → 工程设置...」可编辑工程名称、可执行目标、入口屏幕、项目字体、输出目录与外部组件，双击工程根节点也能打开
+- 「文件 → 工程设置...」可编辑工程名称、可执行目标、编译输出目录、入口屏幕、项目字体、输出目录与外部组件，双击工程根节点也能打开
 - 双击屏幕编辑；修改后执行一次上面的 `cmake --build` 会自动重新生成 UI
 - 组件实例通过 `exports` 暴露参数，在右侧属性面板中按实例填写
   （例如 `GaugeCard` 的 `caption` / `value` / `range`）

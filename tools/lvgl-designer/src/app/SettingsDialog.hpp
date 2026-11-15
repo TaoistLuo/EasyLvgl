@@ -153,7 +153,27 @@ inline QString SettingsDialog::luicPath() {
     return "luic";
 #endif
 }
-inline QString SettingsDialog::cmakePath() { return QSettings().value("build/cmake", "cmake").toString(); }
+inline QString SettingsDialog::cmakePath() {
+    const QString stored = QSettings().value("build/cmake", "").toString();
+    if (!stored.isEmpty() && stored != "cmake" && QFileInfo(stored).exists())
+        return stored;
+#ifdef Q_OS_WIN
+    const QString bundledName = "toolchain/cmake/bin/cmake.exe";
+#else
+    const QString bundledName = "toolchain/cmake/bin/cmake";
+#endif
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QStringList roots = {
+        QDir(appDir).absoluteFilePath("../../.."),
+        QDir(appDir).absoluteFilePath("../../../.."),
+        QDir(appDir).absoluteFilePath("../../../../.."),
+    };
+    for (const QString& root : roots) {
+        const QString bundled = QDir(root).absoluteFilePath(bundledName);
+        if (QFileInfo(bundled).exists()) return bundled;
+    }
+    return "cmake";
+}
 inline QString SettingsDialog::buildDir() { return QSettings().value("build/buildDir", QString()).toString(); }
 inline QString SettingsDialog::generator() {
 #ifdef Q_OS_WIN

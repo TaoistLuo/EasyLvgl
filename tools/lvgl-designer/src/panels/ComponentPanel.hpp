@@ -35,6 +35,7 @@
 #include <QDrag>
 #include <QMimeData>
 #include <QHeaderView>
+#include "panels/ComponentIcon.hpp"
 #include <string>
 #include <vector>
 #include <utility>
@@ -54,9 +55,11 @@ public:
 
         struct CompDef { const char* type; const char* label; };
 
-        auto addGroup = [this](const char* name, std::initializer_list<CompDef> items) {
+        auto addGroup = [this](const char* name, const char* icon,
+                               std::initializer_list<CompDef> items) {
             auto* group = new QTreeWidgetItem(this);
             group->setText(0, name);
+            group->setIcon(0, QIcon(QString(":/icons/%1").arg(icon)));
             group->setFlags(Qt::ItemIsEnabled);
             QFont f = group->font(0);
             f.setBold(true);
@@ -66,20 +69,24 @@ public:
                 item->setText(0, QString("%1(%2)")
                                      .arg(QString::fromUtf8(c.label),
                                           QString::fromUtf8(c.type)));
+                item->setIcon(0, componentIcon(QString::fromUtf8(c.type)));
+                item->setToolTip(0, QString("%1 (%2)")
+                                        .arg(QString::fromUtf8(c.label),
+                                             QString::fromUtf8(c.type)));
                 item->setData(0, Qt::UserRole, c.type);
                 item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
             }
             group->setExpanded(true);
         };
 
-        addGroup("布局", {
+        addGroup("布局", "comp_layout.svg", {
             {"LVBoxLayout",    "垂直布局"},
             {"LHBoxLayout",    "水平布局"},
             {"LGridLayout",    "网格布局"},
             {"LStackedLayout", "堆叠布局"},
         });
 
-        addGroup("按钮", {
+        addGroup("按钮", "comp_button.svg", {
             {"LButton",        "按钮"},
             {"LImageButton",   "图片按钮"},
             {"LCheckbox",      "复选框"},
@@ -88,7 +95,7 @@ public:
             {"LButtonMatrix",  "按钮矩阵"},
         });
 
-        addGroup("容器", {
+        addGroup("容器", "comp_container.svg", {
             {"LGroupBox",      "分组框"},
             {"LList",          "列表"},
             {"LTabView",       "标签页"},
@@ -102,7 +109,7 @@ public:
             {"LCanvas",        "画布"},
         });
 
-        addGroup("输入", {
+        addGroup("输入", "comp_input.svg", {
             {"LLineEdit",      "单行输入"},
             {"LTextEdit",      "多行输入"},
             {"LComboBox",      "下拉框"},
@@ -112,7 +119,7 @@ public:
             {"LKeyboard",      "虚拟键盘"},
         });
 
-        addGroup("显示", {
+        addGroup("显示", "comp_display.svg", {
             {"LLabel",         "标签"},
             {"LImage",         "图片"},
         {"LArclabel",      "弧形文字"},
@@ -127,17 +134,17 @@ public:
             {"LSpan",          "富文本片段"},
         });
 
-        addGroup("视图 / 数据", {
+        addGroup("视图 / 数据", "comp_data.svg", {
             {"LTable",         "表格"},
             {"LChart",         "图表"},
             {"LCalendar",      "日历"},
         });
 
-        addGroup("对话框", {
+        addGroup("对话框", "comp_dialog.svg", {
             {"LMsgBox",        "消息框"},
         });
 
-        addGroup("动画", {
+        addGroup("动画", "comp_anim.svg", {
             {"LAnimImage",     "动画图片"},
             {"LLottie",        "Lottie 动画"},
         });
@@ -154,6 +161,7 @@ public:
         m_projectGroup = new QTreeWidgetItem();
         insertTopLevelItem(0, m_projectGroup);
         m_projectGroup->setText(0, "项目组件");
+        m_projectGroup->setIcon(0, QIcon(":/icons/comp_component.svg"));
         m_projectGroup->setFlags(Qt::ItemIsEnabled);
         QFont f = m_projectGroup->font(0);
         f.setBold(true);
@@ -162,6 +170,7 @@ public:
             auto* item = new QTreeWidgetItem(m_projectGroup);
             item->setText(0, QString("%1(@%2)")
                                  .arg(QString::fromStdString(c), QString::fromStdString(c)));
+            item->setIcon(0, QIcon(":/icons/comp_component.svg"));
             item->setData(0, Qt::UserRole, QString::fromStdString("@" + c));
             item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
         }
@@ -178,6 +187,7 @@ public:
         m_externalGroup = new QTreeWidgetItem();
         insertTopLevelItem(0, m_externalGroup);
         m_externalGroup->setText(0, "外部组件");
+        m_externalGroup->setIcon(0, QIcon(":/icons/comp_external.svg"));
         m_externalGroup->setFlags(Qt::ItemIsEnabled);
         QFont f = m_externalGroup->font(0);
         f.setBold(true);
@@ -186,6 +196,7 @@ public:
             auto* item = new QTreeWidgetItem(m_externalGroup);
             item->setText(0, QString("%1(@%1)")
                                  .arg(QString::fromStdString(c)));
+            item->setIcon(0, QIcon(":/icons/comp_external.svg"));
             item->setData(0, Qt::UserRole, QString::fromStdString("@" + c));
             item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
         }

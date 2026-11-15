@@ -18,6 +18,7 @@ public:
 
 private:
     void browseFont();
+    void browseBuildDir();
     void addExternalRow(const QString& name = QString(),
                         const QString& include = QString(),
                         const QString& cls = QString());
@@ -27,6 +28,7 @@ private:
     QLineEdit* m_target = nullptr;
     QComboBox* m_entry = nullptr;
     QLineEdit* m_font = nullptr;
+    QLineEdit* m_buildDir = nullptr;
     QLineEdit* m_outDir = nullptr;
     QTableWidget* m_external = nullptr;
 };

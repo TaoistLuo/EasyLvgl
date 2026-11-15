@@ -65,6 +65,9 @@ def repo_root() -> str:
 def find_converter(explicit):
     if explicit:
         return os.path.abspath(explicit)
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "LVGLImage.py")
+    if os.path.exists(local):
+        return local
     return os.path.join(repo_root(), "lvgl", "scripts", "LVGLImage.py")
 
 

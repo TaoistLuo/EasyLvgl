@@ -177,6 +177,7 @@ private:
     void onBuildFinished(int code, QProcess::ExitStatus status);
     void onRunProject();
     void onBuildAndRun();
+    QString projectBuildDir() const;
     void onApplyLayoutVBox();
     void onApplyLayoutHBox();
     void onApplyLayoutGrid();

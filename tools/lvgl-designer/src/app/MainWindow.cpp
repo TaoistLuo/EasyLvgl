@@ -106,6 +106,25 @@ static QStringList designerToolchainDirs() {
             for (const QString& s : sub) addDir(rd.absoluteFilePath(s + "/bin"));
         }
     }
+
+    const QString bundleRoot =
+        QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("../../..");
+    const QStringList bundleRoots = {
+        bundleRoot,
+        QDir(bundleRoot).absoluteFilePath(".."),
+        QDir(bundleRoot).absoluteFilePath("../.."),
+    };
+    for (const QString& root : bundleRoots) {
+        const QStringList bundled = {
+            QDir(root).absoluteFilePath("toolchain/mingw64/bin"),
+            QDir(root).absoluteFilePath("toolchain/cmake/bin"),
+            QDir(root).absoluteFilePath("toolchain/python"),
+            QDir(root).absoluteFilePath("toolchain/python/Scripts"),
+        };
+        for (const QString& d : bundled) addDir(d);
+    }
+    addDir(QDir(bundleRoot).absoluteFilePath("bin"));
+
     return dirs;
 }
 
@@ -160,8 +179,24 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::restoreLastProject() {
     const QString last = QSettings().value("project/last").toString();
-    if (!last.isEmpty() && QFileInfo::exists(last))
+    if (!last.isEmpty() && QFileInfo::exists(last)) {
         QTimer::singleShot(0, this, [this, last] { loadProject(last); });
+        return;
+    }
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QStringList roots = {
+        QDir(appDir).absoluteFilePath("../../.."),
+        QDir(appDir).absoluteFilePath("../../../.."),
+        QDir(appDir).absoluteFilePath("../../../../.."),
+    };
+    for (const QString& root : roots) {
+        const QString demo =
+            QDir(root).absoluteFilePath("examples/excavator_dashboard/lvglpp.lpro");
+        if (QFileInfo::exists(demo)) {
+            QTimer::singleShot(0, this, [this, demo] { loadProject(demo); });
+            return;
+        }
+    }
 }
 
 bool MainWindow::openFile(const QString& path) {
@@ -908,14 +943,15 @@ void MainWindow::loadProject(const QString& manifest) {
 
     QSettings().setValue("project/last", manifest);   // 下次启动自动打开
 
-    /* 默认构建目录：工程同级 build_lvgl（不存在就建；用户自定义在工程内的保持不动） */
     {
         const QString projDir = QFileInfo(manifest).absolutePath();
-        const QString defBuild = QDir(projDir).absoluteFilePath("build_lvgl");
-        const QString cur = QSettings().value("build/buildDir").toString();
-        if (cur.isEmpty() || QFileInfo(cur).absolutePath() != projDir)
-            QSettings().setValue("build/buildDir", defBuild);
-        QDir().mkpath(defBuild);
+        QString buildDir = root["buildDir"].toString().trimmed();
+        if (buildDir.isEmpty()) buildDir = "build_lvgl";
+        if (QDir::isRelativePath(buildDir))
+            buildDir = QDir(projDir).absoluteFilePath(buildDir);
+        buildDir = QDir(buildDir).absolutePath();
+        QSettings().setValue("build/buildDir", buildDir);
+        QDir().mkpath(buildDir);
     }
     m_projectDocs.clear();
     m_componentDocs.clear();
@@ -1025,6 +1061,7 @@ void MainWindow::onNewProject() {
         {"version", "1.0"},
         {"name", name},
         {"target", name},
+        {"buildDir", "build_lvgl"},
         {"entry", screenName},
         {"files", QJsonArray{"ui/" + screenName + ".lui"}},
     };
@@ -1065,7 +1102,6 @@ void MainWindow::onNewProject() {
         "            --out-dir ${CMAKE_BINARY_DIR}/ui_generated\n"
         "    DEPENDS ${LUI_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/lvglpp.lpro\n"
         "    COMMENT \"luic: 生成 UI 代码\")\n"
-        "add_dependencies(ui luic)\n\n"
         "# 图片资源：把工程清单里的 resources 转成 lv_image_dsc_t（qrc 式）\n"
         "find_program(EASYLVGL_PYTHON NAMES python3 python)\n"
         "add_custom_target(assets\n"
@@ -1681,8 +1717,22 @@ void MainWindow::onBuildAndRun() {
     onBuildProject();
 }
 
+QString MainWindow::projectBuildDir() const {
+    if (m_projectFile.isEmpty()) return SettingsDialog::buildDir();
+    QString buildDir = "build_lvgl";
+    QFile f(m_projectFile);
+    if (f.open(QIODevice::ReadOnly)) {
+        const auto root = QJsonDocument::fromJson(f.readAll()).object();
+        const QString value = root["buildDir"].toString().trimmed();
+        if (!value.isEmpty()) buildDir = value;
+    }
+    if (QDir::isRelativePath(buildDir))
+        buildDir = QDir(QFileInfo(m_projectFile).absolutePath()).absoluteFilePath(buildDir);
+    return QDir(buildDir).absolutePath();
+}
+
 void MainWindow::onRunProject() {
-    const QString buildDir = SettingsDialog::buildDir();
+    const QString buildDir = projectBuildDir();
     if (buildDir.isEmpty() || m_projectFile.isEmpty()) {
         QMessageBox::information(this, "运行", "请先打开工程并在「设置」里配置构建目录。");
         return;
@@ -1768,6 +1818,7 @@ void MainWindow::onRunProject() {
     m_runPanel->append("=== 运行 " + exe + " ===\n");
     m_runDock->show();
     m_runDock->raise();
+    m_runProc->setProcessEnvironment(designerBuildEnv());
     m_runProc->setWorkingDirectory(QFileInfo(exe).absolutePath());
     m_runProc->start(exe, QStringList());
 }
@@ -1790,8 +1841,8 @@ void MainWindow::onBuildProject() {
         return;
     }
     const QString srcDir = QFileInfo(m_projectFile).absolutePath();
-    QString buildDir = SettingsDialog::buildDir();
-    if (buildDir.isEmpty()) buildDir = srcDir + "/build";   // 默认放工程目录下
+    QString buildDir = projectBuildDir();
+    if (buildDir.isEmpty()) buildDir = srcDir + "/build";
     QDir().mkpath(buildDir);
     /* 构建目录里若已有指向别的源码树的缓存，必须清掉，否则会去构建那个工程 */
     const QString cache = buildDir + "/CMakeCache.txt";
@@ -1917,8 +1968,8 @@ void MainWindow::onCompile() {
     }
 
     QFileInfo fi(m_doc.filePath());
-    QString buildDir = QSettings().value("build/buildDir").toString();
-    if (buildDir.isEmpty() || !QFileInfo(buildDir).isDir())
+    QString buildDir = projectBuildDir();
+    if (buildDir.isEmpty())
         buildDir = QDir(QFileInfo(m_projectFile.isEmpty() ? m_doc.filePath() : m_projectFile).absolutePath())
                        .absoluteFilePath("build_lvgl");
     QDir().mkpath(buildDir);

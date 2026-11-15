@@ -1,0 +1,53 @@
+cmake_minimum_required(VERSION 3.19)
+project(EasyLVGL_SDK LANGUAGES C CXX)
+
+find_package(Threads REQUIRED)
+
+set(EASYLVGL_SDK_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/sdk/include")
+set(EASYLVGL_SDK_LIB "${CMAKE_CURRENT_SOURCE_DIR}/sdk/lib")
+set(EASYLVGL_SDK_DEFINITIONS
+    LV_CONF_SKIP
+    LV_LVGL_H_INCLUDE_SIMPLE
+    "LV_CONF_KCONFIG_EXTERNAL_INCLUDE=\"${EASYLVGL_SDK_INCLUDE}/autoconf.h\""
+    _WIN32_WINNT=0x0601
+    WINVER=0x0601
+    WM_DPICHANGED=0x02E0
+    __STDC_FORMAT_MACROS
+)
+
+add_library(lvgl_linux STATIC IMPORTED)
+set_target_properties(lvgl_linux PROPERTIES
+    IMPORTED_GLOBAL TRUE
+    IMPORTED_LOCATION "${EASYLVGL_SDK_LIB}/liblvgl_linux.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${EASYLVGL_SDK_INCLUDE}"
+    INTERFACE_COMPILE_DEFINITIONS "${EASYLVGL_SDK_DEFINITIONS}"
+    INTERFACE_COMPILE_FEATURES cxx_std_17)
+
+add_library(lvgl STATIC IMPORTED)
+set_target_properties(lvgl PROPERTIES
+    IMPORTED_GLOBAL TRUE
+    IMPORTED_LOCATION "${EASYLVGL_SDK_LIB}/libeasylvgl.a"
+    INTERFACE_INCLUDE_DIRECTORIES
+        "${EASYLVGL_SDK_INCLUDE};${EASYLVGL_SDK_INCLUDE}/lvgl;${EASYLVGL_SDK_INCLUDE}/lvgl/include;${CMAKE_CURRENT_SOURCE_DIR}/src/lib"
+    INTERFACE_COMPILE_DEFINITIONS "${EASYLVGL_SDK_DEFINITIONS}"
+    INTERFACE_COMPILE_FEATURES cxx_std_17
+    INTERFACE_LINK_LIBRARIES
+        "lvgl_linux;Threads::Threads;user32;gdi32;imm32;shell32;ole32;oleaut32;uuid;comctl32")
+
+add_library(lvgl::thorvg INTERFACE IMPORTED)
+set_target_properties(lvgl::thorvg PROPERTIES IMPORTED_GLOBAL TRUE)
+
+add_library(easylvgl_lib INTERFACE)
+target_include_directories(easylvgl_lib INTERFACE
+    "${EASYLVGL_SDK_INCLUDE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/lib")
+target_compile_definitions(easylvgl_lib INTERFACE ${EASYLVGL_SDK_DEFINITIONS})
+target_compile_features(easylvgl_lib INTERFACE cxx_std_17)
+target_link_libraries(easylvgl_lib INTERFACE lvgl lvgl_linux)
+
+if(WIN32)
+    add_executable(luic IMPORTED)
+    set_target_properties(luic PROPERTIES
+        IMPORTED_GLOBAL TRUE
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bin/luic.exe")
+endif()

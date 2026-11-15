@@ -7,7 +7,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # easylvgl 仓库根目录；换机器时用 -DEASYLVGL_ROOT=... 覆盖
 if(NOT DEFINED EASYLVGL_ROOT)
-    get_filename_component(EASYLVGL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+    get_filename_component(_easy_root "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+    if(EXISTS "${_easy_root}/EasyLVGL/CMakeLists.txt")
+        set(EASYLVGL_ROOT "${_easy_root}/EasyLVGL")
+    else()
+        set(EASYLVGL_ROOT "${_easy_root}")
+    endif()
 endif()
 message(STATUS "EASYLVGL_ROOT = ${EASYLVGL_ROOT}")
 

@@ -16,5 +16,16 @@
     <file>file_config.svg</file>
     <file>file_doc.svg</file>
     <file>file_other.svg</file>
+    <file>comp_layout.svg</file>
+    <file>comp_button.svg</file>
+    <file>comp_container.svg</file>
+    <file>comp_input.svg</file>
+    <file>comp_display.svg</file>
+    <file>comp_data.svg</file>
+    <file>comp_dialog.svg</file>
+    <file>comp_anim.svg</file>
+    <file>comp_custom.svg</file>
+    <file>comp_component.svg</file>
+    <file>comp_external.svg</file>
   </qresource>
 </RCC>

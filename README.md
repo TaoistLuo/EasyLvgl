@@ -81,6 +81,19 @@ cmake --build build -j
 构建目标包括 `main`、各示例、`luic`、`cpp_tests`，以及自动生成 UI 头文件的
 `ui_compile` / `widgets_ui_compile`。
 
+### Windows 便携包
+
+`scripts/package/windows_portable.ps1` 会构建设计器，并把 Qt 运行库、MinGW、CMake、
+Python、SDK（预编译库 + 头文件）收进一个目录：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/package/windows_portable.ps1
+```
+
+默认输出到 `..\dist\EasyLVGL`（加 `-Zip` 同时生成压缩包）。整个目录拷贝到另一台
+Windows x64 电脑后，双击 `Start-Designer.cmd` 即可设计、编译、运行，无需安装
+Qt、MinGW、CMake 或 Python。
+
 ### 设计器（Qt 5.15）
 
 ```bash

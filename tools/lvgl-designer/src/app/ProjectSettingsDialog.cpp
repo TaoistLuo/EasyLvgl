@@ -43,6 +43,7 @@ ProjectSettingsDialog::ProjectSettingsDialog(const QString& manifest,
     for (const QString& screen : screens) m_entry->addItem(screen);
     m_entry->setCurrentText(root["entry"].toString());
     m_font = new QLineEdit(root["font"].toString(), this);
+    m_buildDir = new QLineEdit(root["buildDir"].toString("build_lvgl"), this);
     m_outDir = new QLineEdit(root["outDir"].toString("ui_generated"), this);
 
     auto* form = new QFormLayout();
@@ -50,13 +51,21 @@ ProjectSettingsDialog::ProjectSettingsDialog(const QString& manifest,
     form->addRow("可执行目标", m_target);
     form->addRow("入口屏幕", m_entry);
 
+    auto* buildRow = new QHBoxLayout();
+    buildRow->addWidget(m_buildDir, 1);
+    auto* buildBrowse = new QPushButton("浏览...", this);
+    buildRow->addWidget(buildBrowse);
+    form->addRow("编译输出目录", buildRow);
+    connect(buildBrowse, &QPushButton::clicked, this,
+            &ProjectSettingsDialog::browseBuildDir);
+
     auto* fontRow = new QHBoxLayout();
     fontRow->addWidget(m_font, 1);
     auto* browse = new QPushButton("浏览...", this);
     fontRow->addWidget(browse);
     form->addRow("项目字体", fontRow);
 
-    form->addRow("输出目录", m_outDir);
+    form->addRow("UI 输出目录", m_outDir);
 
     m_external = new QTableWidget(0, 3, this);
     m_external->setHorizontalHeaderLabels({"名称", "include", "class"});
@@ -135,6 +144,22 @@ void ProjectSettingsDialog::browseFont() {
     m_font->setText(QDir(projectDir).relativeFilePath(target));
 }
 
+void ProjectSettingsDialog::browseBuildDir() {
+    const QString projectDir = QFileInfo(m_manifest).absolutePath();
+    QString start = m_buildDir->text().trimmed();
+    if (start.isEmpty() || QDir::isRelativePath(start))
+        start = QDir(projectDir).absoluteFilePath(start);
+    if (!QFileInfo(start).isDir()) start = projectDir;
+    const QString path =
+        QFileDialog::getExistingDirectory(this, "选择编译输出目录", start);
+    if (path.isEmpty()) return;
+    const QString abs = QFileInfo(path).absoluteFilePath();
+    if (abs == projectDir || abs.startsWith(projectDir + "/"))
+        m_buildDir->setText(QDir(projectDir).relativeFilePath(abs));
+    else
+        m_buildDir->setText(abs);
+}
+
 bool ProjectSettingsDialog::apply() {
     static const QRegularExpression ident("^[A-Za-z_][A-Za-z0-9_]*$");
 
@@ -161,6 +186,9 @@ bool ProjectSettingsDialog::apply() {
         return false;
     }
     root["target"] = target;
+
+    const QString buildDir = m_buildDir->text().trimmed();
+    root["buildDir"] = buildDir.isEmpty() ? "build_lvgl" : buildDir;
 
     const QString entry = m_entry->currentText().trimmed();
     if (!entry.isEmpty()) root["entry"] = entry;
