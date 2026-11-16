@@ -44,6 +44,7 @@
 #include <QFileInfo>
 #include <QLabel>
 #include <QCloseEvent>
+#include <QVector>
 #include <QTimer>
 #include <optional>
 #include <memory>
@@ -61,8 +62,10 @@
 #include "panels/ProjectPanel.hpp"
 #include "app/SettingsDialog.hpp"
 #include "panels/OutputPanel.hpp"
+#include "panels/SearchPanel.hpp"
 
 class CodeEditor;
+class ClangdClient;
 class QTabWidget;
 
 namespace designer {
@@ -74,6 +77,15 @@ class MainWindow : public QMainWindow {
     SDL2Widget* m_lvglWidget;
     QTabWidget* m_centralTabs = nullptr;
     QHash<QString, CodeEditor*> m_codeEditors;
+    ClangdClient* m_clangd = nullptr;
+    QDockWidget* m_searchDock = nullptr;
+    SearchPanel* m_searchPanel = nullptr;
+    QProcess* m_compileDbProc = nullptr;
+    struct NavLocation { QString path; int line = 1; int column = 1; };
+    QVector<NavLocation> m_navBack;
+    QVector<NavLocation> m_navForward;
+    bool m_navigating = false;
+    QString m_compileDbAttemptedRoot;
     LvglRenderer m_renderer;
     ComponentPanel* m_compPanel;
     PropertyPanel* m_propPanel;
@@ -134,6 +146,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     void setupMenus();
@@ -145,6 +158,13 @@ private:
     void rebuildFromDocument();
 
     void openCodeFile(const QString& path);
+    void recordNavigationPosition();
+    void navigateBack();
+    void navigateForward();
+    void navigateTo(const NavLocation& location);
+    ClangdClient* ensureClangd();
+    ClangdClient* startClangdClient();
+    void startCompileDbGeneration();
     void closeEditorTab(int index);
     void onNew();
     void onOpen();

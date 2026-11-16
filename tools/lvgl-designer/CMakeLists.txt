@@ -50,10 +50,13 @@ add_executable(lvgl-designer
     src/panels/PropertyPanel.cpp
     src/panels/TreePanel.hpp
     src/panels/ProjectPanel.hpp
+    src/panels/SearchPanel.hpp
     src/panels/OutputPanel.hpp
     resources/icons/icons.qrc
     src/panels/TreePanel.cpp
     src/editor/CodeEditor.cpp
+    src/editor/ClangdClient.cpp
+    src/editor/ClangdClient.hpp
     src/commands/UndoCommands.hpp
     src/commands/UndoCommands.cpp
 )

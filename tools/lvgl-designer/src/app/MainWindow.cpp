@@ -33,6 +33,7 @@
 #include "app/MainWindow.hpp"
 #include "app/ProjectSettingsDialog.hpp"
 #include "editor/CodeEditor.hpp"
+#include "editor/ClangdClient.hpp"
 #include "commands/UndoCommands.hpp"
 #include <QApplication>
 #include <QStatusBar>
@@ -70,6 +71,7 @@
 #include <QProcessEnvironment>
 #include <QStandardPaths>
 #include <QLibraryInfo>
+#include <QShortcut>
 #include <algorithm>
 #include <set>
 
@@ -138,6 +140,21 @@ static QProcessEnvironment designerBuildEnv() {
     return env;
 }
 
+static QString findProjectCompiler() {
+    const QString path = QStandardPaths::findExecutable("g++");
+    if (!path.isEmpty()) return path;
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QStringList candidates = {
+        QDir(appDir).absoluteFilePath("../../../../toolchain/mingw64/bin/g++.exe"),
+        QDir(appDir).absoluteFilePath("../../../toolchain/mingw64/bin/g++.exe"),
+        QDir(appDir).absoluteFilePath("../../../../../toolchain/mingw64/bin/g++.exe"),
+        "E:/QT/QT5.12.2/Tools/mingw730_64/bin/g++.exe",
+    };
+    for (const QString& candidate : candidates)
+        if (QFileInfo::exists(candidate)) return candidate;
+    return {};
+}
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
     setWindowTitle("LVGL++ Designer");
@@ -168,6 +185,23 @@ MainWindow::MainWindow(QWidget* parent)
     setupToolbar();
     setupConnections();
 
+    auto* searchShortcut = new QShortcut(QKeySequence("Ctrl+Shift+F"), this);
+    connect(searchShortcut, &QShortcut::activated, this, [this] {
+        m_searchDock->show();
+        m_searchDock->raise();
+        m_searchPanel->focusSearch();
+    });
+    auto* backShortcut = new QShortcut(QKeySequence("Alt+Left"), this);
+    connect(backShortcut, &QShortcut::activated, this, &MainWindow::navigateBack);
+    auto* forwardShortcut = new QShortcut(QKeySequence("Alt+Right"), this);
+    connect(forwardShortcut, &QShortcut::activated, this, &MainWindow::navigateForward);
+    connect(m_searchPanel, &SearchPanel::openFileRequested, this,
+            [this](const QString& path, int line) {
+        openCodeFile(path);
+        if (auto* editor = m_codeEditors.value(QFileInfo(path).absoluteFilePath()))
+            editor->gotoLine(line, 1);
+    });
+
     m_propPanel->setDocument(&m_doc);
     m_propPanel->setUndoStack(m_undoStack);
     m_treePanel->setDocument(&m_doc);
@@ -175,6 +209,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     m_statusInfo = new QLabel("就绪");
     statusBar()->addWidget(m_statusInfo, 1);
+    qApp->installEventFilter(this);
 }
 
 void MainWindow::restoreLastProject() {
@@ -244,10 +279,31 @@ bool MainWindow::openFile(const QString& path) {
     return true;
 }
 
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if (event->type() == QEvent::MouseButtonPress) {
+        auto* mouse = static_cast<QMouseEvent*>(event);
+        if (mouse->button() == Qt::BackButton) {
+            navigateBack();
+            return true;
+        }
+        if (mouse->button() == Qt::ForwardButton) {
+            navigateForward();
+            return true;
+        }
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
 void MainWindow::closeEvent(QCloseEvent* event) {
     if (m_doc.isModified() && !confirmDiscard()) {
         event->ignore();
         return;
+    }
+    if (m_clangd) m_clangd->stop();
+    if (m_compileDbProc) {
+        m_compileDbProc->kill();
+        m_compileDbProc->deleteLater();
+        m_compileDbProc = nullptr;
     }
     event->accept();
 }
@@ -554,6 +610,14 @@ void MainWindow::setupDocks() {
     m_propDock->setMinimumWidth(300);
     addDockWidget(Qt::RightDockWidgetArea, m_propDock);
     resizeDocks({m_leftDock, m_propDock}, {360, 300}, Qt::Horizontal);
+
+    m_searchPanel = new SearchPanel(this);
+    m_searchDock = new QDockWidget("搜索结果", this);
+    m_searchDock->setWidget(m_searchPanel);
+    m_searchDock->setFeatures(QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_searchDock);
+    tabifyDockWidget(m_buildDock, m_searchDock);
+    m_searchDock->hide();
 }
 
 void MainWindow::setupConnections() {
@@ -914,6 +978,7 @@ void MainWindow::loadProject(const QString& manifest) {
     }
     auto root = jdoc.object();
     const QString base = QFileInfo(manifest).absolutePath();
+    if (m_searchPanel) m_searchPanel->setRootPath(base);
     const QString entryName = root["entry"].toString();
 
     m_projectFile = manifest;
@@ -1527,13 +1592,143 @@ void MainWindow::openPath(const QString& path) {
     QMessageBox::information(this, "打开文件", "不支持的文件类型：" + suffix);
 }
 
+ClangdClient* MainWindow::startClangdClient() {
+    if (m_projectFile.isEmpty()) return nullptr;
+    const QString root = QFileInfo(m_projectFile).absolutePath();
+    if (!m_clangd) {
+        m_clangd = new ClangdClient(this);
+        connect(m_clangd, &ClangdClient::logMessage, this, [this](const QString& text) {
+            statusBar()->showMessage(text, 4000);
+        });
+    }
+    if (!m_clangd->isRunning() || m_clangd->rootPath() != root) {
+        QString error;
+        if (!m_clangd->start(root, projectBuildDir(), findProjectCompiler(), &error)) {
+            statusBar()->showMessage(error, 5000);
+            return nullptr;
+        }
+    }
+    for (auto* editor : m_codeEditors) editor->setLanguageClient(m_clangd);
+    return m_clangd;
+}
+
+void MainWindow::startCompileDbGeneration() {
+    if (m_compileDbProc || m_projectFile.isEmpty()) return;
+    const QString sourceDir = QFileInfo(m_projectFile).absolutePath();
+    const QString buildDir = projectBuildDir();
+    if (buildDir.isEmpty() || !QFileInfo::exists(sourceDir + "/CMakeLists.txt")) return;
+    if (m_buildStage != 0) return;
+
+    QDir().mkpath(buildDir);
+    QStringList arguments{"-S", sourceDir, "-B", buildDir,
+                          "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"};
+    const QString generator = SettingsDialog::generator();
+    if (!generator.isEmpty()) arguments << "-G" << generator;
+    arguments << SettingsDialog::extraArgs().split(' ', QString::SkipEmptyParts);
+
+    m_compileDbAttemptedRoot = sourceDir;
+    statusBar()->showMessage("正在后台生成 C++ 索引...", 5000);
+    m_compileDbProc = new QProcess(this);
+    m_compileDbProc->setProcessEnvironment(designerBuildEnv());
+    m_compileDbProc->setWorkingDirectory(sourceDir);
+    connect(m_compileDbProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, buildDir](int code, QProcess::ExitStatus) {
+        if (!m_compileDbProc) return;
+        m_compileDbProc->deleteLater();
+        if (code == 0 && QFileInfo::exists(buildDir + "/compile_commands.json")) {
+            startClangdClient();
+        } else {
+            statusBar()->showMessage("C++ 索引生成失败，编辑器继续可用", 5000);
+            startClangdClient();
+        }
+    });
+    connect(m_compileDbProc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+        if (m_compileDbProc) {
+            m_compileDbProc->deleteLater();
+            m_compileDbProc = nullptr;
+        }
+        startClangdClient();
+    });
+    m_compileDbProc->start(SettingsDialog::cmakePath(), arguments);
+}
+
+ClangdClient* MainWindow::ensureClangd() {
+    if (m_projectFile.isEmpty()) return nullptr;
+    const QString root = QFileInfo(m_projectFile).absolutePath();
+    const QString buildDir = projectBuildDir();
+    if (m_compileDbProc) return nullptr;
+    if (!QFileInfo::exists(buildDir + "/compile_commands.json") &&
+        QFileInfo::exists(root + "/CMakeLists.txt") &&
+        m_compileDbAttemptedRoot != root) {
+        startCompileDbGeneration();
+        return nullptr;
+    }
+    return startClangdClient();
+}
+
+void MainWindow::recordNavigationPosition()
+{
+    if (!m_centralTabs) return;
+    auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->currentWidget());
+    if (!editor || editor->filePath().isEmpty()) return;
+    const QTextCursor cursor = editor->textCursor();
+    NavLocation location{editor->filePath(), cursor.blockNumber() + 1,
+                         cursor.positionInBlock() + 1};
+    if (!m_navBack.isEmpty()) {
+        const NavLocation& last = m_navBack.last();
+        if (last.path == location.path && last.line == location.line &&
+            last.column == location.column)
+            return;
+    }
+    m_navBack.push_back(location);
+    if (m_navBack.size() > 100) m_navBack.removeFirst();
+    m_navForward.clear();
+}
+
+void MainWindow::navigateTo(const NavLocation& location)
+{
+    if (location.path.isEmpty()) return;
+    m_navigating = true;
+    openCodeFile(location.path);
+    if (auto* editor = m_codeEditors.value(QFileInfo(location.path).absoluteFilePath()))
+        editor->gotoLine(location.line, location.column);
+    m_navigating = false;
+}
+
+void MainWindow::navigateBack()
+{
+    if (m_navBack.isEmpty()) return;
+    if (auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->currentWidget())) {
+        const QTextCursor cursor = editor->textCursor();
+        m_navForward.push_back({editor->filePath(), cursor.blockNumber() + 1,
+                                cursor.positionInBlock() + 1});
+    }
+    const NavLocation location = m_navBack.takeLast();
+    navigateTo(location);
+}
+
+void MainWindow::navigateForward()
+{
+    if (m_navForward.isEmpty()) return;
+    if (auto* editor = qobject_cast<CodeEditor*>(m_centralTabs->currentWidget())) {
+        const QTextCursor cursor = editor->textCursor();
+        m_navBack.push_back({editor->filePath(), cursor.blockNumber() + 1,
+                             cursor.positionInBlock() + 1});
+    }
+    const NavLocation location = m_navForward.takeLast();
+    navigateTo(location);
+}
+
 void MainWindow::openCodeFile(const QString& path) {
     const QString abs = QFileInfo(path).absoluteFilePath();
     if (auto* existing = m_codeEditors.value(abs)) {
         m_centralTabs->setCurrentWidget(existing);
         return;
     }
+    if (!m_navigating) recordNavigationPosition();
     auto* editor = new CodeEditor(m_centralTabs);
+    if (!m_projectFile.isEmpty())
+        editor->setProjectRoot(QFileInfo(m_projectFile).absolutePath());
     QString error;
     if (!editor->loadFile(abs, &error)) {
         QMessageBox::critical(this, "打开文件", "无法读取：\n" + abs + "\n" + error);
@@ -1545,6 +1740,21 @@ void MainWindow::openCodeFile(const QString& path) {
     m_centralTabs->setCurrentIndex(index);
     m_codeEditors.insert(abs, editor);
     m_propDock->hide();
+    if (auto* clangd = ensureClangd()) editor->setLanguageClient(clangd);
+    connect(editor, &CodeEditor::definitionTarget, this,
+            [this](const QString& target, int line, int column) {
+        if (target.isEmpty()) return;
+        openCodeFile(target);
+        const QFileInfo info(target);
+        if (auto* targetEditor = m_codeEditors.value(info.absoluteFilePath()))
+            targetEditor->gotoLine(line, column);
+    });
+    connect(editor, &CodeEditor::fontSizeChanged, this, [this](int size) {
+        for (auto* codeEditor : m_codeEditors) codeEditor->setFontPointSize(size);
+    });
+    connect(editor, &CodeEditor::navigationBackRequested, this, &MainWindow::navigateBack);
+    connect(editor, &CodeEditor::navigationForwardRequested, this,
+            &MainWindow::navigateForward);
     connect(editor, &CodeEditor::saved, this, [this, editor](const QString& savedPath) {
         if (m_projectFile.isEmpty()) return;
         if (QFileInfo(savedPath).absoluteFilePath() !=

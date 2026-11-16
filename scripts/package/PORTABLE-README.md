@@ -19,6 +19,7 @@ dist/
 ├── toolchain/
 │   ├── mingw64/
 │   ├── cmake/
+│   ├── clangd/bin/            # clangd + clang-format
 │   └── python/                # 含 pypng、lz4
 └── examples/excavator_dashboard/
 ```
@@ -31,6 +32,16 @@ dist/
 
 - 有上次工程时恢复上次工程
 - 首次启动/没有有效历史时打开 `examples\excavator_dashboard\lvglpp.lpro`
+
+## 源码编辑器
+
+- 行号、当前行、括号匹配
+- C/C++ 语法高亮、自动缩进、`Ctrl+/` 注释
+- `Ctrl+F` / `Ctrl+H` 当前文件查找替换
+- `F12` / `Ctrl+点击` 跳转定义
+- `Ctrl+Space` 或输入 `.` / `>` 触发 clangd 补全
+- `Ctrl+滚轮` 调整代码字号；设计画布同样支持 `Ctrl+滚轮` 缩放
+- clangd 已包含在 `toolchain/clangd`，无需安装
 
 ## 构建示例
 
@@ -72,6 +83,6 @@ dist\EasyLVGL-Portable.exe
 ## 说明
 
 - 目标平台：Windows x64（Qt 5.12.2 / MinGW 7.3 / CMake 3.31 / Python 3.14）
-- 整个 `dist` 约 812 MB；`toolchain`、`examples`、`EasyLVGL` 的相对位置不要拆散
+- 整个 `dist` 约 856 MB；`toolchain`、`examples`、`EasyLVGL` 的相对位置不要拆散
 - 首次运行可能被 SmartScreen 或杀毒软件询问，放行即可
 - 第三方许可证见 `EasyLVGL/LICENSE`、`EasyLVGL/lvgl/LICENSE`

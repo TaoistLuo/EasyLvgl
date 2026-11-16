@@ -4,6 +4,7 @@ param(
     [string]$MingwRoot = "E:\QT\QT5.12.2\Tools\mingw730_64",
     [string]$CmakeRoot = "E:\QT\Tools\cmake",
     [string]$PythonRoot = "C:\Python314",
+    [string]$ClangdRoot = "E:\QT\QTCreator10.0.2\bin\clang\bin",
     [switch]$SkipBuild,
     [switch]$Zip
 )
@@ -24,6 +25,8 @@ $rootBuild = Join-Path $repo "build-win"
 foreach ($p in @($QtRoot, $MingwRoot, $CmakeRoot, $PythonRoot, $windeployqt)) {
     if (-not (Test-Path -LiteralPath $p)) { throw "missing dependency: $p" }
 }
+$clangdExe = Join-Path $ClangdRoot "clangd.exe"
+if (-not (Test-Path -LiteralPath $clangdExe)) { throw "missing clangd: $clangdExe" }
 
 function Invoke-Robocopy {
     param([string]$Source, [string]$Dest)
@@ -139,6 +142,14 @@ New-Item -ItemType Directory -Path $toolchain -Force | Out-Null
 Invoke-Robocopy -Source $MingwRoot -Dest (Join-Path $toolchain "mingw64")
 Invoke-Robocopy -Source $CmakeRoot -Dest (Join-Path $toolchain "cmake")
 Invoke-Robocopy -Source $PythonRoot -Dest (Join-Path $toolchain "python")
+
+$clangdDest = Join-Path $toolchain "clangd\bin"
+New-Item -ItemType Directory -Path $clangdDest -Force | Out-Null
+Copy-Item -LiteralPath $clangdExe -Destination $clangdDest -Force
+$clangFormat = Join-Path $ClangdRoot "clang-format.exe"
+if (Test-Path -LiteralPath $clangFormat) {
+    Copy-Item -LiteralPath $clangFormat -Destination $clangdDest -Force
+}
 
 $python = Join-Path $toolchain "python\python.exe"
 $sitePackages = Join-Path $toolchain "python\Lib\site-packages"
